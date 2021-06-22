@@ -36,7 +36,9 @@
 		<Linker>
 			<Add option="`pkg-config --libs libudjat`" />
 		</Linker>
+		<Unit filename="src/include/udjat/dbus.h" />
 		<Unit filename="src/module/init.cc" />
+		<Unit filename="src/module/value.cc" />
 		<Unit filename="src/testprogram/testprogram.cc" />
 		<Extensions />
 	</Project>
