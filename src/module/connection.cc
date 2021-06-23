@@ -18,10 +18,70 @@
  */
 
  #include "private.h"
+ #include <udjat/tools/mainloop.h>
 
  namespace Udjat {
 
 	namespace DBus {
+
+		static dbus_bool_t add_watch(DBusWatch *watch, DBusConnection *conn) {
+
+			unsigned int flags = dbus_watch_get_flags(watch);
+
+			int event = 0;
+
+			if (flags & DBUS_WATCH_READABLE)
+				event |= MainLoop::oninput;
+
+			if (flags & DBUS_WATCH_WRITABLE)
+				event |= MainLoop::onoutput;
+
+			MainLoop::getInstance().insert(
+				watch,
+				dbus_watch_get_unix_fd(watch),
+				(MainLoop::Event) event,
+				[watch, conn](const MainLoop::Event events) {
+
+					unsigned int flags = 0;
+
+					if (events & MainLoop::oninput)
+						flags |= DBUS_WATCH_READABLE;
+
+					if (events & MainLoop::onoutput)
+						flags |= DBUS_WATCH_WRITABLE;
+
+					if (events & MainLoop::onhangup)
+						flags |= DBUS_WATCH_HANGUP;
+
+					if (events & MainLoop::onerror)
+						flags |= DBUS_WATCH_ERROR;
+
+					if (dbus_watch_handle(watch, flags) == FALSE) {
+						cerr << "Error dbus_watch_handle() failed" << endl;
+					}
+
+					while (dbus_connection_get_dispatch_status(conn) == DBUS_DISPATCH_DATA_REMAINS)
+						dbus_connection_dispatch(conn);
+
+					return true;
+				}
+			);
+
+			return TRUE;
+		}
+
+		static void remove_watch(DBusWatch *w, void *data) {
+			MainLoop::getInstance().remove(w);
+		}
+
+		static void toggle_watch(DBusWatch *w, DBusConnection *conn) {
+
+			if (dbus_watch_get_enabled(w))
+				add_watch(w, conn);
+			else
+				remove_watch(w, conn);
+
+		}
 
 		Connection::Connection(DBusBusType type) {
 
@@ -31,6 +91,18 @@
 			error.test();
 
 			dbus_connection_set_exit_on_disconnect(connct, false);
+
+			if(!dbus_connection_set_watch_functions(
+						connct,
+						(DBusAddWatchFunction)		add_watch,
+						(DBusRemoveWatchFunction)	remove_watch,
+						(DBusWatchToggledFunction)	toggle_watch,
+						connct,
+						NULL
+					)) {
+
+				throw runtime_error("Error setting watch calls");
+			}
 
 			if (dbus_connection_add_filter(connct, (DBusHandleMessageFunction) filter, this, NULL) == FALSE) {
 				dbus_connection_unref(connct);
@@ -71,59 +143,6 @@
 			return *this;
 		}
 
-
-		DBusHandlerResult Connection::filter(DBusConnection *connection, DBusMessage *message, Connection *controller) noexcept {
-
-			/*
-			if(dbus_message_get_type(message) != DBUS_MESSAGE_TYPE_SIGNAL) {
-				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-			}
-
-			std::lock_guard<std::recursive_mutex> lock(mtx);
-
-			const char *member		= dbus_message_get_member(message);
-			const char *interface	= dbus_message_get_interface(message);
-			for(auto intf : obj->interfaces) {
-
-				if(strcmp(intf->c_str(),interface)) {
-					continue;
-				}
-
-				for(auto memb : intf->members) {
-
-					if(strcmp(memb.c_str(),member)) {
-						debug("Ignorando membro %s",memb.c_str());
-						continue;
-					}
-
-					// Achei o membro, executa!
-					try {
-
-						_msg req(message);
-						debug("Executando sinal \"%s.%s\"",interface,member);
-						memb.call(req);
-						return DBUS_HANDLER_RESULT_HANDLED;
-
-					} catch( const std::exception &e ) {
-
-						error("%s.%s: %s",interface,member,e.what());
-						return DBUS_HANDLER_RESULT_HANDLED;
-
-					} catch( ... ) {
-
-						error("%s.%s: %s",interface,member,"Erro inesperado");
-						return DBUS_HANDLER_RESULT_HANDLED;
-
-					}
-				}
-
-			}
-
-			*/
-
-			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-
-		}
 
 	}
 

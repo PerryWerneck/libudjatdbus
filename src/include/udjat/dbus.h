@@ -24,10 +24,13 @@
  #include <dbus/dbus.h>
  #include <stdexcept>
  #include <string>
+ #include <list>
 
  namespace Udjat {
 
 	namespace DBus {
+
+		class Connection;
 
 		class UDJAT_API Error : public DBusError {
 		public:
@@ -54,6 +57,31 @@
 			}
 		};
 
+		/// @brief D-Bus worker.
+		class UDJAT_API Worker {
+		protected:
+
+			/// @brief Message type (from dbus_message_get_type)
+			int type = -1;
+
+			/// @brief Member (from dbus_message_get_member)
+			const char *member = nullptr;
+
+			/// @brief Interface (from dbus_message_get_interface);
+			const char *interface = nullptr;
+
+		public:
+			Worker();
+			virtual ~Worker();
+
+			/// @brief Check if the worker is assigned to the message.
+			bool equal(const DBusMessage *message);
+
+			/// @brief Process message
+			void work(Connection *controller, DBusMessage *message);
+
+		};
+
 		/// @brief D-Bus Connection.
 		class UDJAT_API Connection {
 		private:
@@ -62,6 +90,8 @@
 
 			static DBusHandlerResult filter(DBusConnection *connection, DBusMessage *message, Connection *connct) noexcept;
 
+			std::list<Worker *> workers;
+
 		public:
 			Connection(DBusBusType type);
 			~Connection();
@@ -69,6 +99,8 @@
 			/// @brief Asks the bus to assign the given name to this connection by invoking the RequestName method on the bus.
 			Connection & request(const char *name, unsigned int flags = DBUS_NAME_FLAG_REPLACE_EXISTING);
 
+			void insert(Worker *worker);
+			void remove(Worker *worker);
 		};
 
 		/// @brief D-Bus value.

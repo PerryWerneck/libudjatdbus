@@ -17,10 +17,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+ // https://stackoverflow.com/questions/9378593/dbuswatch-and-dbustimeout-examples
 
  #include <config.h>
  #include <udjat/dbus.h>
  #include <udjat/module.h>
+ #include <iostream>
 
  using namespace std;
 
