@@ -28,10 +28,10 @@
 	}
 
 	DBus::Value::~Value() {
-		reset()
+		reset(Value::Type::Undefined);
 	}
 
-	Udjat::Value & reset(const Type unused) {
+	Udjat::Value & DBus::Value::reset(const Value::Type unused) {
 
 		if(type == DBUS_TYPE_STRING && value.str) {
 			free(value.str);
@@ -44,66 +44,66 @@
 	}
 
 	Udjat::Value & DBus::Value::set(const char *value, const Type type) {
-		reset();
+		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_STRING;
 		this->value.str = strdup(value);
 	}
 
 	Udjat::Value & DBus::Value::set(const short value) {
-		reset();
+		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_INT16;
 		this->value.i16 = value;
 	}
 
 	Udjat::Value & DBus::Value::set(const unsigned short value) {
-		reset();
+		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_UINT16;
 		this->value.u16 = value;
 	}
 
 	Udjat::Value & DBus::Value::set(const int value) {
-		reset();
+		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_INT32;
 		this->value.i32 = value;
 	}
 
 	Udjat::Value & DBus::Value::set(const unsigned int value) {
-		reset();
+		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_UINT32;
 		this->value.u32 = value;
 	}
 
 	Udjat::Value & DBus::Value::set(const long value) {
-		reset();
+		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_INT64;
 		this->value.i64 = value;
 	}
 
 	Udjat::Value & DBus::Value::set(const unsigned long value) {
-		reset();
+		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_UINT64;
 		this->value.u64 = value;
 	}
 
 	Udjat::Value & DBus::Value::set(const TimeStamp value) {
-		reset();
+		reset(Value::Type::Undefined);
 		set(value.to_string().c_str());
 	}
 
 	Udjat::Value & DBus::Value::set(const bool value) {
-		reset();
+		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_BOOLEAN;
 		this->value.bool_val = value;
 	}
 
 	Udjat::Value & DBus::Value::set(const float value) {
-		reset();
+		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_DOUBLE;
 		this->value.dbl = value;
 	}
 
 	Udjat::Value & DBus::Value::set(const double value) {
-		reset();
+		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_DOUBLE;
 		this->value.dbl = value;
 	}

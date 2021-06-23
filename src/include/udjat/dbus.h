@@ -22,11 +22,56 @@
  #include <udjat/defs.h>
  #include <udjat/tools/value.h>
  #include <dbus/dbus.h>
+ #include <stdexcept>
+ #include <string>
 
  namespace Udjat {
 
 	namespace DBus {
 
+		class UDJAT_API Error : public DBusError {
+		public:
+			Error() {
+				dbus_error_init(this);
+			}
+
+			~Error() {
+				dbus_error_free(this);
+			}
+
+			void clear() {
+				dbus_error_free(this);
+			}
+
+			operator bool() {
+				return dbus_error_is_set(this);
+			}
+
+			void test() {
+				if(dbus_error_is_set(this)) {
+					throw std::runtime_error(this->message);
+				}
+			}
+		};
+
+		/// @brief D-Bus Connection.
+		class UDJAT_API Connection {
+		private:
+			DBusConnection	* connct;
+			std::string		  name;
+
+			static DBusHandlerResult filter(DBusConnection *connection, DBusMessage *message, Connection *connct) noexcept;
+
+		public:
+			Connection(DBusBusType type);
+			~Connection();
+
+			/// @brief Asks the bus to assign the given name to this connection by invoking the RequestName method on the bus.
+			Connection & request(const char *name, unsigned int flags = DBUS_NAME_FLAG_REPLACE_EXISTING);
+
+		};
+
+		/// @brief D-Bus value.
 		class UDJAT_API Value : public Udjat::Value {
 		private:
 			int type;
@@ -51,7 +96,6 @@
 			Udjat::Value & set(const double value) override;
 
 		};
-
 
 	}
 

@@ -17,39 +17,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #include "private.h"
 
- #ifdef DEBUG
-	#define BUSTYPE DBUS_BUS_SESSION
- #else
-	#define BUSTYPE DBUS_BUS_SYSTEM
- #endif // DEBUG
+ #include <config.h>
+ #include <udjat/dbus.h>
+ #include <udjat/module.h>
+
+ using namespace std;
 
  namespace Udjat {
 
-	 static const Udjat::ModuleInfo moduleinfo{
-		PACKAGE_NAME,								// The module name.
-		"D-Bus module exporter", 					// The module description.
-		PACKAGE_VERSION, 							// The module version.
-		PACKAGE_URL, 								// The package URL.
-		PACKAGE_BUGREPORT 							// The bug report address.
-	 };
+	namespace DBus {
 
- 	DBus::Controller::Controller() : Udjat::Module("d-bus",&moduleinfo), DBus::Connection(BUSTYPE) {
+		class Controller : public Udjat::Module, private DBus::Connection {
+		public:
+			Controller();
+			~Controller();
 
- 		request("br.eti.werneck.udjat");
-
- 	};
-
-	DBus::Controller::~Controller() {
- 	};
+		};
+	}
 
  }
-
-
- /// @brief Register udjat module.
- Udjat::Module * udjat_module_init() {
-	return new Udjat::DBus::Controller();
- }
-
-

@@ -30,14 +30,17 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="`pkg-config --cflags libudjat`" />
+			<Add option="`pkg-config --cflags libudjat dbus-1`" />
 			<Add directory="src/include" />
 		</Compiler>
 		<Linker>
-			<Add option="`pkg-config --libs libudjat`" />
+			<Add option="`pkg-config --libs libudjat dbus-1`" />
 		</Linker>
+		<Unit filename="src/include/config.h" />
 		<Unit filename="src/include/udjat/dbus.h" />
+		<Unit filename="src/module/connection.cc" />
 		<Unit filename="src/module/init.cc" />
+		<Unit filename="src/module/private.h" />
 		<Unit filename="src/module/value.cc" />
 		<Unit filename="src/testprogram/testprogram.cc" />
 		<Extensions />
