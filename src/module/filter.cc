@@ -18,6 +18,7 @@
  */
 
  #include "private.h"
+ #include <udjat/worker.h>
 
  namespace Udjat {
 
@@ -27,6 +28,9 @@
 
 			DBusHandlerResult rc = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
+			//
+			// First search for internal workers.
+			//
 			for(auto worker : controller->workers) {
 
 				if(worker->equal(message)) {
@@ -55,6 +59,49 @@
 				}
 
 			}
+
+			//
+			// Not found on internal workers, try libudjat ones
+			//
+			/*
+			static const char *interface = "br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".";
+			if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_METHOD_CALL && !strcasecmp(dbus_message_get_interface(message),interface)) {
+
+				try {
+
+					const char *ptr = dbus_message_get_interface(message) + strlen(interface);
+
+#ifdef DEBUG
+					cout << "Requested interface: '" << ptr << "'" << endl;
+#endif // DEBUG
+
+					if(!*ptr) {
+						throw runtime_error("The interface doesn't have the worker name");
+					}
+
+					DBus::Request request(message);
+					DBus::Response response(this);
+
+					if(work(ptr, request, response)) {
+						response.send();
+					} else {
+						throw runtime_error("The requested method is not allowed");
+					}
+
+				} catch(const exception &e) {
+
+					cerr << "D-Bus\t" << e.what() << endl;
+
+					DBusMessage * rsp = dbus_message_new_error(message,DBUS_ERROR_FAILED,e.what());
+					dbus_connection_send(connection, rsp, NULL);
+					dbus_message_unref(rsp);
+
+				}
+
+				rc = DBUS_HANDLER_RESULT_HANDLED;
+
+			}
+*/
 
 			return rc;
 

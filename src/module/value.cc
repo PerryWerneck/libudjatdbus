@@ -41,71 +41,82 @@
 		type = DBUS_TYPE_BOOLEAN;
 		value.bool_val = 0;
 
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const char *value, const Type type) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_STRING;
 		this->value.str = strdup(value);
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const short value) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_INT16;
 		this->value.i16 = value;
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const unsigned short value) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_UINT16;
 		this->value.u16 = value;
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const int value) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_INT32;
 		this->value.i32 = value;
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const unsigned int value) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_UINT32;
 		this->value.u32 = value;
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const long value) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_INT64;
 		this->value.i64 = value;
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const unsigned long value) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_UINT64;
 		this->value.u64 = value;
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const TimeStamp value) {
 		reset(Value::Type::Undefined);
-		set(value.to_string().c_str());
+		return set(value.to_string().c_str());
 	}
 
 	Udjat::Value & DBus::Value::set(const bool value) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_BOOLEAN;
 		this->value.bool_val = value;
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const float value) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_DOUBLE;
 		this->value.dbl = value;
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const double value) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_DOUBLE;
 		this->value.dbl = value;
+		return *this;
 	}
 
  }

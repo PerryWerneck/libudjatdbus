@@ -21,6 +21,7 @@
 
  #include <udjat/defs.h>
  #include <udjat/tools/value.h>
+ #include <udjat/request.h>
  #include <dbus/dbus.h>
  #include <stdexcept>
  #include <string>
@@ -31,6 +32,32 @@
 	namespace DBus {
 
 		class Connection;
+
+		/// @brief D-Bus value.
+		class UDJAT_API Value : public Udjat::Value {
+		private:
+			int type;
+			DBusBasicValue value;
+
+		public:
+			Value();
+			~Value();
+
+			Udjat::Value & reset(const Type type) override;
+
+			Udjat::Value & set(const char *value, const Type type) override;
+			Udjat::Value & set(const short value) override;
+			Udjat::Value & set(const unsigned short value) override;
+			Udjat::Value & set(const int value) override;
+			Udjat::Value & set(const unsigned int value) override;
+			Udjat::Value & set(const long value) override;
+			Udjat::Value & set(const unsigned long value) override;
+			Udjat::Value & set(const TimeStamp value) override;
+			Udjat::Value & set(const bool value) override;
+			Udjat::Value & set(const float value) override;
+			Udjat::Value & set(const double value) override;
+
+		};
 
 		class UDJAT_API Error : public DBusError {
 		public:
@@ -57,6 +84,34 @@
 			}
 		};
 
+		/// @brief D-Bus request.
+		class Request : public Udjat::Request {
+		public:
+			Request(DBusMessage *message);
+			virtual ~Request();
+
+		};
+
+		/// @brief D-Bus response.
+		class Response : public Udjat::Response {
+		private:
+			Connection *connct;
+
+		public:
+			Response(Connection *connct);
+			virtual ~Response();
+
+			void send();
+
+			bool isNull() const override;
+			Udjat::Value & operator[](const char *name) override;
+			Udjat::Value & append(const Type type = Object) override;
+			Udjat::Value & reset(const Type type = Undefined) override;
+			Udjat::Value & set(const Value &value) override;
+			Udjat::Value & set(const char *value, const Type type = String) override;
+
+		};
+
 		/// @brief D-Bus worker.
 		class UDJAT_API Worker {
 		protected:
@@ -75,7 +130,10 @@
 			virtual ~Worker();
 
 			/// @brief Check if the worker is assigned to the message.
-			bool equal(const DBusMessage *message);
+			bool equal(DBusMessage *message);
+
+			/// @brief Execute request.
+			virtual void work(DBus::Request &request, DBus::Response &response);
 
 			/// @brief Process message
 			void work(Connection *controller, DBusMessage *message);
@@ -101,32 +159,6 @@
 
 			void insert(Worker *worker);
 			void remove(Worker *worker);
-		};
-
-		/// @brief D-Bus value.
-		class UDJAT_API Value : public Udjat::Value {
-		private:
-			int type;
-			DBusBasicValue value;
-
-		public:
-			Value();
-			~Value();
-
-			Udjat::Value & reset(const Type type) override;
-
-			Udjat::Value & set(const char *value, const Type type) override;
-			Udjat::Value & set(const short value) override;
-			Udjat::Value & set(const unsigned short value) override;
-			Udjat::Value & set(const int value) override;
-			Udjat::Value & set(const unsigned int value) override;
-			Udjat::Value & set(const long value) override;
-			Udjat::Value & set(const unsigned long value) override;
-			Udjat::Value & set(const TimeStamp value) override;
-			Udjat::Value & set(const bool value) override;
-			Udjat::Value & set(const float value) override;
-			Udjat::Value & set(const double value) override;
-
 		};
 
 	}

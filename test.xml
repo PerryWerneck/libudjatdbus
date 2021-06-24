@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<config>
+
+	<agent name='intvalue' type='integer' value='0'>
+
+	</agent>
+
+</config>
+

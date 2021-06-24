@@ -31,8 +31,11 @@
 	Logger::redirect(nullptr,true);
 
 	auto module = udjat_module_init();
+	auto agent = Abstract::Agent::init("${PWD}/test.xml");
 
 	Udjat::run();
+
+	Abstract::Agent::deinit();
 
 	cout << "Removing module" << endl;
 	delete module;

@@ -17,25 +17,47 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- // https://stackoverflow.com/questions/9378593/dbuswatch-and-dbustimeout-examples
-
- #include <config.h>
- #include <udjat/dbus.h>
- #include <udjat/module.h>
- #include <iostream>
-
- using namespace std;
+ #include "private.h"
 
  namespace Udjat {
 
 	namespace DBus {
 
-		class Controller : public Udjat::Module, private DBus::Connection {
-		public:
-			Controller();
-			~Controller();
+		Worker::Worker() {
+		}
 
-		};
+		Worker::~Worker() {
+		}
+
+		bool Worker::equal(DBusMessage *message) {
+
+			if(type != -1 && type != dbus_message_get_type(message))
+				return false;
+
+			if(member && strcasecmp(member,dbus_message_get_member(message)) != 0)
+				return false;
+
+			if(interface && strcasecmp(interface,dbus_message_get_interface(message)) != 0)
+				return false;
+
+			return true;
+		}
+
+		void Worker::work(DBus::Request &request, DBus::Response &response) {
+			throw runtime_error("Can't execute worker");
+		}
+
+		/// @brief Process message
+		void Worker::work(Connection *controller, DBusMessage *message) {
+
+			DBus::Request request(message);
+			DBus::Response response(controller);
+
+			work(request,response);
+
+			response.send();
+
+		}
 
 	}
 
