@@ -83,6 +83,34 @@
 
 		}
 
+		static dbus_bool_t add_timeout(DBusTimeout *timeout, void *data) {
+
+			if (!dbus_timeout_get_enabled(timeout))
+				return TRUE;
+
+			MainLoop::getInstance().insert(
+				timeout,
+				(unsigned long) dbus_timeout_get_interval(timeout),
+				[timeout]() {
+					dbus_timeout_handle(timeout);
+					return true;
+				}
+			);
+
+			return TRUE;
+		}
+
+		static void remove_timeout(DBusTimeout *t, void *data) {
+			MainLoop::getInstance().remove(t);
+		}
+
+		static void toggle_timeout(DBusTimeout *t, void *data) {
+			if (dbus_timeout_get_enabled(t))
+				add_timeout(t, data);
+			else
+				remove_timeout(t, data);
+		}
+
 		Connection::Connection(DBusBusType type) {
 
 			Error error;
@@ -93,15 +121,26 @@
 			dbus_connection_set_exit_on_disconnect(connct, false);
 
 			if(!dbus_connection_set_watch_functions(
-						connct,
-						(DBusAddWatchFunction)		add_watch,
-						(DBusRemoveWatchFunction)	remove_watch,
-						(DBusWatchToggledFunction)	toggle_watch,
-						connct,
-						NULL
-					)) {
+					connct,
+					(DBusAddWatchFunction)		add_watch,
+					(DBusRemoveWatchFunction)	remove_watch,
+					(DBusWatchToggledFunction)	toggle_watch,
+					connct,
+					NULL
+				)) {
 
 				throw runtime_error("Error setting watch calls");
+			}
+
+			if (!dbus_connection_set_timeout_functions(
+					connct,
+					add_timeout,
+					remove_timeout,
+					toggle_timeout,
+					connct,
+					NULL
+			)) {
+				throw runtime_error("Error setting timeout calls");
 			}
 
 			if (dbus_connection_add_filter(connct, (DBusHandleMessageFunction) filter, this, NULL) == FALSE) {
