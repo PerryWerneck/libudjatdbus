@@ -88,10 +88,19 @@
 			if (!dbus_timeout_get_enabled(timeout))
 				return TRUE;
 
+#ifdef DEBUG
+			cout << __FUNCTION__ << "(" << timeout << "," << dbus_timeout_get_interval(timeout) << ")" << endl;
+#endif // DEBUG
+
 			MainLoop::getInstance().insert(
 				timeout,
 				(unsigned long) dbus_timeout_get_interval(timeout),
 				[timeout]() {
+
+#ifdef DEBUG
+					cout << "handle(" << timeout << ")" << endl;
+#endif // DEBUG
+
 					dbus_timeout_handle(timeout);
 					return true;
 				}
@@ -100,8 +109,13 @@
 			return TRUE;
 		}
 
-		static void remove_timeout(DBusTimeout *t, void *data) {
-			MainLoop::getInstance().remove(t);
+		static void remove_timeout(DBusTimeout *timeout, void *data) {
+
+#ifdef DEBUG
+			cout << __FUNCTION__ << "(" << timeout << ")" << endl;
+#endif // DEBUG
+
+			MainLoop::getInstance().remove(timeout);
 		}
 
 		static void toggle_timeout(DBusTimeout *t, void *data) {

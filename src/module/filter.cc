@@ -28,6 +28,11 @@
 
 			DBusHandlerResult rc = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
+#ifdef DEBUG
+			cout	<< "Member:    " << dbus_message_get_member(message) << endl
+					<< "Interface: " << dbus_message_get_interface(message) << endl;
+#endif // DEBUG
+
 			//
 			// First search for internal workers.
 			//

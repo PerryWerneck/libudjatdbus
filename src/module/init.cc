@@ -37,7 +37,7 @@
 
  	DBus::Controller::Controller() : Udjat::Module("d-bus",&moduleinfo), DBus::Connection(BUSTYPE) {
 
- 		request("br.eti.werneck.udjat");
+ 		request("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME));
 
  	};
 
