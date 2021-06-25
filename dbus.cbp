@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output=".bin/Debug/UDJAT Module D-Bus" prefix_auto="1" extension_auto="1" />
+				<Option output=".bin/Debug/udjat-test" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -33,10 +33,12 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="`pkg-config --cflags libudjat dbus-1`" />
+			<Add option="-pthread" />
 			<Add directory="src/include" />
 		</Compiler>
 		<Linker>
 			<Add option="`pkg-config --libs libudjat dbus-1`" />
+			<Add option="-pthread" />
 		</Linker>
 		<Unit filename="src/include/config.h" />
 		<Unit filename="src/include/udjat/dbus.h" />
@@ -46,6 +48,7 @@
 		<Unit filename="src/module/private.h" />
 		<Unit filename="src/module/request.cc" />
 		<Unit filename="src/module/response.cc" />
+		<Unit filename="src/module/udjatworker.cc" />
 		<Unit filename="src/module/value.cc" />
 		<Unit filename="src/module/worker.cc" />
 		<Unit filename="src/testprogram/testprogram.cc" />

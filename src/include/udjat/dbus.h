@@ -27,6 +27,8 @@
  #include <string>
  #include <list>
  #include <map>
+ #include <mutex>
+ #include <thread>
 
  namespace Udjat {
 
@@ -102,7 +104,7 @@
 		class Request : public Udjat::Request {
 		private:
 			DBusMessage *message;
-			DBusMessageIter *iter;
+			DBusMessageIter iter;
 
 			int pop(DBusBasicValue &value);
 
@@ -168,7 +170,19 @@
 		/// @brief D-Bus Connection.
 		class UDJAT_API Connection {
 		private:
-			DBusConnection	* connct;
+
+			/// @brief Mutex for serialization.
+			std::recursive_mutex guard;
+
+			/// @brief D-Bus connection mainloop.
+			std::thread		* mainloop = nullptr;
+
+			/// @brief Dispatcher
+			// static dispatcher(Connection *connct);
+
+			/// @brief D-Bus connection handle.
+			DBusConnection	* connct = NULL;
+
 			std::string		  name;
 
 			static DBusHandlerResult filter(DBusConnection *connection, DBusMessage *message, Connection *connct) noexcept;

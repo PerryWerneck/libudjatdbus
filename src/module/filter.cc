@@ -50,19 +50,36 @@
 				}
 
 				//
-				// Do we have any libudjat worker for this interface?
+				// Search for modules.
 				//
-				if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_METHOD_CALL) {
-					static const char *interface = "br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".";
-					size_t intflen = strlen(interface);
+				{
+					const Udjat::Worker * worker = Udjat::getWorker(message);
+					if(worker) {
 
-					if(strncasecmp(dbus_message_get_interface(message),interface,intflen) == 0) {
+						DBus::Request request(message);
+						DBus::Response response(controller);
 
-						const char * worker = dbus_message_get_interface(message) + intflen;
+						if(request == "get") {
 
-						cout << "Requested worker: '" << worker << "'" << endl;
+#ifdef DEBUG
+							cout << "Getting value & state" << endl;
+#endif // DEBUG
+							worker->get(request,response);
 
+						} else if(request == "info") {
 
+#ifdef DEBUG
+							cout << "Getting module information" << endl;
+#endif // DEBUG
+							worker->getInfo(response);
+
+						} else {
+
+							return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+						}
+
+						return DBUS_HANDLER_RESULT_HANDLED;
 					}
 
 				}

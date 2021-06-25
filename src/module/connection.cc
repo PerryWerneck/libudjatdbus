@@ -18,172 +18,85 @@
  */
 
  #include "private.h"
- #include <udjat/tools/mainloop.h>
 
  namespace Udjat {
 
 	namespace DBus {
 
-		static dbus_bool_t add_watch(DBusWatch *watch, DBusConnection *conn) {
-
-			unsigned int flags = dbus_watch_get_flags(watch);
-
-			int event = 0;
-
-			if (flags & DBUS_WATCH_READABLE)
-				event |= MainLoop::oninput;
-
-			if (flags & DBUS_WATCH_WRITABLE)
-				event |= MainLoop::onoutput;
-
-			MainLoop::getInstance().insert(
-				watch,
-				dbus_watch_get_unix_fd(watch),
-				(MainLoop::Event) event,
-				[watch, conn](const MainLoop::Event events) {
-
-					unsigned int flags = 0;
-
-					if (events & MainLoop::oninput)
-						flags |= DBUS_WATCH_READABLE;
-
-					if (events & MainLoop::onoutput)
-						flags |= DBUS_WATCH_WRITABLE;
-
-					if (events & MainLoop::onhangup)
-						flags |= DBUS_WATCH_HANGUP;
-
-					if (events & MainLoop::onerror)
-						flags |= DBUS_WATCH_ERROR;
-
-					if (dbus_watch_handle(watch, flags) == FALSE) {
-						cerr << "Error dbus_watch_handle() failed" << endl;
-					}
-
-					while (dbus_connection_get_dispatch_status(conn) == DBUS_DISPATCH_DATA_REMAINS)
-						dbus_connection_dispatch(conn);
-
-					return true;
-				}
-			);
-
-			return TRUE;
-		}
-
-		static void remove_watch(DBusWatch *w, void *data) {
-			MainLoop::getInstance().remove(w);
-		}
-
-		static void toggle_watch(DBusWatch *w, DBusConnection *conn) {
-
-			if (dbus_watch_get_enabled(w))
-				add_watch(w, conn);
-			else
-				remove_watch(w, conn);
-
-		}
-
-		static dbus_bool_t add_timeout(DBusTimeout *timeout, void *data) {
-
-			if (!dbus_timeout_get_enabled(timeout))
-				return TRUE;
-
-#ifdef DEBUG
-			cout << __FUNCTION__ << "(" << timeout << "," << dbus_timeout_get_interval(timeout) << ")" << endl;
-#endif // DEBUG
-
-			MainLoop::getInstance().insert(
-				timeout,
-				(unsigned long) dbus_timeout_get_interval(timeout),
-				[timeout]() {
-
-#ifdef DEBUG
-					cout << "handle(" << timeout << ")" << endl;
-#endif // DEBUG
-
-					dbus_timeout_handle(timeout);
-					return true;
-				}
-			);
-
-			return TRUE;
-		}
-
-		static void remove_timeout(DBusTimeout *timeout, void *data) {
-
-#ifdef DEBUG
-			cout << __FUNCTION__ << "(" << timeout << ")" << endl;
-#endif // DEBUG
-
-			MainLoop::getInstance().remove(timeout);
-		}
-
-		static void toggle_timeout(DBusTimeout *t, void *data) {
-			if (dbus_timeout_get_enabled(t))
-				add_timeout(t, data);
-			else
-				remove_timeout(t, data);
-		}
-
 		Connection::Connection(DBusBusType type) {
 
 			Error error;
+
+			lock_guard<recursive_mutex> lock(guard);
 
 			connct = dbus_bus_get(type,&error);
 			error.test();
 
 			dbus_connection_set_exit_on_disconnect(connct, false);
 
-			if(!dbus_connection_set_watch_functions(
-					connct,
-					(DBusAddWatchFunction)		add_watch,
-					(DBusRemoveWatchFunction)	remove_watch,
-					(DBusWatchToggledFunction)	toggle_watch,
-					connct,
-					NULL
-				)) {
-
-				throw runtime_error("Error setting watch calls");
-			}
-
-			if (!dbus_connection_set_timeout_functions(
-					connct,
-					add_timeout,
-					remove_timeout,
-					toggle_timeout,
-					connct,
-					NULL
-			)) {
-				throw runtime_error("Error setting timeout calls");
-			}
-
 			if (dbus_connection_add_filter(connct, (DBusHandleMessageFunction) filter, this, NULL) == FALSE) {
 				dbus_connection_unref(connct);
 				throw runtime_error("Unable to add signal filter");
 			}
 
+			mainloop = new thread([this]() {
+
+				DBusConnection * c = this->connct;
+
+				{
+					lock_guard<recursive_mutex> lock(guard);
+					dbus_connection_ref(c);
+				}
+
+				while(this->connct && dbus_connection_read_write(c,500)) {
+
+					lock_guard<recursive_mutex> lock(guard);
+					while(dbus_connection_get_dispatch_status(c) == DBUS_DISPATCH_DATA_REMAINS) {
+						dbus_connection_dispatch(c);
+					}
+
+				}
+
+				{
+					lock_guard<recursive_mutex> lock(guard);
+					dbus_connection_unref(c);
+				}
+
+			});
+
 		}
 
 		Connection::~Connection() {
 
-			dbus_connection_remove_filter(connct,(DBusHandleMessageFunction) filter, this);
+			{
+				lock_guard<recursive_mutex> lock(guard);
+				dbus_connection_remove_filter(connct,(DBusHandleMessageFunction) filter, this);
 
-			if(!name.empty()) {
+				if(!name.empty()) {
 
-				Error error;
-				dbus_bus_release_name(connct,name.c_str(),&error);
+					Error error;
+					dbus_bus_release_name(connct,name.c_str(),&error);
 
-				if(error) {
-					cerr << error.message << endl;
+					if(error) {
+						cerr << error.message << endl;
+					}
+
 				}
 
+				dbus_connection_unref(connct);
+				connct = nullptr;
 			}
 
-			dbus_connection_unref(connct);
+			// Wait for mainloop to end.
+			cout << "d-bus\tWaiting for connection to finish" << endl;
+			mainloop->join();
+			delete mainloop;
 
 		}
 
 		Connection & Connection::request(const char *name, unsigned int flags) {
+
+			lock_guard<recursive_mutex> lock(guard);
 
 			if(!this->name.empty()) {
 				throw std::system_error(EBUSY, std::system_category(), "This connection already has a name");

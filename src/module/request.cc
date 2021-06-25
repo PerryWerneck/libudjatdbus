@@ -24,10 +24,10 @@
 	DBus::Request::Request(DBusMessage *message) {
 
 		this->message = message;
-		this->name = dbus_message_get_member(message);
+		this->method = dbus_message_get_member(message);
 		dbus_message_ref(message);
 
-		dbus_message_iter_init(message, iter);
+		dbus_message_iter_init(message, &iter);
 
 	}
 
@@ -37,14 +37,14 @@
 
 	int DBus::Request::pop(DBusBasicValue &value) {
 
-		int type = dbus_message_iter_get_arg_type(iter);
+		int type = dbus_message_iter_get_arg_type(&iter);
 		if(type == DBUS_TYPE_INVALID) {
 			throw system_error(ENODATA,system_category(),"Not enough arguments");
 		}
 
-		dbus_message_iter_get_basic(iter,&value);
+		dbus_message_iter_get_basic(&iter,&value);
 
-		dbus_message_iter_next(iter);
+		dbus_message_iter_next(&iter);
 		return type;
 	}
 

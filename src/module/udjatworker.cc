@@ -17,31 +17,40 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- // https://stackoverflow.com/questions/9378593/dbuswatch-and-dbustimeout-examples
-
- #include <config.h>
- #include <udjat/dbus.h>
- #include <udjat/module.h>
- #include <udjat/worker.h>
- #include <iostream>
- #include <system_error>
-
- using namespace std;
+ #include "private.h"
 
  namespace Udjat {
 
-	/// @brief Get Udjat Worker from interface.
-	/// @return Worker (or nullptr if not available or error).
-	const Worker * getWorker(DBusMessage *message);
+	const Worker * getWorker(DBusMessage *message) {
 
-	namespace DBus {
+		if(dbus_message_get_type(message) != DBUS_MESSAGE_TYPE_METHOD_CALL) {
+			return nullptr;
+		}
 
-		class Controller : public Udjat::Module, private DBus::Connection {
-		public:
-			Controller();
-			~Controller();
+		static const char *interface = "br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".";
+		size_t intflen = strlen(interface);
 
-		};
+		if(strncasecmp(dbus_message_get_interface(message),interface,intflen)) {
+			return nullptr;
+		}
+
+		const char * worker = dbus_message_get_interface(message) + intflen;
+
+#ifdef DEBUG
+		cout << "Requested worker: '" << worker << "'" << endl;
+#endif // DEBUG
+
+		try {
+
+			return Udjat::Worker::find(worker);
+
+		} catch(...) {
+
+			// Ignore exceptions.
+
+		}
+
+		return nullptr;
 
 	}
 
