@@ -86,9 +86,19 @@
 
 		/// @brief D-Bus request.
 		class Request : public Udjat::Request {
+		private:
+			DBusMessage *message;
+			DBusMessageIter *iter;
+
+			int pop(DBusBasicValue &value);
+
 		public:
 			Request(DBusMessage *message);
 			virtual ~Request();
+
+			std::string pop() override;
+			Udjat::Request & pop(int &value) override;
+			Udjat::Request & pop(unsigned int &value) override;
 
 		};
 
