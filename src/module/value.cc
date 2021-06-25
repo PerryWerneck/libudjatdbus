@@ -17,29 +17,67 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+ #include "private.h"
  #include <udjat/dbus.h>
  #include <cstring>
 
  namespace Udjat {
 
 	DBus::Value::Value() {
-		type = DBUS_TYPE_BOOLEAN;
-		value.bool_val = 0;
+		type = DBUS_TYPE_INVALID;
+		memset(&value,0,sizeof(value));
 	}
 
 	DBus::Value::~Value() {
 		reset(Value::Type::Undefined);
 	}
 
-	Udjat::Value & DBus::Value::reset(const Value::Type unused) {
+	bool DBus::Value::isNull() const {
+		return type == DBUS_TYPE_INVALID;
+	}
+
+	Udjat::Value & DBus::Value::append(const Type type) {
+		throw system_error(ENOTSUP,system_category(),"Cant append value");
+	}
+
+	Udjat::Value & DBus::Value::set(const Udjat::Value &value) {
+		throw system_error(ENOTSUP,system_category(),"Cant set value");
+	}
+
+	Udjat::Value & DBus::Value::operator[](const char *name) {
+
+		reset();
+		type = DBUS_TYPE_DICT_ENTRY;
+
+		auto search = children.find(name);
+		if(search != children.end()) {
+			return *search->second;
+		}
+
+		Value * rc = new DBus::Value();
+
+		children[name] = rc;
+
+		return *rc;
+
+	}
+
+	Udjat::Value & DBus::Value::reset(const Udjat::Value::Type unused) {
 
 		if(type == DBUS_TYPE_STRING && value.str) {
 			free(value.str);
 			value.str = NULL;
 		}
 
-		type = DBUS_TYPE_BOOLEAN;
-		value.bool_val = 0;
+		type = DBUS_TYPE_INVALID;
+		memset(&value,0,sizeof(value));
+
+		// cleanup children.
+		for(auto child : children) {
+			delete child.second;
+		}
+
+		children.clear();
 
 		return *this;
 	}

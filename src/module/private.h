@@ -23,6 +23,7 @@
  #include <udjat/dbus.h>
  #include <udjat/module.h>
  #include <iostream>
+ #include <system_error>
 
  using namespace std;
 

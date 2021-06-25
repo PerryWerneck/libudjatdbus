@@ -1,0 +1,64 @@
+/* SPDX-License-Identifier: LGPL-3.0-or-later */
+
+/*
+ * Copyright (C) 2021 Perry Werneck <perry.werneck@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+ #include "private.h"
+
+ namespace Udjat {
+
+	DBus::Response::Response(Connection *c) : connct(c) {
+
+	}
+
+	DBus::Response::~Response() {
+	}
+
+	void DBus::Response::send() {
+	}
+
+	bool DBus::Response::isNull() const {
+		return value.isNull();
+	}
+
+	Udjat::Value & DBus::Response::reset(const Udjat::Value::Type type) {
+		value.reset(type);
+		return *this;
+	}
+
+	Udjat::Value & DBus::Response::operator[](const char *name) {
+		return value[name];
+	}
+
+	Udjat::Value & DBus::Response::append(const Type type) {
+		throw system_error(ENOTSUP,system_category(),"Cant add value by type");
+		return *this;
+	}
+
+	Udjat::Value & DBus::Response::set(const Value &value) {
+		throw system_error(ENOTSUP,system_category(),"Cant set value");
+		return *this;
+	}
+
+	Udjat::Value & DBus::Response::set(const char *value, const Type type) {
+		throw system_error(ENOTSUP,system_category(),"Cant set value by type");
+		return *this;
+	}
+
+
+ }
+

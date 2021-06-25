@@ -26,6 +26,7 @@
  #include <stdexcept>
  #include <string>
  #include <list>
+ #include <map>
 
  namespace Udjat {
 
@@ -38,12 +39,25 @@
 		private:
 			int type;
 			DBusBasicValue value;
+			std::map<std::string,Value *> children;
 
 		public:
 			Value();
-			~Value();
+			virtual ~Value();
 
-			Udjat::Value & reset(const Type type) override;
+			/// @brief The value has children?
+			inline bool empty() const noexcept {
+				return children.empty();
+			}
+
+			Udjat::Value & reset(const Udjat::Value::Type type = Udjat::Value::Undefined) override;
+
+			bool isNull() const override;
+
+			Udjat::Value & operator[](const char *name) override;
+
+			Udjat::Value & append(const Type type) override;
+			Udjat::Value & set(const Udjat::Value &value) override;
 
 			Udjat::Value & set(const char *value, const Type type) override;
 			Udjat::Value & set(const short value) override;
@@ -105,6 +119,7 @@
 		/// @brief D-Bus response.
 		class Response : public Udjat::Response {
 		private:
+			DBus::Value value;
 			Connection *connct;
 
 		public:
