@@ -50,12 +50,16 @@
 		/// @brief Process message
 		void Worker::work(Connection *controller, DBusMessage *message) {
 
+			/*
 			DBus::Request request(message);
 			DBus::Response response(controller);
 
 			work(request,response);
 
-			response.send();
+			DBusMessage * reply = dbus_message_new_method_return(message);
+			response.get(reply);
+			dbus_connection_send(connection, reply, NULL);
+			*/
 
 		}
 

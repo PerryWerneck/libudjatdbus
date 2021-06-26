@@ -36,8 +36,17 @@
 		return type == DBUS_TYPE_INVALID;
 	}
 
-	Udjat::Value & DBus::Value::append(const Type type) {
-		throw system_error(ENOTSUP,system_category(),"Cant append value");
+	Udjat::Value & DBus::Value::append(const Type unused) {
+
+		if(type != DBUS_TYPE_ARRAY) {
+			reset();
+			type = DBUS_TYPE_ARRAY;
+		}
+
+		Value * rc = new Value();
+		children[std::to_string((int) children.size()).c_str()] = rc;
+		return *rc;
+
 	}
 
 	Udjat::Value & DBus::Value::set(const Udjat::Value &value) {
@@ -46,8 +55,10 @@
 
 	Udjat::Value & DBus::Value::operator[](const char *name) {
 
-		reset();
-		type = DBUS_TYPE_DICT_ENTRY;
+		if(type != DBUS_TYPE_DICT_ENTRY) {
+			reset();
+			type = DBUS_TYPE_DICT_ENTRY;
+		}
 
 		auto search = children.find(name);
 		if(search != children.end()) {
@@ -156,6 +167,25 @@
 		this->value.dbl = value;
 		return *this;
 	}
+
+	void DBus::Value::get(DBusMessage *message) {
+
+		if(!children.empty()) {
+			// TODO: Create sub-node
+			return;
+		}
+
+		switch(this->type) {
+		case DBUS_TYPE_INVALID:
+		case DBUS_TYPE_ARRAY:
+		case DBUS_TYPE_DICT_ENTRY:
+			return;
+		}
+
+		dbus_message_append_args(message,this->type,&this->value,DBUS_TYPE_INVALID);
+
+	}
+
 
  }
 

@@ -28,7 +28,23 @@
 	DBus::Response::~Response() {
 	}
 
-	void DBus::Response::send() {
+	void DBus::Response::get(DBusMessage *message) {
+
+		if(value.children.empty()) {
+
+			value.get(message);
+
+		} else {
+
+			for(auto child : value.children) {
+				child.second->get(message);
+			}
+
+		}
+
+
+		// Send message
+
 	}
 
 	bool DBus::Response::isNull() const {
@@ -45,13 +61,11 @@
 	}
 
 	Udjat::Value & DBus::Response::append(const Type type) {
-		throw system_error(ENOTSUP,system_category(),"Cant add value by type");
-		return *this;
+		return value.append(type);
 	}
 
 	Udjat::Value & DBus::Response::set(const Value &value) {
-		throw system_error(ENOTSUP,system_category(),"Cant set value");
-		return *this;
+		return this->value.set(value);
 	}
 
 	Udjat::Value & DBus::Response::set(const char *value, const Type type) {

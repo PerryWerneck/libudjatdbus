@@ -64,7 +64,9 @@
 #ifdef DEBUG
 							cout << "Getting value & state" << endl;
 #endif // DEBUG
-							worker->get(request,response);
+							if(!worker->work(request,response)) {
+								throw runtime_error("Method not allowed");
+							}
 
 						} else if(request == "info") {
 
@@ -77,6 +79,12 @@
 
 							return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
+						}
+
+						{
+							DBusMessage * reply = dbus_message_new_method_return(message);
+							response.get(reply);
+							dbus_connection_send(connection, reply, NULL);
 						}
 
 						return DBUS_HANDLER_RESULT_HANDLED;

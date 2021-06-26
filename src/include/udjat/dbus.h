@@ -35,10 +35,13 @@
 	namespace DBus {
 
 		class Connection;
+		class Response;
 
 		/// @brief D-Bus value.
 		class UDJAT_API Value : public Udjat::Value {
 		private:
+			friend class Response;
+
 			int type;
 			DBusBasicValue value;
 			std::map<std::string,Value *> children;
@@ -46,6 +49,9 @@
 		public:
 			Value();
 			virtual ~Value();
+
+			/// @brief Add value on the message.
+			void get(DBusMessage *message);
 
 			/// @brief The value has children?
 			inline bool empty() const noexcept {
@@ -128,7 +134,9 @@
 			Response(Connection *connct);
 			virtual ~Response();
 
-			void send();
+			/// @brief Load message reply.
+			/// @param message Message reply (from dbus_message_new_method_return)
+			void get(DBusMessage *message);
 
 			bool isNull() const override;
 			Udjat::Value & operator[](const char *name) override;
