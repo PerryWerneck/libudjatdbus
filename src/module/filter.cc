@@ -73,7 +73,8 @@
 #ifdef DEBUG
 							cout << "Getting module information" << endl;
 #endif // DEBUG
-							worker->getInfo(response);
+
+							worker->getModuleInfo().get(response);
 
 						} else {
 
