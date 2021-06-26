@@ -51,7 +51,7 @@
 			virtual ~Value();
 
 			/// @brief Add value on the message.
-			void get(DBusMessage *message);
+			void get(DBusMessageIter *iter);
 
 			/// @brief The value has children?
 			inline bool empty() const noexcept {

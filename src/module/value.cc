@@ -168,21 +168,35 @@
 		return *this;
 	}
 
-	void DBus::Value::get(DBusMessage *message) {
-
-		if(!children.empty()) {
-			// TODO: Create sub-node
-			return;
-		}
+	void DBus::Value::get(DBusMessageIter *iter) {
 
 		switch(this->type) {
 		case DBUS_TYPE_INVALID:
 		case DBUS_TYPE_ARRAY:
+			return;
+
 		case DBUS_TYPE_DICT_ENTRY:
+			{
+				DBusMessageIter subIter;
+				if(dbus_message_iter_open_container(iter, DBUS_TYPE_STRUCT, NULL, &subIter)) {
+
+					for(auto child : this->children) {
+						child.second->get(&subIter);
+					}
+
+					dbus_message_iter_close_container(iter, &subIter);
+				}
+
+
+			}
 			return;
 		}
 
-		dbus_message_append_args(message,this->type,&this->value,DBUS_TYPE_INVALID);
+		if(!children.empty()) {
+			return;
+		}
+
+		dbus_message_iter_append_basic(iter,this->type,&this->value);
 
 	}
 

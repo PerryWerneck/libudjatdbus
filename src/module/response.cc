@@ -30,20 +30,20 @@
 
 	void DBus::Response::get(DBusMessage *message) {
 
+		DBusMessageIter iter;
+		dbus_message_iter_init_append(message, &iter);
+
 		if(value.children.empty()) {
 
-			value.get(message);
+			value.get(&iter);
 
 		} else {
 
 			for(auto child : value.children) {
-				child.second->get(message);
+				child.second->get(&iter);
 			}
 
 		}
-
-
-		// Send message
 
 	}
 
