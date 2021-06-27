@@ -43,7 +43,7 @@
 			return true;
 		}
 
-		bool Worker::work(DBus::Request &request, DBus::Response &response) {
+		bool Worker::work(DBus::Request UDJAT_UNUSED(&request), DBus::Response UDJAT_UNUSED(&response)) {
 			throw runtime_error("Method not allowed");
 		}
 

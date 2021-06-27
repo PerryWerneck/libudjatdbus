@@ -36,7 +36,7 @@
 		return type == DBUS_TYPE_INVALID;
 	}
 
-	Udjat::Value & DBus::Value::append(const Type unused) {
+	Udjat::Value & DBus::Value::append(const Type UDJAT_UNUSED(unused)) {
 
 		if(type != DBUS_TYPE_ARRAY) {
 			reset();
@@ -73,7 +73,7 @@
 
 	}
 
-	Udjat::Value & DBus::Value::reset(const Udjat::Value::Type unused) {
+	Udjat::Value & DBus::Value::reset(const Udjat::Value::Type UDJAT_UNUSED(unused)) {
 
 		if(type == DBUS_TYPE_STRING && value.str) {
 			free(value.str);
@@ -93,7 +93,11 @@
 		return *this;
 	}
 
-	Udjat::Value & DBus::Value::set(const char *value, const Type type) {
+	Udjat::Value & DBus::Value::set(const TimeStamp value) {
+		return set(value.to_string().c_str());
+	}
+
+	Udjat::Value & DBus::Value::set(const char *value, const Type UDJAT_UNUSED(type)) {
 		reset(Value::Type::Undefined);
 		this->type = DBUS_TYPE_STRING;
 		this->value.str = strdup(value);
@@ -140,11 +144,6 @@
 		this->type = DBUS_TYPE_UINT64;
 		this->value.u64 = value;
 		return *this;
-	}
-
-	Udjat::Value & DBus::Value::set(const TimeStamp value) {
-		reset(Value::Type::Undefined);
-		return set(value.to_string().c_str());
 	}
 
 	Udjat::Value & DBus::Value::set(const bool value) {
