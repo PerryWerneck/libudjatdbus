@@ -88,7 +88,7 @@
 			}
 
 			~Error() {
-				dbus_error_free(this);
+				clear();
 			}
 
 			void clear() {
@@ -101,8 +101,11 @@
 
 			void test() {
 				if(dbus_error_is_set(this)) {
-					throw std::runtime_error(this->message);
+					std::string message = this->message;
+					clear();
+					throw std::runtime_error(message);
 				}
+
 			}
 		};
 
