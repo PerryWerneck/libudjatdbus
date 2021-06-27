@@ -19,15 +19,27 @@
 
  #include "private.h"
 
- namespace Udjat {
+ using namespace Udjat;
+
+ const Udjat::ModuleInfo DBus::moduleinfo{
+	PACKAGE_NAME,								// The module name.
+	"UDJat D-Bus module", 						// The module description.
+	PACKAGE_VERSION, 							// The module version.
+	PACKAGE_URL, 								// The package URL.
+	PACKAGE_BUGREPORT 							// The bug report address.
+ };
+
+ /// @brief Register udjat module.
+ Udjat::Module * udjat_module_init() {
 
 	/// @brief Proxy for libudjat workers.
 	class Proxy : public DBus::Worker {
 	private:
-		static constexpr const char *interface = "br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".";
+		const char * interface;
 
 	public:
-		Proxy() = default;
+		Proxy() : interface("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".") {
+		}
 
 		bool equal(DBusMessage *message) override {
 
@@ -72,37 +84,34 @@
 
 	};
 
-	static const Udjat::ModuleInfo moduleinfo{
-		PACKAGE_NAME,								// The module name.
-		"D-Bus module exporter", 					// The module description.
-		PACKAGE_VERSION, 							// The module version.
-		PACKAGE_URL, 								// The package URL.
-		PACKAGE_BUGREPORT 							// The bug report address.
-	 };
+	class Controller : public Udjat::Module {
+	private:
 
- 	DBus::Controller::Controller() : Udjat::Module("d-bus",&moduleinfo), proxy(new Proxy()) {
+		/// @brief Proxy for libudjat workers.
+		Proxy * proxy;
 
-		Connection &connection = Connection::getInstance();
+	public:
 
- 		connection.request("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME));
- 		connection.insert(proxy);
+		Controller() : Udjat::Module("d-bus",&DBus::moduleinfo), proxy(new Proxy()) {
 
- 	};
+			DBus::Connection &connection = DBus::Connection::getInstance();
 
-	DBus::Controller::~Controller() {
+			connection.request("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME));
+			connection.insert(proxy);
 
-		Connection &connection = Connection::getInstance();
+		};
 
-		connection.remove(proxy);
-		delete proxy;
- 	};
+		~Controller() {
 
- }
+			DBus::Connection &connection = DBus::Connection::getInstance();
 
+			connection.remove(proxy);
+			delete proxy;
+		};
 
- /// @brief Register udjat module.
- Udjat::Module * udjat_module_init() {
-	return new Udjat::DBus::Controller();
+	};
+
+	return new Controller();
  }
 
 
