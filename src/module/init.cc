@@ -21,7 +21,58 @@
 
  namespace Udjat {
 
-	 static const Udjat::ModuleInfo moduleinfo{
+	/// @brief Proxy for libudjat workers.
+	class Proxy : public DBus::Worker {
+	private:
+		static constexpr const char *interface = "br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".";
+
+	public:
+		Proxy() = default;
+
+		bool equal(DBusMessage *message) override {
+
+			if(dbus_message_get_type(message) != DBUS_MESSAGE_TYPE_METHOD_CALL) {
+				return false;
+			}
+
+			if(strncasecmp(dbus_message_get_interface(message),interface,strlen(interface))) {
+				return false;
+			}
+
+			return true;
+		}
+
+		/// @brief Execute request.
+		bool work(DBus::Request &request, DBus::Response &response) override {
+
+			const char * name = request.getInterface() + strlen(interface);
+
+			const Udjat::Worker * worker = Udjat::Worker::find(name);
+			if(!worker)
+				return false;
+
+			if(request == "get") {
+
+				if(!worker->work(request,response)) {
+					throw runtime_error("Method not allowed");
+				}
+
+			} else if(request == "info") {
+
+				worker->getModuleInfo().get(response);
+
+			} else {
+
+				return false;
+
+			}
+
+			return true;
+		}
+
+	};
+
+	static const Udjat::ModuleInfo moduleinfo{
 		PACKAGE_NAME,								// The module name.
 		"D-Bus module exporter", 					// The module description.
 		PACKAGE_VERSION, 							// The module version.
@@ -29,11 +80,21 @@
 		PACKAGE_BUGREPORT 							// The bug report address.
 	 };
 
- 	DBus::Controller::Controller() : Udjat::Module("d-bus",&moduleinfo) {
- 		Connection::getInstance().request("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME));
+ 	DBus::Controller::Controller() : Udjat::Module("d-bus",&moduleinfo), proxy(new Proxy()) {
+
+		Connection &connection = Connection::getInstance();
+
+ 		connection.request("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME));
+ 		connection.insert(proxy);
+
  	};
 
 	DBus::Controller::~Controller() {
+
+		Connection &connection = Connection::getInstance();
+
+		connection.remove(proxy);
+		delete proxy;
  	};
 
  }

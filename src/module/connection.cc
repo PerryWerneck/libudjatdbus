@@ -120,6 +120,32 @@
 			return *this;
 		}
 
+		Worker * Connection::find(DBusMessage *message) {
+
+			lock_guard<recursive_mutex> lock(guard);
+
+			for(auto worker : workers) {
+
+				if(worker->equal(message)) {
+					return worker;
+				}
+
+			}
+
+			return nullptr;
+		}
+
+		void Connection::insert(Worker *worker) {
+			lock_guard<recursive_mutex> lock(guard);
+			workers.push_back(worker);
+		}
+
+		void Connection::remove(Worker *worker) {
+			lock_guard<recursive_mutex> lock(guard);
+			workers.remove_if([worker](Worker *w) {
+				return w == worker;
+			});
+		}
 
 	}
 

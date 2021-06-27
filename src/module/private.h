@@ -32,11 +32,16 @@
 
 	/// @brief Get Udjat Worker from interface.
 	/// @return Worker (or nullptr if not available or error).
-	const Worker * getWorker(DBusMessage *message);
+	//const Worker * getWorker(DBusMessage *message);
 
 	namespace DBus {
 
 		class Controller : public Udjat::Module {
+		private:
+
+			/// @brief Proxy for libudjat workers.
+			Worker * proxy;
+
 		public:
 			Controller();
 			~Controller();

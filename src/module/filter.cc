@@ -26,8 +26,6 @@
 
 		DBusHandlerResult Connection::filter(DBusConnection *connection, DBusMessage *message, Connection *controller) noexcept {
 
-			// DBusHandlerResult rc = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-
 #ifdef DEBUG
 			cout	<< "Member:    " << dbus_message_get_member(message) << endl
 					<< "Interface: " << dbus_message_get_interface(message) << endl;
@@ -35,64 +33,17 @@
 
 			try {
 				//
-				// First search for internal workers.
+				// Search for internal workers.
 				//
-				for(auto worker : controller->workers) {
+				Worker * worker = controller->find(message);
 
-					if(worker->equal(message)) {
-
-						// Found worker for this message.
-						DBus::Request request(message);
-						DBus::Response response;
-
-						worker->work(request, response);
-
+				if(worker) {
+					DBus::Request request(message);
+					DBus::Response response;
+					if(worker->work(request, response)) {
 						response.reply(connection,message);
-
-						return DBUS_HANDLER_RESULT_HANDLED;
-
-					}
-
-				}
-
-				//
-				// Search for modules.
-				//
-				{
-					const Udjat::Worker * worker = Udjat::getWorker(message);
-					if(worker) {
-
-						DBus::Request request(message);
-						DBus::Response response;
-
-						if(request == "get") {
-
-#ifdef DEBUG
-							cout << "Getting value & state" << endl;
-#endif // DEBUG
-							if(!worker->work(request,response)) {
-								throw runtime_error("Method not allowed");
-							}
-
-						} else if(request == "info") {
-
-#ifdef DEBUG
-							cout << "Getting module information" << endl;
-#endif // DEBUG
-
-							worker->getModuleInfo().get(response);
-
-						} else {
-
-							return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-
-						}
-
-						response.reply(connection,message);
-
 						return DBUS_HANDLER_RESULT_HANDLED;
 					}
-
 				}
 
 			} catch(const std::exception &e) {

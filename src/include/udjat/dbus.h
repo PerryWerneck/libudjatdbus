@@ -122,6 +122,10 @@
 			Udjat::Request & pop(int &value) override;
 			Udjat::Request & pop(unsigned int &value) override;
 
+			inline const char * getInterface() const noexcept {
+				return dbus_message_get_interface(message);
+			}
+
 		};
 
 		/// @brief D-Bus response.
@@ -167,10 +171,11 @@
 			virtual ~Worker();
 
 			/// @brief Check if the worker is assigned to the message.
-			bool equal(DBusMessage *message);
+			virtual bool equal(DBusMessage *message);
 
 			/// @brief Execute request.
-			virtual void work(DBus::Request &request, DBus::Response &response);
+			/// @return true if was handled.
+			virtual bool work(DBus::Request &request, DBus::Response &response);
 
 		};
 
@@ -205,6 +210,10 @@
 
 			/// @brief Asks the bus to assign the given name to this connection by invoking the RequestName method on the bus.
 			Connection & request(const char *name, unsigned int flags = DBUS_NAME_FLAG_REPLACE_EXISTING);
+
+			/// @brief Find worker for message.
+			/// @return Worker of nullptr if not found.
+			Worker * find(DBusMessage *message);
 
 			void insert(Worker *worker);
 			void remove(Worker *worker);

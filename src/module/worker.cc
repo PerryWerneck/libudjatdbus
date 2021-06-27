@@ -43,7 +43,7 @@
 			return true;
 		}
 
-		void Worker::work(DBus::Request &request, DBus::Response &response) {
+		bool Worker::work(DBus::Request &request, DBus::Response &response) {
 			throw runtime_error("Method not allowed");
 		}
 
