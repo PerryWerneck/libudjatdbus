@@ -94,7 +94,17 @@
 	}
 
 	Udjat::Value & DBus::Value::set(const TimeStamp value) {
-		return set(value.to_string().c_str());
+
+		reset(Value::Type::Undefined);
+		this->type = DBUS_TYPE_STRING;
+
+		if(value) {
+			this->value.str = strdup(value.to_string("%Y-%m-%d %H:%M:%S").c_str());
+		} else {
+			this->value.str = strdup("");
+		}
+
+		return *this;
 	}
 
 	Udjat::Value & DBus::Value::set(const char *value, const Type UDJAT_UNUSED(type)) {
