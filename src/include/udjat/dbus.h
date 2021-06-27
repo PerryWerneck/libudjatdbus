@@ -128,11 +128,13 @@
 		class Response : public Udjat::Response {
 		private:
 			DBus::Value value;
-			Connection *connct;
 
 		public:
-			Response(Connection *connct);
-			virtual ~Response();
+			Response();
+			~Response();
+
+			/// @brief Send reply.
+			void reply(DBusConnection *connection, DBusMessage *message);
 
 			/// @brief Load message reply.
 			/// @param message Message reply (from dbus_message_new_method_return)
@@ -170,9 +172,6 @@
 			/// @brief Execute request.
 			virtual void work(DBus::Request &request, DBus::Response &response);
 
-			/// @brief Process message
-			void work(Connection *controller, DBusMessage *message);
-
 		};
 
 		/// @brief D-Bus Connection.
@@ -198,6 +197,9 @@
 			std::list<Worker *> workers;
 
 		public:
+
+			static Connection & getInstance();
+
 			Connection(DBusBusType type);
 			~Connection();
 

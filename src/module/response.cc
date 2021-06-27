@@ -21,7 +21,7 @@
 
  namespace Udjat {
 
-	DBus::Response::Response(Connection *c) : connct(c) {
+	DBus::Response::Response() {
 
 	}
 
@@ -45,6 +45,12 @@
 
 		}
 
+	}
+
+	void DBus::Response::reply(DBusConnection *connection, DBusMessage *message) {
+		DBusMessage * reply = dbus_message_new_method_return(message);
+		get(reply);
+		dbus_connection_send(connection, reply, NULL);
 	}
 
 	bool DBus::Response::isNull() const {

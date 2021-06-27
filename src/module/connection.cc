@@ -23,6 +23,17 @@
 
 	namespace DBus {
 
+		Connection & Connection::getInstance() {
+#ifdef DEBUG
+			static Connection instance(DBUS_BUS_SESSION);
+#else
+			static Connection instance(DBUS_BUS_SYSTEM);
+#endif // DEBUG
+
+			return instance;
+
+		}
+
 		Connection::Connection(DBusBusType type) {
 
 			Error error;

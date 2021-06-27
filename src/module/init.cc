@@ -19,12 +19,6 @@
 
  #include "private.h"
 
- #ifdef DEBUG
-	#define BUSTYPE DBUS_BUS_SESSION
- #else
-	#define BUSTYPE DBUS_BUS_SYSTEM
- #endif // DEBUG
-
  namespace Udjat {
 
 	 static const Udjat::ModuleInfo moduleinfo{
@@ -35,10 +29,8 @@
 		PACKAGE_BUGREPORT 							// The bug report address.
 	 };
 
- 	DBus::Controller::Controller() : Udjat::Module("d-bus",&moduleinfo), DBus::Connection(BUSTYPE) {
-
- 		request("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME));
-
+ 	DBus::Controller::Controller() : Udjat::Module("d-bus",&moduleinfo) {
+ 		Connection::getInstance().request("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME));
  	};
 
 	DBus::Controller::~Controller() {

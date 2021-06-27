@@ -36,7 +36,7 @@
 
 	namespace DBus {
 
-		class Controller : public Udjat::Module, private DBus::Connection {
+		class Controller : public Udjat::Module {
 		public:
 			Controller();
 			~Controller();

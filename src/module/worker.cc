@@ -44,23 +44,7 @@
 		}
 
 		void Worker::work(DBus::Request &request, DBus::Response &response) {
-			throw runtime_error("Can't execute worker");
-		}
-
-		/// @brief Process message
-		void Worker::work(Connection *controller, DBusMessage *message) {
-
-			/*
-			DBus::Request request(message);
-			DBus::Response response(controller);
-
-			work(request,response);
-
-			DBusMessage * reply = dbus_message_new_method_return(message);
-			response.get(reply);
-			dbus_connection_send(connection, reply, NULL);
-			*/
-
+			throw runtime_error("Method not allowed");
 		}
 
 	}

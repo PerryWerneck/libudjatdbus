@@ -42,7 +42,13 @@
 					if(worker->equal(message)) {
 
 						// Found worker for this message.
-						worker->work(controller, message);
+						DBus::Request request(message);
+						DBus::Response response;
+
+						worker->work(request, response);
+
+						response.reply(connection,message);
+
 						return DBUS_HANDLER_RESULT_HANDLED;
 
 					}
@@ -57,7 +63,7 @@
 					if(worker) {
 
 						DBus::Request request(message);
-						DBus::Response response(controller);
+						DBus::Response response;
 
 						if(request == "get") {
 
@@ -82,11 +88,7 @@
 
 						}
 
-						{
-							DBusMessage * reply = dbus_message_new_method_return(message);
-							response.get(reply);
-							dbus_connection_send(connection, reply, NULL);
-						}
+						response.reply(connection,message);
 
 						return DBUS_HANDLER_RESULT_HANDLED;
 					}
@@ -103,31 +105,6 @@
 				return DBUS_HANDLER_RESULT_HANDLED;
 
 			}
-			/*
-			//
-			// Not found on internal workers, try libudjat ones
-			//
-
-			if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_METHOD_CALL && !strcasecmp(dbus_message_get_interface(message),interface)) {
-
-				try {
-
-					const char *ptr = dbus_message_get_interface(message) + strlen(interface);
-
-#ifdef DEBUG
-					cout << "Requested worker: '" << ptr << "'" << endl;
-#endif // DEBUG
-
-
-				} catch(const exception &e) {
-
-
-				}
-
-				rc = DBUS_HANDLER_RESULT_HANDLED;
-
-			}
-			*/
 
 			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
