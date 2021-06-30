@@ -33,7 +33,7 @@
 		DBusMessageIter iter;
 		dbus_message_iter_init_append(message, &iter);
 
-		if(value.children.empty()) {
+		if(value.children.empty() || value == DBUS_TYPE_ARRAY) {
 
 			value.get(&iter);
 

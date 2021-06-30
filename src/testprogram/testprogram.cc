@@ -30,6 +30,14 @@
 
 	Logger::redirect(nullptr,true);
 
+	try {
+
+		Module::load("udjat-module-information");
+
+	} catch(const std::exception &e) {
+		cerr << "Error '" << e.what() << "' loading information module" << endl;
+	}
+
 	auto module = udjat_module_init();
 	auto agent = Abstract::Agent::init("${PWD}/test.xml");
 

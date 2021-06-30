@@ -41,6 +41,7 @@
 			lock_guard<recursive_mutex> lock(guard);
 
 			connct = dbus_bus_get(type,&error);
+
 			error.test();
 
 			dbus_connection_set_exit_on_disconnect(connct, false);

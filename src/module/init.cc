@@ -34,11 +34,9 @@
 
 	/// @brief Proxy for libudjat workers.
 	class Proxy : public DBus::Worker {
-	private:
-		const char * interface;
-
 	public:
-		Proxy() : interface("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".") {
+		Proxy() {
+			this->interface = "br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".";
 		}
 
 		bool equal(DBusMessage *message) override {
@@ -57,9 +55,14 @@
 		/// @brief Execute request.
 		bool work(DBus::Request &request, DBus::Response &response) override {
 
-			const char * name = request.getInterface() + strlen(interface);
+			string name{request.getInterface() + strlen(interface)};
 
-			const Udjat::Worker * worker = Udjat::Worker::find(name);
+			size_t len = name.find('.');
+			if(len != string::npos && len > 0) {
+				name.resize(len);
+			}
+
+			const Udjat::Worker * worker = Udjat::Worker::find(name.c_str());
 			if(!worker)
 				return false;
 

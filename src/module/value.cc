@@ -43,6 +43,8 @@
 			type = DBUS_TYPE_ARRAY;
 		}
 
+		cout << "***********DBUS_TYPE_ARRAY" << endl;
+
 		Value * rc = new Value();
 		children[std::to_string((int) children.size()).c_str()] = rc;
 		return *rc;

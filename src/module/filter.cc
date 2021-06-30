@@ -38,7 +38,7 @@
 				Worker * worker = controller->find(message);
 
 				if(worker) {
-					DBus::Request request(message);
+					DBus::Request request(message,worker->getAction(message));
 					DBus::Response response;
 					if(worker->work(request, response)) {
 						response.reply(connection,message);

@@ -58,6 +58,10 @@
 				return children.empty();
 			}
 
+			inline bool operator==(int type) const noexcept {
+				return this->type == type;
+			}
+
 			Udjat::Value & reset(const Udjat::Value::Type type = Udjat::Value::Undefined) override;
 
 			bool isNull() const override;
@@ -101,11 +105,8 @@
 
 			void test() {
 				if(dbus_error_is_set(this)) {
-					std::string message = this->message;
-					clear();
-					throw std::runtime_error(message);
+					throw std::runtime_error(this->message);
 				}
-
 			}
 		};
 
@@ -113,13 +114,17 @@
 		class Request : public Udjat::Request {
 		private:
 			DBusMessage *message;
+			std::string action;
+
 			DBusMessageIter iter;
 
 			int pop(DBusBasicValue &value);
 
 		public:
-			Request(DBusMessage *message);
+			Request(DBusMessage *message, const std::string &action = "");
 			virtual ~Request();
+
+			const std::string getAction() override;
 
 			std::string pop() override;
 			Udjat::Request & pop(int &value) override;
@@ -175,6 +180,8 @@
 
 			/// @brief Check if the worker is assigned to the message.
 			virtual bool equal(DBusMessage *message);
+
+			const std::string getAction(DBusMessage *message);
 
 			/// @brief Execute request.
 			/// @return true if was handled.

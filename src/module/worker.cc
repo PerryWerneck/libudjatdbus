@@ -47,6 +47,23 @@
 			throw runtime_error("Method not allowed");
 		}
 
+		const std::string Worker::getAction(DBusMessage *message) {
+
+			const char *interface = dbus_message_get_interface(message);
+
+			if(strlen(interface) <= strlen(this->interface)) {
+				return "";
+			}
+
+			const char *action = strchr(interface + strlen(this->interface), '.');
+			if(!action) {
+				return "";
+			}
+
+			return action+1;
+		}
+
+
 	}
 
  }

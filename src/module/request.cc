@@ -21,9 +21,8 @@
 
  namespace Udjat {
 
-	DBus::Request::Request(DBusMessage *message) {
+	DBus::Request::Request(DBusMessage *m, const std::string &a) : message(m),action(a) {
 
-		this->message = message;
 		this->method = dbus_message_get_member(message);
 		dbus_message_ref(message);
 
@@ -35,11 +34,21 @@
 		dbus_message_unref(message);
 	}
 
+	const std::string DBus::Request::getAction() {
+#ifdef DEBUG
+		cout << "Request action: '" << this->action << "'" << endl;
+#endif // DEBUG
+		return this->action;
+	}
+
 	int DBus::Request::pop(DBusBasicValue &value) {
 
 		int type = dbus_message_iter_get_arg_type(&iter);
 		if(type == DBUS_TYPE_INVALID) {
-			throw system_error(ENODATA,system_category(),"Not enough arguments");
+#ifdef DEBUG
+			cout << "Called '" << __FUNCTION__ << "' with an invalid iterator" << endl;
+#endif // DEBUG
+			throw system_error(ENODATA,system_category(),"Cant 'pop' required argument");
 		}
 
 		dbus_message_iter_get_basic(&iter,&value);
