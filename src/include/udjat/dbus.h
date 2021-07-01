@@ -46,6 +46,12 @@
 			DBusBasicValue value;
 			std::map<std::string,Value *> children;
 
+			inline bool noSignature() const noexcept {
+				return (type == DBUS_TYPE_INVALID || type == DBUS_TYPE_ARRAY || type == DBUS_TYPE_DICT_ENTRY);
+			}
+
+			std::string getArraySignature() const noexcept;
+
 		public:
 			Value();
 			virtual ~Value();

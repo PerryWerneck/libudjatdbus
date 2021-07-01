@@ -177,6 +177,29 @@
 		return *this;
 	}
 
+	string DBus::Value::getArraySignature() const noexcept {
+
+		string str{"("};
+
+		for(auto child : this->children) {
+
+			if(child.second->noSignature()) {
+				continue;
+			}
+
+			char v[2];
+			v[0] = (char) child.second->type;
+			v[1] = 0;
+			str += v;
+		}
+
+
+		str += ")";
+		return str;
+
+	}
+
+
 	void DBus::Value::get(DBusMessageIter *iter) {
 
 		switch(this->type) {
@@ -186,6 +209,50 @@
 		case DBUS_TYPE_ARRAY:
 			{
 				DBusMessageIter subIter;
+
+				if(!this->children.empty()) {
+
+					string signature = this->children.begin()->second->getArraySignature();
+
+					if(dbus_message_iter_open_container(iter, DBUS_TYPE_ARRAY, signature.c_str(), &subIter)) {
+
+						for(auto row : this->children) {
+
+							DBusMessageIter aIter;
+
+							if(dbus_message_iter_open_container(&subIter, DBUS_TYPE_STRUCT, NULL, &aIter)) {
+
+								const char *ptr = signature.c_str() + 1;
+								for(auto child : row.second->children) {
+
+									if(child.second->noSignature() || !*ptr) {
+										continue;
+									}
+
+									if(*ptr != ((char) child.second->type)) {
+
+										cerr << "DBus\tUnexpected signature. Got '"
+												<< ((char) child.second->type)
+												<< "' while expecting for '"
+												<< *ptr << "'" << endl;
+										continue;
+									}
+
+									ptr++;
+									child.second->get(&aIter);
+
+								}
+
+								dbus_message_iter_close_container(&subIter,&aIter);
+
+							}
+						}
+
+						dbus_message_iter_close_container(iter, &subIter);
+					}
+				}
+
+				/*
 				if(dbus_message_iter_open_container(iter, DBUS_TYPE_STRUCT, NULL, &subIter)) {
 
 					for(auto child : this->children) {
@@ -194,6 +261,7 @@
 
 					dbus_message_iter_close_container(iter, &subIter);
 				}
+				*/
 			}
 			return;
 
