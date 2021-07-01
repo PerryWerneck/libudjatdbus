@@ -43,8 +43,6 @@
 			type = DBUS_TYPE_ARRAY;
 		}
 
-		cout << "***********DBUS_TYPE_ARRAY" << endl;
-
 		Value * rc = new Value();
 		children[std::to_string((int) children.size()).c_str()] = rc;
 		return *rc;
@@ -183,7 +181,20 @@
 
 		switch(this->type) {
 		case DBUS_TYPE_INVALID:
+			return;
+
 		case DBUS_TYPE_ARRAY:
+			{
+				DBusMessageIter subIter;
+				if(dbus_message_iter_open_container(iter, DBUS_TYPE_STRUCT, NULL, &subIter)) {
+
+					for(auto child : this->children) {
+						child.second->get(&subIter);
+					}
+
+					dbus_message_iter_close_container(iter, &subIter);
+				}
+			}
 			return;
 
 		case DBUS_TYPE_DICT_ENTRY:
@@ -197,7 +208,6 @@
 
 					dbus_message_iter_close_container(iter, &subIter);
 				}
-
 
 			}
 			return;
