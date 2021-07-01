@@ -60,7 +60,8 @@
 				}
 
 				void refresh() override {
-					set( ((unsigned int) rand()) % limit);
+					cout << "Refreshing random agent" << endl;
+					set( (((unsigned int) rand())+1) % limit);
 				}
 
 			};

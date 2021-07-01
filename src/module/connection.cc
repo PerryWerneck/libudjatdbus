@@ -148,6 +148,19 @@
 			});
 		}
 
+		void Connection::send(DBusMessage *message) {
+
+			lock_guard<recursive_mutex> lock(guard);
+
+			dbus_bool_t rc = dbus_connection_send(this->connct, message, NULL);
+			dbus_message_unref(message);
+
+			if(!rc) {
+				throw runtime_error("Can't send D-Bus message");
+			}
+
+		}
+
 	}
 
  }

@@ -22,6 +22,7 @@
  #include <udjat/defs.h>
  #include <udjat/tools/value.h>
  #include <udjat/request.h>
+ #include <udjat/alert.h>
  #include <dbus/dbus.h>
  #include <stdexcept>
  #include <string>
@@ -241,8 +242,34 @@
 			/// @return Worker of nullptr if not found.
 			Worker * find(DBusMessage *message);
 
+			/// @brief Send message, unref message.
+			void send(DBusMessage *message);
+
 			void insert(Worker *worker);
 			void remove(Worker *worker);
+		};
+
+		class UDJAT_API Signal : public Udjat::Alert {
+		protected:
+
+			/// @brief The path to the object emitting the signal.
+			const char *path;
+
+			/// @brief The interface the signal is emitted from.
+			const char *iface;
+
+			/// @brief Name of the signal.
+			const char *name;
+
+			/// @brief emit signal.
+			// void emit(const char *path, const char *iface, const char *name);
+
+		public:
+			Signal(const pugi::xml_node &node);
+			virtual ~Signal();
+
+			void activate(const Abstract::Agent &agent, const Abstract::State &state) override;
+
 		};
 
 	}

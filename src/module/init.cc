@@ -18,6 +18,8 @@
  */
 
  #include "private.h"
+ #include <udjat/dbus.h>
+ #include <udjat/factory.h>
 
  using namespace Udjat;
 
@@ -87,7 +89,7 @@
 
 	};
 
-	class Controller : public Udjat::Module {
+	class Controller : public Udjat::Module, Udjat::Factory {
 	private:
 
 		/// @brief Proxy for libudjat workers.
@@ -95,7 +97,7 @@
 
 	public:
 
-		Controller() : Udjat::Module("d-bus",&DBus::moduleinfo), proxy(new Proxy()) {
+		Controller() : Udjat::Module("d-bus",&DBus::moduleinfo), proxy(new Proxy()), Udjat::Factory("dbus-signal",&DBus::moduleinfo) {
 
 			DBus::Connection &connection = DBus::Connection::getInstance();
 
@@ -111,6 +113,11 @@
 			connection.remove(proxy);
 			delete proxy;
 		};
+
+		void parse(Abstract::Agent &parent, const pugi::xml_node &node) const override {
+			auto x= make_shared<DBus::Signal>(node);
+			//parent.push_back(make_shared<DBus::Signal>(node));
+		}
 
 	};
 

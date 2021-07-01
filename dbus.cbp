@@ -49,6 +49,7 @@
 		<Unit filename="src/module/private.h" />
 		<Unit filename="src/module/request.cc" />
 		<Unit filename="src/module/response.cc" />
+		<Unit filename="src/module/signal.cc" />
 		<Unit filename="src/module/udjatworker.cc" />
 		<Unit filename="src/module/value.cc" />
 		<Unit filename="src/module/worker.cc" />
