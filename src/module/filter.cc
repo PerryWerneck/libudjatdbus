@@ -26,6 +26,21 @@
 
 		DBusHandlerResult Connection::filter(DBusConnection *connection, DBusMessage *message, Connection *controller) noexcept {
 
+			if(!(strcasecmp("Introspect",dbus_message_get_member(message)) || strcasecmp("org.freedesktop.DBus.Introspectable",dbus_message_get_interface(message)))) {
+
+				// https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-introspectable
+				// https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format
+
+				// TODO: How to implement introspection?
+
+#ifdef DEBUG
+				cout	<< "Client is requesting object introspection" << endl;
+#endif // DEBUG
+
+
+				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+			}
+
 #ifdef DEBUG
 			cout	<< "Member:    " << dbus_message_get_member(message) << endl
 					<< "Interface: " << dbus_message_get_interface(message) << endl;

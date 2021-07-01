@@ -6,5 +6,11 @@
 
 	</agent>
 
+	<random name='alerter' update-timer='60' on-demand='false'>
+
+		<dbus-signal />
+
+	</random>
+	
 </config>
 

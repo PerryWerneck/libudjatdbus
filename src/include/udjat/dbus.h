@@ -42,14 +42,24 @@
 		private:
 			friend class Response;
 
+		protected:
+
+			/// @brief D-Bus data type.
 			int type;
+
+			/// @brief D-Bus value.
 			DBusBasicValue value;
+
+			/// @brief Value children.
 			std::map<std::string,Value *> children;
 
+			/// @brief Check if the value dont have a signagture.
+			/// @return true if the value can be added on signatured.
 			inline bool noSignature() const noexcept {
 				return (type == DBUS_TYPE_INVALID || type == DBUS_TYPE_ARRAY || type == DBUS_TYPE_DICT_ENTRY);
 			}
 
+			/// @brief Get signature for array export.
 			std::string getArraySignature() const noexcept;
 
 		public:

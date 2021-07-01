@@ -19,6 +19,7 @@
 
  #include <udjat.h>
  #include <udjat/module.h>
+ #include <udjat/factory.h>
  #include <unistd.h>
 
  using namespace std;
@@ -37,6 +38,40 @@
 	} catch(const std::exception &e) {
 		cerr << "Error '" << e.what() << "' loading information module" << endl;
 	}
+
+
+	// Randomic value agent factory.
+	class Factory : public Udjat::Factory {
+	public:
+		Factory() : Udjat::Factory("random") {
+			srand(time(NULL));
+		}
+
+		void parse(Abstract::Agent &parent, const pugi::xml_node &node) const override {
+
+			class RandomAgent : public Agent<unsigned int> {
+			private:
+				unsigned int limit = 5;
+
+			public:
+				RandomAgent(const pugi::xml_node &node) : Agent<unsigned int>() {
+					cout << "Creating random Agent" << endl;
+					load(node);
+				}
+
+				void refresh() override {
+					set( ((unsigned int) rand()) % limit);
+				}
+
+			};
+
+			parent.insert(make_shared<RandomAgent>(node));
+
+		}
+
+	};
+
+	static Factory factory;
 
 	auto module = udjat_module_init();
 	auto agent = Abstract::Agent::init("${PWD}/test.xml");

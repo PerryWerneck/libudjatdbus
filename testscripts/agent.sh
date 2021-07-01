@@ -3,27 +3,18 @@
 # https://stackoverflow.com/questions/48648952/set-get-property-using-dbus-send
 #
 
+gdbus \
+	call \
+	--session \
+	--dest "br.eti.werneck.udjat" \
+	--object-path "/" \
+	--method br.eti.werneck.udjat.agent.get
+
 #dbus-send \
 #	--session \
-#	--dest=br.com.bb.pw3270.a\
+#	--dest=br.eti.werneck.udjat \
 #	--print-reply \
-#	"/br/com/bb/tn3270/session" \
-#	"org.freedesktop.DBus.Properties.Get" \
-#	string:br.com.bb.tn3270.session \
-#	string:url
-
-#gdbus \
-#	call \
-#	--session \
-#	--dest "br.eti.werneck.udjat" \
-#	--object-path "/" \
-#	--method br.eti.werneck.udjat.get
-
-dbus-send \
-	--session \
-	--dest=br.eti.werneck.udjat \
-	--print-reply \
-	"/" \
-	br.eti.werneck.udjat.agent.get
+#	"/" \
+#	br.eti.werneck.udjat.agent.get
 	
 
