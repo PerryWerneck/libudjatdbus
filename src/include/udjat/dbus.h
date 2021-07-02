@@ -249,7 +249,7 @@
 			void remove(Worker *worker);
 		};
 
-		class UDJAT_API Signal : public Udjat::Alert {
+		class UDJAT_API Alert : public Udjat::Alert {
 		protected:
 
 			/// @brief The path to the object emitting the signal.
@@ -261,12 +261,34 @@
 			/// @brief Name of the signal.
 			const char *member;
 
+			/// @brief D-Bus message argument.
+			struct Argument {
+
+				/// @brief D-Bus data type.
+				int type;
+
+				/// @brief D-Bus value.
+				const char *value;
+
+				Argument(const pugi::xml_node &node);
+
+			};
+
+			std::vector<Argument> arguments;
+
+		public:
+			Alert(const pugi::xml_node &node);
+			virtual ~Alert();
+
+		};
+
+		class UDJAT_API Signal : public DBus::Alert {
 		public:
 
 			class Factory;
 
-			Signal(const pugi::xml_node &node);
-			virtual ~Signal();
+			Signal(const pugi::xml_node &node) : DBus::Alert(node) {
+			}
 
 			void activate(const Abstract::Agent &agent, const Abstract::State &state) override;
 

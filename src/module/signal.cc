@@ -30,21 +30,6 @@
 		parent.push_back(make_shared<DBus::Signal>(node));
 	}
 
-	DBus::Signal::Signal(const pugi::xml_node &node) : Udjat::Alert(node) {
-
-		path = Quark(node,"path","${agent.path}").c_str();
-		iface = Quark(node,"interface","br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".agent").c_str();
-		member = Quark(node,"member","${level}").c_str();
-
-#ifdef DEBUG
-		info("Signal created iface='{}' name='{}'",iface,member);
-#endif // DEBUG
-	}
-
-	DBus::Signal::~Signal() {
-
-	}
-
 	void DBus::Signal::activate(const Abstract::Agent &agent, const Abstract::State &state) {
 
 		class Event : public Alert::Event {
@@ -54,7 +39,18 @@
 			string member;
 
 		public:
-			Event(const string &p, const string &i, const string &m) : path(p), iface(i), member(m) {
+			Event(const Signal *signal, const Abstract::Agent &agent, const Abstract::State &state)
+				: path(signal->path), iface(signal->iface), member(signal->member) {
+
+				state.expand(path);
+				agent.expand(path);
+
+				state.expand(iface);
+				agent.expand(iface);
+
+				state.expand(member);
+				agent.expand(member);
+
 			}
 
 			const char * getDescription() const override {
@@ -75,27 +71,13 @@
 
 		};
 
-		string path = this->path;
-		string iface = this->iface;
-		string member = this->member;
-
-		state.expand(path);
-		agent.expand(path);
-
-		state.expand(iface);
-		agent.expand(iface);
-
-		state.expand(member);
-		agent.expand(member);
-
 #ifdef DEBUG
 		info("Signal '{}.{}' was activated",iface,member);
 #endif // DEBUG
 
-		Alert::activate(make_shared<Event>(path,iface,member));
+		Alert::activate(make_shared<Event>(this,agent,state));
 
 	}
-
 
  }
 
