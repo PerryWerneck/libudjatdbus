@@ -115,8 +115,7 @@
 		};
 
 		void parse(Abstract::Agent &parent, const pugi::xml_node &node) const override {
-			auto x= make_shared<DBus::Signal>(node);
-			//parent.push_back(make_shared<DBus::Signal>(node));
+			parent.push_back(make_shared<DBus::Signal>(node));
 		}
 
 	};

@@ -259,7 +259,7 @@
 			const char *iface;
 
 			/// @brief Name of the signal.
-			const char *name;
+			const char *member;
 
 			/// @brief emit signal.
 			// void emit(const char *path, const char *iface, const char *name);

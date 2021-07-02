@@ -25,12 +25,12 @@
 
 	DBus::Signal::Signal(const pugi::xml_node &node) : Udjat::Alert(node) {
 
-		path = Udjat::Attribute(node,"path").as_quark("/").c_str();
-		iface = Udjat::Attribute(node,"interface").as_quark("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME)).c_str();
-		name = Udjat::Attribute(node,"name").as_quark("alert").c_str();
+		path = Quark(node,"path","${agent.path}").c_str();
+		iface = Quark(node,"interface","br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".agent").c_str();
+		member = Quark(node,"member","${level}").c_str();
 
 #ifdef DEBUG
-		info("Signal '{}.{}' was created",iface,name);
+		info("Signal created iface='{}' name='{}'",iface,member);
 #endif // DEBUG
 	}
 
@@ -44,10 +44,10 @@
 		private:
 			string path;
 			string iface;
-			string name;
+			string member;
 
 		public:
-			Event(const string &p, const string &i, const string &n) : path(p), iface(i), name(n) {
+			Event(const string &p, const string &i, const string &m) : path(p), iface(i), member(m) {
 			}
 
 			const char * getDescription() const override {
@@ -56,9 +56,12 @@
 
 			void alert(size_t current, size_t total) override {
 
-				info("Emitting {}.{} ({}/{})",iface,name,current,total);
+				info("Emitting {} {} ({}/{})",iface,member,current,total);
+#ifdef DEBUG
+				info("Path='{}'",path);
+#endif // DEBUG
 
-				DBusMessage *msg = dbus_message_new_signal(path.c_str(),iface.c_str(),name.c_str());
+				DBusMessage *msg = dbus_message_new_signal(path.c_str(),iface.c_str(),member.c_str());
 				Connection::getInstance().send(msg);
 
 			}
@@ -67,7 +70,7 @@
 
 		string path = this->path;
 		string iface = this->iface;
-		string name = this->name;
+		string member = this->member;
 
 		state.expand(path);
 		agent.expand(path);
@@ -75,14 +78,14 @@
 		state.expand(iface);
 		agent.expand(iface);
 
-		state.expand(name);
-		agent.expand(name);
+		state.expand(member);
+		agent.expand(member);
 
 #ifdef DEBUG
-		info("Signal '{}.{}' was activated",iface,name);
+		info("Signal '{}.{}' was activated",iface,member);
 #endif // DEBUG
 
-		Alert::activate(make_shared<Event>(path,iface,name));
+		Alert::activate(make_shared<Event>(path,iface,member));
 
 	}
 
