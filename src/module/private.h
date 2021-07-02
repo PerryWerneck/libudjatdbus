@@ -23,6 +23,7 @@
  #include <udjat/dbus.h>
  #include <udjat/module.h>
  #include <udjat/worker.h>
+ #include <udjat/factory.h>
  #include <iostream>
  #include <system_error>
 
@@ -31,6 +32,13 @@
  namespace Udjat {
 
 	namespace DBus {
+
+		class Signal::Factory : public Udjat::Factory {
+		public:
+			Factory();
+			void parse(Abstract::Agent &parent, const pugi::xml_node &node) const override;
+
+		};
 
 		extern const Udjat::ModuleInfo moduleinfo;
 

@@ -89,15 +89,18 @@
 
 	};
 
-	class Controller : public Udjat::Module, Udjat::Factory {
+	class Controller : public Udjat::Module {
 	private:
 
 		/// @brief Proxy for libudjat workers.
 		Proxy * proxy;
 
+		/// @brief Signal factory.
+		DBus::Signal::Factory sigFactory;
+
 	public:
 
-		Controller() : Udjat::Module("d-bus",&DBus::moduleinfo), proxy(new Proxy()), Udjat::Factory("dbus-signal",&DBus::moduleinfo) {
+		Controller() : Udjat::Module("d-bus",&DBus::moduleinfo), proxy(new Proxy()) {
 
 			DBus::Connection &connection = DBus::Connection::getInstance();
 
@@ -113,10 +116,6 @@
 			connection.remove(proxy);
 			delete proxy;
 		};
-
-		void parse(Abstract::Agent &parent, const pugi::xml_node &node) const override {
-			parent.push_back(make_shared<DBus::Signal>(node));
-		}
 
 	};
 

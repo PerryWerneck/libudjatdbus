@@ -23,6 +23,13 @@
 
  namespace Udjat {
 
+	DBus::Signal::Factory::Factory() : Udjat::Factory("dbus-signal",&DBus::moduleinfo) {
+	}
+
+	void DBus::Signal::Factory::parse(Abstract::Agent &parent, const pugi::xml_node &node) const {
+		parent.push_back(make_shared<DBus::Signal>(node));
+	}
+
 	DBus::Signal::Signal(const pugi::xml_node &node) : Udjat::Alert(node) {
 
 		path = Quark(node,"path","${agent.path}").c_str();

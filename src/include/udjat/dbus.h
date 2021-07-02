@@ -261,10 +261,10 @@
 			/// @brief Name of the signal.
 			const char *member;
 
-			/// @brief emit signal.
-			// void emit(const char *path, const char *iface, const char *name);
-
 		public:
+
+			class Factory;
+
 			Signal(const pugi::xml_node &node);
 			virtual ~Signal();
 
