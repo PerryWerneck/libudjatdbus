@@ -18,6 +18,7 @@
  */
 
  #include "private.h"
+ #include <udjat/tools/configuration.h>
 
  namespace Udjat {
 
@@ -192,7 +193,7 @@
 					DBusMessage * reply = dbus_connection_send_with_reply_and_block(
 												this->connct,
 												message,
-												1000,
+												Config::Value<int>("dbus","timeout",1000),
 												&error
 											);
 
