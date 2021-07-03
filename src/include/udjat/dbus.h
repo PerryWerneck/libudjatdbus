@@ -244,7 +244,9 @@
 			Worker * find(DBusMessage *message);
 
 			/// @brief Send message, unref message.
-			void send(DBusMessage *message);
+			void send(DBusMessage *message, const std::vector<DBus::Value> * values = nullptr);
+
+			void send(const int message_type, const char *path, const char *iface, const char *member, const std::vector<DBus::Value> * values = nullptr);
 
 			void insert(Worker *worker);
 			void remove(Worker *worker);
@@ -276,6 +278,26 @@
 			};
 
 			std::vector<Argument> arguments;
+
+			/// @brief D-Bus message event.
+			class Event : public Udjat::Alert::Event {
+			protected:
+
+				int message_type;
+
+				std::string path;
+				std::string iface;
+				std::string member;
+
+				std::vector<DBus::Value> values;
+
+			public:
+				Event(const DBus::Alert &alert, int message_type, const Abstract::Agent &agent, const Abstract::State &state);
+
+				const char * getDescription() const override;
+				void alert(size_t current, size_t total) override;
+
+			};
 
 		public:
 			Alert(const pugi::xml_node &node);

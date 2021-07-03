@@ -148,9 +148,38 @@
 			});
 		}
 
-		void Connection::send(DBusMessage *message) {
+		void Connection::send(const int message_type, const char *path, const char *iface, const char *member, const std::vector<DBus::Value> * values)  {
+
+			DBusMessage *message = dbus_message_new(message_type);
+
+			if(!dbus_message_set_path(message,path)) {
+				throw runtime_error("Can't set message path");
+			}
+
+			if(!dbus_message_set_interface(message,iface)) {
+				throw runtime_error("Can't set message interface");
+			}
+
+			if(!dbus_message_set_member(message,member)) {
+				throw runtime_error("Can't set message member");
+			}
+
+			send(message,values);
+		}
+
+		void Connection::send(DBusMessage *message, const std::vector<DBus::Value> * values) {
 
 			lock_guard<recursive_mutex> lock(guard);
+
+			if(values) {
+
+				// Add values to the message.
+				for(auto value = values->begin(); value != values->end(); value++) {
+
+
+				}
+
+			}
 
 			dbus_bool_t rc = dbus_connection_send(this->connct, message, NULL);
 			dbus_message_unref(message);

@@ -32,63 +32,11 @@
 
 	void DBus::Signal::activate(const Abstract::Agent &agent, const Abstract::State &state) {
 
-		class Event : public Alert::Event {
-		private:
-			string path;
-			string iface;
-			string member;
-
-			std::vector<DBus::Value> values;
-
-		public:
-			Event(const Signal *signal, const Abstract::Agent &agent, const Abstract::State &state)
-				: path(signal->path), iface(signal->iface), member(signal->member) {
-
-				state.expand(path);
-				agent.expand(path);
-
-				state.expand(iface);
-				agent.expand(iface);
-
-				state.expand(member);
-				agent.expand(member);
-
-				// Load arguments.
-				for(auto argument = signal->begin(); argument != signal->end(); argument++) {
-
-					string str{argument->value};
-					state.expand(str);
-					agent.expand(str);
-
-					values.emplace_back(argument->type,str.c_str());
-
-				}
-
-			}
-
-			const char * getDescription() const override {
-				return iface.c_str();
-			}
-
-			void alert(size_t current, size_t total) override {
-
-				info("Emitting {} {} ({}/{})",iface,member,current,total);
-#ifdef DEBUG
-				info("Path='{}'",path);
-#endif // DEBUG
-
-				DBusMessage *msg = dbus_message_new_signal(path.c_str(),iface.c_str(),member.c_str());
-				Connection::getInstance().send(msg);
-
-			}
-
-		};
-
 #ifdef DEBUG
 		info("Signal '{}.{}' was activated",iface,member);
 #endif // DEBUG
 
-		Alert::activate(make_shared<Event>(this,agent,state));
+		Alert::activate(make_shared<DBus::Alert::Event>(*this,DBUS_MESSAGE_TYPE_SIGNAL,agent,state));
 
 	}
 
