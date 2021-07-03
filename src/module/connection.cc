@@ -183,13 +183,53 @@
 
 			}
 
-			dbus_bool_t rc = dbus_connection_send(this->connct, message, NULL);
-			dbus_connection_flush(this->connct);
-			dbus_message_unref(message);
+			try {
 
-			if(!rc) {
-				throw runtime_error("Can't send D-Bus message");
+				if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_METHOD_CALL) {
+
+					DBus::Error error;
+
+					DBusMessage * reply = dbus_connection_send_with_reply_and_block(
+												this->connct,
+												message,
+												1000,
+												&error
+											);
+
+					if(reply) {
+
+						if(dbus_message_get_type(reply) == DBUS_MESSAGE_TYPE_ERROR) {
+
+							// TODO: Improve it!
+							dbus_message_unref(reply);
+							throw runtime_error("Method call has returned an error");
+
+						}
+
+						dbus_message_unref(reply);
+
+					}
+
+					error.test();
+
+				} else {
+
+					dbus_bool_t rc = dbus_connection_send(this->connct, message, NULL);
+					dbus_connection_flush(this->connct);
+
+					if(!rc) {
+						throw runtime_error("Can't send D-Bus message");
+					}
+
+				}
+
+			} catch(...) {
+
+				dbus_message_unref(message);
+				throw;
 			}
+
+			dbus_message_unref(message);
 
 		}
 
