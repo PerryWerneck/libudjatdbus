@@ -59,6 +59,11 @@
 	}
 
 	DBus::Alert::Argument::Argument(const pugi::xml_node &node) : type(getType(node)), value(Quark(node,"value","",false).c_str()) {
+
+#ifdef DEBUG
+		cout << ((char) this->type) << " - " << this->value << endl;
+#endif // DEBUG
+
 	}
 
  }

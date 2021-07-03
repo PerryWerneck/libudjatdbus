@@ -8,7 +8,13 @@
 
 	<random name='alerter' update-timer='60' on-demand='false'>
 
-		<dbus-signal />
+		<dbus-signal>
+		
+			<argument type='int16' value='${agent.value}'/>
+			<argument type='string' value='${level}'/>
+			<argument type='string' value='${state.summary}'/>
+				
+		</dbus-signal>
 
 	</random>
 	

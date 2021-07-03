@@ -24,6 +24,31 @@
 
  namespace Udjat {
 
+ 	DBus::Value::Value(const Value *src) {
+
+ 		type = src->type;
+
+ 		if(type == DBUS_TYPE_STRING) {
+			memset(&value,0,sizeof(value));
+			value.str = strdup(src->value.str);
+ 		} else {
+			value = src->value;
+ 		}
+
+	}
+
+	DBus::Value::Value(const Value &src) {
+ 		type = src.type;
+
+ 		if(type == DBUS_TYPE_STRING) {
+			memset(&value,0,sizeof(value));
+			value.str = strdup(src.value.str);
+ 		} else {
+			value = src.value;
+ 		}
+
+	}
+
 	DBus::Value::Value() {
 		type = DBUS_TYPE_INVALID;
 		memset(&value,0,sizeof(value));
@@ -72,7 +97,10 @@
 			break;
 
 		case DBUS_TYPE_STRING:
-			this->set(str);
+			value.str = strdup(str);
+#ifdef DEBUG
+			cout << "value(" << ((char) this->type) << ")='" << value.str << "' (" << ((void *) value.str) << endl;
+#endif // DEBUG
 			break;
 
 		default:
@@ -253,7 +281,7 @@
 	}
 
 
-	void DBus::Value::get(DBusMessageIter *iter) {
+	void DBus::Value::get(DBusMessageIter *iter) const {
 
 		switch(this->type) {
 		case DBUS_TYPE_INVALID:
@@ -338,7 +366,15 @@
 			return;
 		}
 
-		dbus_message_iter_append_basic(iter,this->type,&this->value);
+#ifdef DEBUG
+		if(this->type == DBUS_TYPE_STRING) {
+			cout << "Value(" << ((char) this->type) << ") = '" << this->value.str << "' (" << ((void *) this->value.str) << ")" << endl;
+		}
+#endif // DEBUG
+
+		if(!dbus_message_iter_append_basic(iter,this->type,&this->value)) {
+			throw runtime_error("Can't add value to d-bus iterator");
+		}
 
 	}
 

@@ -174,14 +174,17 @@
 			if(values) {
 
 				// Add values to the message.
+				DBusMessageIter args;
+
+				dbus_message_iter_init_append(message, &args);
 				for(auto value = values->begin(); value != values->end(); value++) {
-
-
+					value->get(&args);
 				}
 
 			}
 
 			dbus_bool_t rc = dbus_connection_send(this->connct, message, NULL);
+			dbus_connection_flush(this->connct);
 			dbus_message_unref(message);
 
 			if(!rc) {

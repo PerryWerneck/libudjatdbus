@@ -64,12 +64,17 @@
 			std::string getArraySignature() const noexcept;
 
 		public:
+
+			// String values have an strdup; the copy can invalidate the pointer.
+			Value(const Value *src);
+			Value(const Value &src);
+
 			Value();
 			Value(int type, const char *value);
 			virtual ~Value();
 
 			/// @brief Add value on the message.
-			void get(DBusMessageIter *iter);
+			void get(DBusMessageIter *iter) const;
 
 			/// @brief The value has children?
 			inline bool empty() const noexcept {
