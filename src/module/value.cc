@@ -20,12 +20,65 @@
  #include "private.h"
  #include <udjat/dbus.h>
  #include <cstring>
+ #include <string>
 
  namespace Udjat {
 
 	DBus::Value::Value() {
 		type = DBUS_TYPE_INVALID;
 		memset(&value,0,sizeof(value));
+	}
+
+	DBus::Value::Value(int type, const char *str) : DBus::Value::Value() {
+
+		reset();
+		this->type = type;
+
+		switch(type) {
+		case DBUS_TYPE_BYTE:
+			value.byt = str[0];
+			break;
+
+		case DBUS_TYPE_BOOLEAN:
+			value.bool_val = (std::stoi(str) != 0);
+			break;
+
+		case DBUS_TYPE_INT16:
+			value.i16 = std::stoi(str);
+			break;
+
+		case DBUS_TYPE_UINT16:
+			value.u16 = std::stoi(str);
+			break;
+
+		case DBUS_TYPE_INT32:
+			value.i32 = std::stol(str);
+			break;
+
+		case DBUS_TYPE_UINT32:
+			value.u32 = std::stoul(str);
+			break;
+
+		case DBUS_TYPE_INT64:
+			value.i64 = std::stoll(str);
+			break;
+
+		case DBUS_TYPE_UINT64:
+			value.u64 = std::stoull(str);
+			break;
+
+		case DBUS_TYPE_DOUBLE:
+			value.dbl = stod(str);
+			break;
+
+		case DBUS_TYPE_STRING:
+			this->set(str);
+			break;
+
+		default:
+			throw runtime_error("Unexpected type id");
+		}
+
 	}
 
 	DBus::Value::~Value() {

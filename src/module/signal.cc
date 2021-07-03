@@ -38,6 +38,8 @@
 			string iface;
 			string member;
 
+			std::vector<DBus::Value> values;
+
 		public:
 			Event(const Signal *signal, const Abstract::Agent &agent, const Abstract::State &state)
 				: path(signal->path), iface(signal->iface), member(signal->member) {
@@ -50,6 +52,17 @@
 
 				state.expand(member);
 				agent.expand(member);
+
+				// Load arguments.
+				for(auto argument = signal->begin(); argument != signal->end(); argument++) {
+
+					string str{argument->value};
+					state.expand(str);
+					agent.expand(str);
+
+					values.emplace_back(argument->type,str.c_str());
+
+				}
 
 			}
 

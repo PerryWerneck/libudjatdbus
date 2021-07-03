@@ -44,6 +44,7 @@
 		<Unit filename="src/include/config.h" />
 		<Unit filename="src/include/udjat/dbus.h" />
 		<Unit filename="src/module/alert.cc" />
+		<Unit filename="src/module/argument.cc" />
 		<Unit filename="src/module/connection.cc" />
 		<Unit filename="src/module/filter.cc" />
 		<Unit filename="src/module/init.cc" />

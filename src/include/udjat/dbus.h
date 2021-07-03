@@ -65,6 +65,7 @@
 
 		public:
 			Value();
+			Value(int type, const char *value);
 			virtual ~Value();
 
 			/// @brief Add value on the message.
@@ -279,6 +280,14 @@
 		public:
 			Alert(const pugi::xml_node &node);
 			virtual ~Alert();
+
+			inline std::vector<Argument>::const_iterator begin() const noexcept {
+				return arguments.begin();
+			}
+
+			inline std::vector<Argument>::const_iterator end() const noexcept {
+				return arguments.end();
+			}
 
 		};
 

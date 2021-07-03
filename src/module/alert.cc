@@ -23,7 +23,7 @@
 
  namespace Udjat {
 
-	DBus::Alert::Alert(const pugi::xml_node &node) : Udjat::Alert(node) {
+	DBus::Alert::Alert(const pugi::xml_node &node) : Udjat::Alert(node,"dbus") {
 
 		path = Quark(node,"path","${agent.path}").c_str();
 		iface = Quark(node,"interface","br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".agent").c_str();
@@ -32,6 +32,11 @@
 #ifdef DEBUG
 		info("Alert created iface='{}' name='{}'",iface,member);
 #endif // DEBUG
+
+		for(auto child = node.child("argument"); child; child = child.next_sibling("argument")) {
+			arguments.emplace_back(child);
+		}
+
 	}
 
 	DBus::Alert::~Alert() {
