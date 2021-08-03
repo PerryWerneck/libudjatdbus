@@ -36,7 +36,7 @@
 		class Signal::Factory : public Udjat::Factory {
 		public:
 			Factory();
-			void parse(Abstract::Agent &parent, const pugi::xml_node &node) const override;
+			bool parse(Abstract::Agent &parent, const pugi::xml_node &node) const override;
 
 		};
 

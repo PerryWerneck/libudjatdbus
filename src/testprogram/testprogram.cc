@@ -47,7 +47,7 @@
 			srand(time(NULL));
 		}
 
-		void parse(Abstract::Agent &parent, const pugi::xml_node &node) const override {
+		bool parse(Abstract::Agent &parent, const pugi::xml_node &node) const override {
 
 			class RandomAgent : public Agent<unsigned int> {
 			private:
@@ -59,14 +59,17 @@
 					load(node);
 				}
 
-				void refresh() override {
+				bool refresh() override {
 					cout << "Refreshing random agent" << endl;
 					set( (((unsigned int) rand())+1) % limit);
+					return true;
 				}
 
 			};
 
 			parent.insert(make_shared<RandomAgent>(node));
+
+			return true;
 
 		}
 

@@ -26,8 +26,9 @@
 	DBus::Signal::Factory::Factory() : Udjat::Factory("dbus-signal",&DBus::moduleinfo) {
 	}
 
-	void DBus::Signal::Factory::parse(Abstract::Agent &parent, const pugi::xml_node &node) const {
+	bool DBus::Signal::Factory::parse(Abstract::Agent &parent, const pugi::xml_node &node) const {
 		parent.push_back(make_shared<DBus::Signal>(node));
+		return true;
 	}
 
 	void DBus::Signal::activate(const Abstract::Agent &agent, const Abstract::State &state) {
