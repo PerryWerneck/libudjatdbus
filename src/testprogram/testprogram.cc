@@ -20,6 +20,7 @@
  #include <udjat.h>
  #include <udjat/module.h>
  #include <udjat/factory.h>
+ #include <udjat/tools/mainloop.h>
  #include <unistd.h>
 
  using namespace std;
@@ -80,7 +81,7 @@
 	auto module = udjat_module_init();
 	auto agent = Abstract::Agent::init("${PWD}/test.xml");
 
-	Udjat::run();
+	Udjat::MainLoop::getInstance().run();
 
 	Abstract::Agent::deinit();
 
