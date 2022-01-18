@@ -212,7 +212,7 @@
 						const char *path,
 						const char *interface,
 						const char *member,
-						std::function<void(DBusMessage * message, DBusError *error)> call
+						std::function<void(Message & message)> call
 					);
 			*/
 

@@ -18,12 +18,11 @@
  */
 
  #include "private.h"
- #include <udjat/dbus.h>
- #include <udjat/factory.h>
+ #include <udjat/module.h>
 
  using namespace Udjat;
 
- const Udjat::ModuleInfo DBus::moduleinfo{
+ static const Udjat::ModuleInfo moduleinfo {
 	PACKAGE_NAME,								// The module name.
 	"UDJat D-Bus module", 						// The module description.
 	PACKAGE_VERSION, 							// The module version.
@@ -34,87 +33,15 @@
  /// @brief Register udjat module.
  Udjat::Module * udjat_module_init() {
 
-	/// @brief Proxy for libudjat workers.
-	class Proxy : public DBus::Worker {
-	public:
-		Proxy() {
-			this->interface = "br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME) ".";
-		}
-
-		bool equal(DBusMessage *message) override {
-
-			if(dbus_message_get_type(message) != DBUS_MESSAGE_TYPE_METHOD_CALL) {
-				return false;
-			}
-
-			if(strncasecmp(dbus_message_get_interface(message),interface,strlen(interface))) {
-				return false;
-			}
-
-			return true;
-		}
-
-		/// @brief Execute request.
-		bool work(DBus::Request &request, DBus::Response &response) override {
-
-			string name{request.getInterface() + strlen(interface)};
-
-			size_t len = name.find('.');
-			if(len != string::npos && len > 0) {
-				name.resize(len);
-			}
-
-			const Udjat::Worker * worker = Udjat::Worker::find(name.c_str());
-			if(!worker)
-				return false;
-
-			if(request == "get") {
-
-				if(!worker->work(request,response)) {
-					throw runtime_error("Method not allowed");
-				}
-
-			} else if(request == "info") {
-
-				worker->getModuleInfo().get(response);
-
-			} else {
-
-				return false;
-
-			}
-
-			return true;
-		}
-
-	};
-
 	class Controller : public Udjat::Module {
 	private:
 
-		/// @brief Proxy for libudjat workers.
-		Proxy * proxy;
-
-		/// @brief Signal factory.
-		DBus::Signal::Factory sigFactory;
-
 	public:
 
-		Controller() : Udjat::Module("d-bus",&DBus::moduleinfo), proxy(new Proxy()) {
-
-			DBus::Connection &connection = DBus::Connection::getInstance();
-
-			connection.request("br.eti.werneck." STRINGIZE_VALUE_OF(PRODUCT_NAME));
-			connection.insert(proxy);
-
+		Controller() : Udjat::Module("d-bus",&moduleinfo) {
 		};
 
-		~Controller() {
-
-			DBus::Connection &connection = DBus::Connection::getInstance();
-
-			connection.remove(proxy);
-			delete proxy;
+		virtual ~Controller() {
 		};
 
 	};

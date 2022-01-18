@@ -20,10 +20,8 @@
  // https://stackoverflow.com/questions/9378593/dbuswatch-and-dbustimeout-examples
 
  #include <config.h>
- #include <udjat/dbus.h>
- #include <udjat/module.h>
- #include <udjat/worker.h>
- #include <udjat/factory.h>
+ #include <udjat/defs.h>
+ #include <udjat/tools/dbus.h>
  #include <iostream>
  #include <system_error>
 
@@ -32,15 +30,6 @@
  namespace Udjat {
 
 	namespace DBus {
-
-		class Signal::Factory : public Udjat::Factory {
-		public:
-			Factory();
-			bool parse(Abstract::Agent &parent, const pugi::xml_node &node) const override;
-
-		};
-
-		extern const Udjat::ModuleInfo moduleinfo;
 
 	}
 
