@@ -24,6 +24,7 @@
 
  namespace Udjat {
 
+	/*
 	DBus::Response::Response() {
 
 	}
@@ -81,7 +82,7 @@
 		throw system_error(ENOTSUP,system_category(),"Cant set value by type");
 		return *this;
 	}
-
+	*/
 
  }
 

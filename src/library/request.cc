@@ -24,6 +24,7 @@
 
  namespace Udjat {
 
+	/*
 	DBus::Request::Request(DBusMessage *m, const std::string &a) : message(m),action(a) {
 
 		this->method = dbus_message_get_member(message);
@@ -172,6 +173,7 @@
 		return *this;
 
 	}
+	*/
 
  }
 

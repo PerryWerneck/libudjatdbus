@@ -42,12 +42,14 @@
 			<Add option="-pthread" />
 		</Linker>
 		<Unit filename="src/include/config.h" />
-		<Unit filename="src/include/udjat/dbus.h" />
+		<Unit filename="src/include/udjat/tools/dbus.h" />
 		<Unit filename="src/library/connection.cc" />
 		<Unit filename="src/library/filter.cc" />
+		<Unit filename="src/library/interface.cc" />
 		<Unit filename="src/library/request.cc" />
 		<Unit filename="src/library/response.cc" />
 		<Unit filename="src/library/value.cc" />
+		<Unit filename="src/library/worker.cc" />
 		<Unit filename="src/module/alert.cc" />
 		<Unit filename="src/module/argument.cc" />
 		<Unit filename="src/module/connection.cc" />

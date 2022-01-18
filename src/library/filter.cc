@@ -20,63 +20,66 @@
  #include <config.h>
  #include <udjat/tools/dbus.h>
  #include <udjat/worker.h>
+ #include <iostream>
 
  using namespace std;
 
  namespace Udjat {
 
-	namespace DBus {
+	DBusHandlerResult DBus::Connection::on_signal(DBusMessage *message) {
 
-		DBusHandlerResult Connection::filter(DBusConnection *connection, DBusMessage *message, Connection *controller) noexcept {
-
-			if(!(strcasecmp("Introspect",dbus_message_get_member(message)) || strcasecmp("org.freedesktop.DBus.Introspectable",dbus_message_get_interface(message)))) {
-
-				// https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-introspectable
-				// https://dbus.freedesktop.org/doc/dbus-specification.html#introspection-format
-
-				// TODO: How to implement introspection?
-
-				cerr << "d-bus\tClient is requesting introspection [not supported]" << endl;
-
-				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-			}
+		const char *member		= dbus_message_get_member(message);
+		const char *interface	= dbus_message_get_interface(message);
 
 #ifdef DEBUG
-			cout	<< "Member:    " << dbus_message_get_member(message) << endl
-					<< "Interface: " << dbus_message_get_interface(message) << endl;
+		cout << "d-bus\tsignal(" << interface << " " << member << ")" << endl;
 #endif // DEBUG
 
-			try {
-				//
-				// Search for internal workers.
-				//
-				Worker * worker = controller->find(message);
+		lock_guard<mutex> lock(guard);
 
-				if(worker) {
-					DBus::Request request(message,worker->getAction(message));
-					DBus::Response response;
-					if(worker->work(request, response)) {
-						response.reply(connection,message);
-						return DBUS_HANDLER_RESULT_HANDLED;
+		try {
+
+			for(auto intf : interfaces) {
+
+				if(!intf.name.compare(interface)) {
+
+					for(auto memb : intf.members) {
+
+						if(!memb.name.compare(member)) {
+							memb.call(message);
+							break;
+						}
+
 					}
+					break;
 				}
-
-			} catch(const std::exception &e) {
-
-				cerr << "D-Busd-bus\t" << e.what() << endl;
-
-				DBusMessage * rsp = dbus_message_new_error(message,DBUS_ERROR_FAILED,e.what());
-				dbus_connection_send(connection, rsp, NULL);
-				dbus_message_unref(rsp);
-				return DBUS_HANDLER_RESULT_HANDLED;
-
 			}
 
-			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+		} catch(const exception &e) {
+
+			cerr << "d-bus\t" << interface << " " << member << ": " << e.what() << endl;
+
+		} catch(...) {
+
+			cerr << "d-bus\t" << interface << " " << member << ": Unexpected error" << endl;
 
 		}
 
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
 	}
+
+	DBusHandlerResult DBus::Connection::filter(DBusConnection *connection, DBusMessage *message, DBus::Connection *controller) {
+
+		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_SIGNAL) {
+			controller->on_signal(message);
+		}
+
+		// TODO: Filter method calls.
+
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	}
+
 
  }
 

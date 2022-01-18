@@ -26,6 +26,7 @@
 
  namespace Udjat {
 
+	/*
  	DBus::Value::Value(const Value *src) {
 
  		type = src->type;
@@ -335,16 +336,6 @@
 					}
 				}
 
-				/*
-				if(dbus_message_iter_open_container(iter, DBUS_TYPE_STRUCT, NULL, &subIter)) {
-
-					for(auto child : this->children) {
-						child.second->get(&subIter);
-					}
-
-					dbus_message_iter_close_container(iter, &subIter);
-				}
-				*/
 			}
 			return;
 
@@ -379,7 +370,7 @@
 		}
 
 	}
-
+	*/
 
  }
 
