@@ -60,12 +60,12 @@ case "$host" in
 		CFLAGS="$CFLAGS -pthread -D_WIN32_WINNT=0x0600"
 		CXXFLAGS="$CXXFLAGS -pthread -D_WIN32_WINNT=0x0600"
 		LDFLAGS="$LDFLAGS -pthread"
-		DLL_LDFLAGS="-shared -Wl,--output-def,\$(@D)/udjatusers.def"
+		DLL_LDFLAGS="-shared -Wl,--output-def,\$(@D)/udjatipc.def"
 		LIBS="$LIBS -lwtsapi32"
 		AC_SUBST(LIBEXT,.dll)
 		AC_SUBST(EXEEXT,.exe)
 		AC_SUBST(OSNAME,windows)
-		AC_SUBST(SONAME,udjatusers.dll)
+		AC_SUBST(SONAME,udjatipc.dll)
 		AC_CONFIG_FILES(sdk/windows/dynamic.pc)
 		AC_CONFIG_FILES(sdk/windows/static.pc)
 		
@@ -78,7 +78,7 @@ case "$host" in
 		AC_SUBST(LIBEXT,.so)
 		AC_SUBST(EXEEXT)
 		AC_SUBST(OSNAME,linux)
-		AC_SUBST(SONAME,libudjatusers.so.$app_vrs_major.$app_vrs_minor)
+		AC_SUBST(SONAME,libudjatdbus.so.$app_vrs_major.$app_vrs_minor)
 		AC_CONFIG_FILES(sdk/linux/dynamic.pc)
 		AC_CONFIG_FILES(sdk/linux/static.pc)
 		

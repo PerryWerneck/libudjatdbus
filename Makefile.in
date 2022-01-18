@@ -152,7 +152,7 @@ $(BINRLS)/$(SONAME): \
 		$^ \
 		$(LIBS)
 
-$(BINRLS)/libudjatusers.a: \
+$(BINRLS)/libudjatdbus.a: \
 	$(foreach SRC, $(basename $(LIBRARY_SOURCES)), $(OBJRLS)/$(SRC).o)
 
 	@$(MKDIR) $(@D)
@@ -234,23 +234,23 @@ install-dev: \
 		$(DESTDIR)$(libdir)/pkgconfig/udjat-users-static.pc
 
 install-linux-static: \
-	$(BINRLS)/libudjatusers.a
+	$(BINRLS)/libudjatdbus.a
 
 	# Install static library
 	@$(MKDIR) $(DESTDIR)$(libdir)
 	@$(INSTALL_DATA) \
-		$(BINRLS)/libudjatusers.a \
-		$(DESTDIR)$(libdir)/libudjatusers.static.a
+		$(BINRLS)/libudjatdbus.a \
+		$(DESTDIR)$(libdir)/libudjatdbus.static.a
 
 install-windows-static: \
-	$(BINRLS)/libudjatusers.a
+	$(BINRLS)/libudjatdbus.a
 
 	@$(MKDIR) \
 		$(DESTDIR)$(libdir)
 
 	@$(INSTALL_PROGRAM) \
-		$(BINRLS)/libudjatusers.a \
-		$(DESTDIR)$(libdir)/libudjatusers.a
+		$(BINRLS)/libudjatdbus.a \
+		$(DESTDIR)$(libdir)/libudjatdbus.a
 
 install-linux-dev:
 
@@ -260,7 +260,7 @@ install-linux-dev:
 
 	@$(LN_S) \
 		$(SONAME) \
-		$(DESTDIR)$(libdir)/libudjatusers.so
+		$(DESTDIR)$(libdir)/libudjatdbus.so
 
 install-windows-dev:
 
@@ -268,9 +268,9 @@ install-windows-dev:
 		$(DESTDIR)$(libdir)
 
 	@$(DLLTOOL) \
-		--input-def $(BINRLS)/udjatusers.def \
+		--input-def $(BINRLS)/udjatdbus.def \
 		--dllname @SONAME@ \
-		--output-lib $(DESTDIR)$(libdir)/libudjatusers.dll.a
+		--output-lib $(DESTDIR)$(libdir)/libudjatdbus.dll.a
 		
 	
 #---[ Uninstall Targets ]----------------------------------------------------------------
