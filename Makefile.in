@@ -227,11 +227,11 @@ install-dev: \
 
 	@$(INSTALL_DATA) \
 		sdk/@OSNAME@/dynamic.pc \
-		$(DESTDIR)$(libdir)/pkgconfig/udjat-users.pc
+		$(DESTDIR)$(libdir)/pkgconfig/udjat-dbus.pc
 
 	@$(INSTALL_DATA) \
 		sdk/@OSNAME@/static.pc \
-		$(DESTDIR)$(libdir)/pkgconfig/udjat-users-static.pc
+		$(DESTDIR)$(libdir)/pkgconfig/udjat-dbus-static.pc
 
 install-linux-static: \
 	$(BINRLS)/libudjatdbus.a
