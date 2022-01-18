@@ -21,12 +21,12 @@
  #include <udjat/tools/dbus.h>
  #include <cstring>
  #include <string>
+ #include <iostream>
 
  using namespace std;
 
  namespace Udjat {
 
-	/*
  	DBus::Value::Value(const Value *src) {
 
  		type = src->type;
@@ -41,6 +41,7 @@
 	}
 
 	DBus::Value::Value(const Value &src) {
+
  		type = src.type;
 
  		if(type == DBUS_TYPE_STRING) {
@@ -277,12 +278,50 @@
 			str += v;
 		}
 
-
 		str += ")";
 		return str;
 
 	}
 
+	bool DBus::Value::set(DBusMessageIter *iter) {
+
+		reset(Value::Type::Undefined);
+
+		type = dbus_message_iter_get_arg_type(iter);
+
+		if(type == DBUS_TYPE_INVALID)
+			return false;
+
+		dbus_message_iter_get_basic(iter,&value);
+
+		if(type == DBUS_TYPE_STRING) {
+			// String, copy the value.
+			char * dup = strdup(value.str);
+			value.str = dup;
+			return true;
+		}
+
+		if(type == DBUS_TYPE_ARRAY) {
+			cerr << "d-bus\tUnsupported DBUS_TYPE_ARRAY value" << endl;
+			reset(Value::Type::Undefined);
+			return false;
+		}
+
+		if(type == DBUS_TYPE_DICT_ENTRY) {
+			cerr << "d-bus\tUnsupported DBUS_TYPE_DICT_ENTRY value" << endl;
+			reset(Value::Type::Undefined);
+			return false;
+		}
+
+		if(type == DBUS_TYPE_VARIANT) {
+			cerr << "d-bus\tUnsupported DBUS_TYPE_VARIANT value" << endl;
+			reset(Value::Type::Undefined);
+			return false;
+		}
+
+		return true;
+
+	}
 
 	void DBus::Value::get(DBusMessageIter *iter) const {
 
@@ -370,7 +409,6 @@
 		}
 
 	}
-	*/
 
  }
 

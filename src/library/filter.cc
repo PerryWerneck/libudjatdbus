@@ -19,6 +19,7 @@
 
  #include <config.h>
  #include <udjat/tools/dbus.h>
+ #include <udjat/tools/threadpool.h>
  #include <udjat/worker.h>
  #include <iostream>
 
@@ -40,13 +41,24 @@
 		try {
 
 			for(auto intf : interfaces) {
-
 				if(!intf.name.compare(interface)) {
-
 					for(auto memb : intf.members) {
-
 						if(!memb.name.compare(member)) {
-							memb.call(message);
+
+							try {
+								Message msg(message);
+								memb.call(msg);
+
+							} catch(const exception &e) {
+
+								cerr << "d-bus\tError '" << e.what() << "' processing signal" << endl;
+
+							} catch(...) {
+
+								cerr << "d-bus\tUnexpected error processing signal" << endl;
+
+							}
+
 							break;
 						}
 

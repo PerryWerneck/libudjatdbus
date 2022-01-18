@@ -49,10 +49,19 @@ using std::cerr;
 
 	std::mutex DBus::Connection::guard;
 
+	DBus::Connection & DBus::Connection::getSystemInstance() {
+		lock_guard<mutex> lock(guard);
+		DBus::Connection instance(DBUS_BUS_SYSTEM);
+		return instance;
+	}
+
+	DBus::Connection & DBus::Connection::getSessionInstance() {
+		lock_guard<mutex> lock(guard);
+		DBus::Connection instance(DBUS_BUS_SESSION);
+		return instance;
+	}
+
 	DBus::Connection::Connection() {
-		active = false;
-		thread = nullptr;
-		connection = nullptr;
 	}
 
 	DBus::Connection::Connection(DBusConnection * connection) : Connection() {
@@ -168,11 +177,16 @@ using std::cerr;
 	}
 
 	/// @brief Subscribe to D-Bus signal.
-	void DBus::Connection::subscribe(void *id, const char *interface, const char *member, std::function<void(DBusMessage * message)> call) {
+	void DBus::Connection::subscribe(void *id, const char *interface, const char *member, std::function<void(DBus::Message &message)> call) {
 
-		lock_guard<mutex> lock(guard);
-		getInterface(interface).members.emplace_back(member,call);
+		{
+			lock_guard<mutex> lock(guard);
+			getInterface(interface).members.emplace_back(id,member,call);
+		}
 
+		if(!active) {
+			start();
+		}
 	}
 
 	/*
@@ -345,10 +359,9 @@ using std::cerr;
 		lock_guard<mutex> lock(guard);
 
 		if(thread)
-			throw std::runtime_error("Connection is already active");
+			return;
 
 		active = true;
-
 		thread = new std::thread([this]{
 
 #ifdef DEBUG

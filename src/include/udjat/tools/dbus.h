@@ -20,21 +20,109 @@
  #pragma once
 
  #include <udjat/defs.h>
+ #include <udjat/tools/value.h>
  #include <dbus/dbus.h>
  #include <mutex>
  #include <functional>
  #include <list>
+ #include <map>
  #include <thread>
 
  namespace Udjat {
 
 	namespace DBus {
 
-		/// @brief D-Bus interface
+		class Connection;
 		class Interface;
+		class Message;
+
+		/// @brief D-Bus Value
+		class UDJAT_API Value : public Udjat::Value {
+		private:
+
+			/// @brief D-Bus data type.
+			int type;
+
+			/// @brief D-Bus value.
+			DBusBasicValue value;
+
+			/// @brief Value children.
+			std::map<std::string,Value *> children;
+
+			/// @brief Check if the value dont have a signagture.
+			/// @return true if the value can be added on signatured.
+			inline bool noSignature() const noexcept {
+				return (type == DBUS_TYPE_INVALID || type == DBUS_TYPE_ARRAY || type == DBUS_TYPE_DICT_ENTRY);
+			}
+
+			/// @brief Get signature for array export.
+			std::string getArraySignature() const noexcept;
+
+		public:
+
+			// String values have an strdup; the copy can invalidate the pointer.
+			Value(const Value *src);
+			Value(const Value &src);
+
+			Value();
+			Value(int type, const char *value);
+			virtual ~Value();
+
+			/// @brief Add value on iter.
+			void get(DBusMessageIter *iter) const;
+
+			/// @brief Set value from iter.
+			/// @return true if the value is valid.
+			bool set(DBusMessageIter *iter);
+
+			/// @brief The value has children?
+			inline bool empty() const noexcept {
+				return children.empty();
+			}
+
+			inline bool operator==(int type) const noexcept {
+				return this->type == type;
+			}
+
+			Udjat::Value & reset(const Udjat::Value::Type type = Udjat::Value::Undefined) override;
+
+			bool isNull() const override;
+
+			Udjat::Value & operator[](const char *name) override;
+
+			Udjat::Value & append(const Type type) override;
+			Udjat::Value & set(const Udjat::Value &value) override;
+
+			Udjat::Value & set(const char *value, const Type type) override;
+			Udjat::Value & set(const short value) override;
+			Udjat::Value & set(const unsigned short value) override;
+			Udjat::Value & set(const int value) override;
+			Udjat::Value & set(const unsigned int value) override;
+			Udjat::Value & set(const long value) override;
+			Udjat::Value & set(const unsigned long value) override;
+			Udjat::Value & set(const TimeStamp value) override;
+			Udjat::Value & set(const bool value) override;
+			Udjat::Value & set(const float value) override;
+			Udjat::Value & set(const double value) override;
+
+		};
+
+		/// @brief D-Bus message
+		class UDJAT_API Message {
+		private:
+			DBusMessage *message;
+			DBusMessageIter iter;
+
+		public:
+			Message(DBusMessage *m);
+			~Message();
+
+			Message & pop(Value &value);
+
+		};
 
 		/// @brief Conexão com o barramento D-Bus.
-		class Connection {
+		class UDJAT_API Connection {
 		private:
 
 			/// @brief Semaforo para serializar acessos.
@@ -56,13 +144,14 @@
 			/// @brief Handle signal
 			DBusHandlerResult on_signal(DBusMessage *message);
 
-			/// @brief Método para responder a um sinal D-Bus.
+			/// @brief D-Bus signal listener
 			struct Listener {
+				void *id;
 				std::string name;
-				std::function<void(DBusMessage * message)> call;
+				std::function<void(Message & message)> call;
 
-				Listener(const std::string &n, std::function<void(DBusMessage * message)> c)
-					: name(n), call(c) { }
+				Listener(void *i, const std::string &n, std::function<void(Message & message)> c)
+					: id(i), name(n), call(c) { }
 			};
 
 			/// @brief Interface no barramento D-Bus.
@@ -101,12 +190,12 @@
 			Connection(DBusBusType type);
 			~Connection();
 
-			DBusConnection * getConnection() const {
+			inline DBusConnection * getConnection() const {
 				return connection;
 			}
 
 			/// @brief Subscribe to D-Bus signal.
-			void subscribe(void *id, const char *interface, const char *member, std::function<void(DBusMessage * message)> call);
+			void subscribe(void *id, const char *interface, const char *member, std::function<void(DBus::Message &message)> call);
 
 			/// @brief Unsubscribe from D-Bus signal.
 			void unsubscribe(void *id, const char *interfaceName, const char *memberName);

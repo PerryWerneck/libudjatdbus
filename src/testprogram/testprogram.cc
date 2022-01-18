@@ -21,6 +21,7 @@
 
  #include <udjat/tools/systemservice.h>
  #include <udjat/tools/application.h>
+ #include <udjat/tools/dbus.h>
  #include <udjat/agent.h>
  #include <udjat/factory.h>
  #include <udjat/module.h>
@@ -53,6 +54,14 @@ int main(int argc, char **argv) {
 				cout << "http://localhost:8989/api/1.0/agent/" << agent->getName() << ".xml" << endl;
 			}
 
+			DBus::Connection::getSessionInstance().subscribe(
+				this,
+				"com.example.signal",
+				"hello",
+				[](DBus::Message &message) {
+						cout << "d-bus\tGot signal!" << endl;
+				}
+			);
 		}
 
 		/// @brief Deinitialize service.

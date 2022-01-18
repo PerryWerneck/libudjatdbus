@@ -46,6 +46,7 @@
 		<Unit filename="src/library/connection.cc" />
 		<Unit filename="src/library/filter.cc" />
 		<Unit filename="src/library/interface.cc" />
+		<Unit filename="src/library/message.cc" />
 		<Unit filename="src/library/request.cc" />
 		<Unit filename="src/library/response.cc" />
 		<Unit filename="src/library/value.cc" />
