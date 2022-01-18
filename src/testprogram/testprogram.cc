@@ -17,77 +17,57 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #include <udjat.h>
- #include <udjat/module.h>
+ #include <config.h>
+
+ #include <udjat/tools/systemservice.h>
+ #include <udjat/tools/application.h>
+ #include <udjat/agent.h>
  #include <udjat/factory.h>
- #include <udjat/tools/mainloop.h>
- #include <unistd.h>
+ #include <udjat/module.h>
+ #include <iostream>
+ #include <memory>
 
  using namespace std;
  using namespace Udjat;
 
- int main(int argc, char **argv) {
+//---[ Implement ]------------------------------------------------------------------------------------------
 
-	setlocale( LC_ALL, "" );
+int main(int argc, char **argv) {
 
-	Logger::redirect(nullptr,true);
+	class Service : public SystemService {
+	protected:
+		/// @brief Initialize service.
+		void init() override {
+			cout << Application::Name() << "\tInitializing" << endl;
 
-	try {
+			// udjat_module_init();
 
-		Module::load("udjat-module-information");
+			auto root = Abstract::Agent::init("*.xml");
 
-	} catch(const std::exception &e) {
-		cerr << "Error '" << e.what() << "' loading information module" << endl;
-	}
+			cout << "http://localhost:8989/api/1.0/info/modules.xml" << endl;
+			cout << "http://localhost:8989/api/1.0/info/workers.xml" << endl;
+			cout << "http://localhost:8989/api/1.0/info/factories.xml" << endl;
+			cout << "http://localhost:8989/api/1.0/agent.xml" << endl;
 
+			for(auto agent : *root) {
+				cout << "http://localhost:8989/api/1.0/agent/" << agent->getName() << ".xml" << endl;
+			}
 
-	// Randomic value agent factory.
-	class Factory : public Udjat::Factory {
+		}
+
+		/// @brief Deinitialize service.
+		void deinit() override {
+			cout << Application::Name() << "\tDeinitializing" << endl;
+			Udjat::Module::unload();
+		}
+
 	public:
-		Factory() : Udjat::Factory("random") {
-			srand(time(NULL));
-		}
+		Service() = default;
 
-		bool parse(Abstract::Agent &parent, const pugi::xml_node &node) const override {
-
-			class RandomAgent : public Agent<unsigned int> {
-			private:
-				unsigned int limit = 5;
-
-			public:
-				RandomAgent(const pugi::xml_node &node) : Agent<unsigned int>() {
-					cout << "Creating random Agent" << endl;
-					load(node);
-				}
-
-				bool refresh() override {
-					cout << "Refreshing random agent" << endl;
-					set( (((unsigned int) rand())+1) % limit);
-					return true;
-				}
-
-			};
-
-			parent.insert(make_shared<RandomAgent>(node));
-
-			return true;
-
-		}
 
 	};
 
-	static Factory factory;
+	return Service().run(argc,argv);
 
-	auto module = udjat_module_init();
-	auto agent = Abstract::Agent::init("${PWD}/test.xml");
 
-	Udjat::MainLoop::getInstance().run();
-
-	Abstract::Agent::deinit();
-
-	cout << "Removing module" << endl;
-	delete module;
-	Module::unload();
-
-	return 0;
 }

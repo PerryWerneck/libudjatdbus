@@ -17,29 +17,36 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #include "private.h"
+ #include <config.h>
+ #include <mutex>
+ #include <udjat/tools/dbus.h>
  #include <udjat/tools/configuration.h>
+
+ using namespace std;
 
  namespace Udjat {
 
 	namespace DBus {
 
-		Connection & Connection::getInstance() {
-#ifdef DEBUG
-			static Connection instance(DBUS_BUS_SESSION);
-#else
+		std::mutex Connection::guard;
+
+		Connection & Connection::getSystemInstance() {
+			lock_guard<mutex> lock(guard);
 			static Connection instance(DBUS_BUS_SYSTEM);
-#endif // DEBUG
-
 			return instance;
+		}
 
+		Connection & Connection::getSessionInstance() {
+			lock_guard<mutex> lock(guard);
+			static Connection instance(DBUS_BUS_SESSION);
+			return instance;
 		}
 
 		Connection::Connection(DBusBusType type) {
 
 			Error error;
 
-			lock_guard<recursive_mutex> lock(guard);
+			lock_guard<mutex> lock(guard);
 
 			connct = dbus_bus_get(type,&error);
 
@@ -52,18 +59,19 @@
 				throw runtime_error("Unable to add signal filter");
 			}
 
+			// TODO: Use udjat mainloop.
 			mainloop = new thread([this]() {
 
 				DBusConnection * c = this->connct;
 
 				{
-					lock_guard<recursive_mutex> lock(guard);
+					lock_guard<mutex> lock(guard);
 					dbus_connection_ref(c);
 				}
 
 				while(this->connct && dbus_connection_read_write(c,500)) {
 
-					lock_guard<recursive_mutex> lock(guard);
+					lock_guard<mutex> lock(guard);
 					while(dbus_connection_get_dispatch_status(c) == DBUS_DISPATCH_DATA_REMAINS) {
 						dbus_connection_dispatch(c);
 					}
@@ -71,7 +79,7 @@
 				}
 
 				{
-					lock_guard<recursive_mutex> lock(guard);
+					lock_guard<mutex> lock(guard);
 					dbus_connection_unref(c);
 				}
 
@@ -82,7 +90,7 @@
 		Connection::~Connection() {
 
 			{
-				lock_guard<recursive_mutex> lock(guard);
+				lock_guard<mutex> lock(guard);
 				dbus_connection_remove_filter(connct,(DBusHandleMessageFunction) filter, this);
 
 				if(!name.empty()) {
@@ -91,7 +99,7 @@
 					dbus_bus_release_name(connct,name.c_str(),&error);
 
 					if(error) {
-						cerr << error.message << endl;
+						cerr << "d-bus\t" << error.message << endl;
 					}
 
 				}
@@ -109,7 +117,7 @@
 
 		Connection & Connection::request(const char *name, unsigned int flags) {
 
-			lock_guard<recursive_mutex> lock(guard);
+			lock_guard<mutex> lock(guard);
 
 			if(!this->name.empty()) {
 				throw std::system_error(EBUSY, std::system_category(), "This connection already has a name");
@@ -124,7 +132,7 @@
 
 		Worker * Connection::find(DBusMessage *message) {
 
-			lock_guard<recursive_mutex> lock(guard);
+			lock_guard<mutex> lock(guard);
 
 			for(auto worker : workers) {
 
@@ -138,12 +146,12 @@
 		}
 
 		void Connection::insert(Worker *worker) {
-			lock_guard<recursive_mutex> lock(guard);
+			lock_guard<mutex> lock(guard);
 			workers.push_back(worker);
 		}
 
 		void Connection::remove(Worker *worker) {
-			lock_guard<recursive_mutex> lock(guard);
+			lock_guard<mutex> lock(guard);
 			workers.remove_if([worker](Worker *w) {
 				return w == worker;
 			});
@@ -170,7 +178,7 @@
 
 		void Connection::send(DBusMessage *message, const std::vector<DBus::Value> * values) {
 
-			lock_guard<recursive_mutex> lock(guard);
+			lock_guard<mutex> lock(guard);
 
 			if(values) {
 

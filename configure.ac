@@ -6,7 +6,7 @@ AC_PREREQ(2.59)
 
 dnl Initialise automake with the package name, version and
 dnl bug-reporting address.
-AC_INIT([udjat-module-dbus], [1.0], [perry.werneck@gmail.com],[udjat-module-dbus],[https://github.com/PerryWerneck/udjat-module-dbus.git])
+AC_INIT([udjat-module-dbus], [1.0], [perry.werneck@gmail.com],[udjat-module-dbus],[https://github.com/PerryWerneck/udjat-module-dbus])
 
 dnl Place auxilliary scripts here.
 AC_CONFIG_AUX_DIR([scripts])
@@ -34,6 +34,8 @@ AC_PROG_LN_S
 
 AC_LANG([C++])
 
+PKG_CHECK_EXISTS
+
 dnl ---------------------------------------------------------------------------
 dnl Version info
 dnl ---------------------------------------------------------------------------
@@ -55,26 +57,46 @@ CFLAGS="$CFLAGS -I$ac_pwd/src/include"
 
 case "$host" in
 	*-mingw32)
+		CFLAGS="$CFLAGS -pthread -D_WIN32_WINNT=0x0600"
+		CXXFLAGS="$CXXFLAGS -pthread -D_WIN32_WINNT=0x0600"
 		LDFLAGS="$LDFLAGS -pthread"
+		DLL_LDFLAGS="-shared -Wl,--output-def,\$(@D)/udjatusers.def"
+		LIBS="$LIBS -lwtsapi32"
 		AC_SUBST(LIBEXT,.dll)
 		AC_SUBST(EXEEXT,.exe)
 		AC_SUBST(OSNAME,windows)
+		AC_SUBST(SONAME,udjatusers.dll)
+		AC_CONFIG_FILES(sdk/windows/dynamic.pc)
+		AC_CONFIG_FILES(sdk/windows/static.pc)
+		
 		;;
 
  	*)
 		CFLAGS="$CFLAGS -pthread"
 		LDFLAGS="$LDFLAGS -pthread"
+		DLL_LDFLAGS="-shared"
 		AC_SUBST(LIBEXT,.so)
 		AC_SUBST(EXEEXT)
 		AC_SUBST(OSNAME,linux)
+		AC_SUBST(SONAME,libudjatusers.so.$app_vrs_major.$app_vrs_minor)
+		AC_CONFIG_FILES(sdk/linux/dynamic.pc)
+		AC_CONFIG_FILES(sdk/linux/static.pc)
+		
+		PKG_CHECK_MODULES( [SYSTEMD], [libsystemd], AC_DEFINE(HAVE_SYSTEMD,[],[Do we have systemd?]), AC_MSG_NOTICE([libsystemd not present.]) )
 
 esac
+
+AC_SUBST(SYSTEMD_LIBS)
+AC_SUBST(SYSTEMD_CFLAGS)
+AC_SUBST(DLL_LDFLAGS)
 
 dnl ---------------------------------------------------------------------------
 dnl Check for tools
 dnl ---------------------------------------------------------------------------
 
 AC_PATH_TOOL([VALGRIND], [valgrind], [no])
+AC_PATH_TOOL([AR], [ar], [no])
+AC_PATH_TOOL([DLLTOOL], [dlltool], [true])
 
 dnl ---------------------------------------------------------------------------
 dnl Check for C++ 2017 support
@@ -147,19 +169,6 @@ if test "$app_cv_pic" == "yes"; then
 fi
 
 dnl ---------------------------------------------------------------------------
-dnl Libraries
-dnl ---------------------------------------------------------------------------
-PKG_CHECK_EXISTS
-
-dnl ---------------------------------------------------------------------------
-dnl Check for libdbus
-dnl ---------------------------------------------------------------------------
-
-PKG_CHECK_MODULES( [DBUS], [dbus-1], AC_DEFINE(HAVE_DBUS,[],[Do we have d-bus?]), AC_MSG_ERROR([ No DBUS support.]) )
-AC_SUBST(DBUS_LIBS)
-AC_SUBST(DBUS_CFLAGS)
-
-dnl ---------------------------------------------------------------------------
 dnl Check for libudjat
 dnl ---------------------------------------------------------------------------
 PKG_CHECK_MODULES( [UDJAT], [libudjat], AC_DEFINE(HAVE_UDJAT,[],[Do we have libudjat?]), AC_MSG_ERROR([libudjat not present.]) )
@@ -176,13 +185,16 @@ AC_DEFINE_UNQUOTED(MODULE_PATH, $app_cv_module_path, [The path for module instal
 AC_SUBST(MODULE_PATH,$app_cv_module_path)
 
 dnl ---------------------------------------------------------------------------
-dnl test for pugixml
+dnl Check for libdbus
 dnl ---------------------------------------------------------------------------
 
-PKG_CHECK_MODULES(PUGIXML, pugixml, AC_DEFINE(HAVE_PUGIXML,[],[Do we have PUGIXML?]),AC_MSG_ERROR(pugixml is required))
+PKG_CHECK_MODULES( [DBUS], [dbus-1], AC_DEFINE(HAVE_DBUS,[],[Do we have d-bus?]), AC_MSG_ERROR([ No DBUS support.]) )
+AC_SUBST(DBUS_LIBS)
+AC_SUBST(DBUS_CFLAGS)
 
-AC_SUBST(PUGIXML_LIBS)
-AC_SUBST(PUGIXML_CFLAGS)
+dnl ---------------------------------------------------------------------------
+dnl Output config
+dnl ---------------------------------------------------------------------------
 
 AC_SUBST(BASEDIR,$ac_pwd)
 AC_CONFIG_FILES(Makefile)

@@ -49,4 +49,8 @@ config.h
 stamp-h1
 Makefile
 *.[0-9]
+intl
+po
+*.pc
+
 

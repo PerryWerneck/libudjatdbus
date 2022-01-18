@@ -217,7 +217,7 @@
 		private:
 
 			/// @brief Mutex for serialization.
-			std::recursive_mutex guard;
+			static std::mutex guard;
 
 			/// @brief D-Bus connection mainloop.
 			std::thread		* mainloop = nullptr;
@@ -236,7 +236,8 @@
 
 		public:
 
-			static Connection & getInstance();
+			static Connection & getSystemInstance();
+			static Connection & getSessionInstance();
 
 			Connection(DBusBusType type);
 			~Connection();

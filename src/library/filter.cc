@@ -17,8 +17,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #include "private.h"
+ #include <config.h>
+ #include <udjat/tools/dbus.h>
  #include <udjat/worker.h>
+
+ using namespace std;
 
  namespace Udjat {
 
@@ -33,10 +36,7 @@
 
 				// TODO: How to implement introspection?
 
-#ifdef DEBUG
-				cout	<< "Client is requesting object introspection" << endl;
-#endif // DEBUG
-
+				cerr << "d-bus\tClient is requesting introspection [not supported]" << endl;
 
 				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 			}
@@ -63,7 +63,7 @@
 
 			} catch(const std::exception &e) {
 
-				cerr << "D-Bus\t" << e.what() << endl;
+				cerr << "D-Busd-bus\t" << e.what() << endl;
 
 				DBusMessage * rsp = dbus_message_new_error(message,DBUS_ERROR_FAILED,e.what());
 				dbus_connection_send(connection, rsp, NULL);

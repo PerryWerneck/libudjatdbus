@@ -17,7 +17,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #include "private.h"
+ #include <config.h>
+ #include <udjat/tools/dbus.h>
+
+ using namespace std;
 
  namespace Udjat {
 
