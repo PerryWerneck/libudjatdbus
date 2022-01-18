@@ -47,17 +47,17 @@ using std::cerr;
 
  namespace Udjat {
 
-	std::mutex DBus::Connection::guard;
+	std::recursive_mutex DBus::Connection::guard;
 
 	DBus::Connection & DBus::Connection::getSystemInstance() {
-		lock_guard<mutex> lock(guard);
-		DBus::Connection instance(DBUS_BUS_SYSTEM);
+		lock_guard<recursive_mutex> lock(guard);
+		static DBus::Connection instance(DBUS_BUS_SYSTEM);
 		return instance;
 	}
 
 	DBus::Connection & DBus::Connection::getSessionInstance() {
-		lock_guard<mutex> lock(guard);
-		DBus::Connection instance(DBUS_BUS_SESSION);
+		lock_guard<recursive_mutex> lock(guard);
+		static DBus::Connection instance(DBUS_BUS_SESSION);
 		return instance;
 	}
 
@@ -123,6 +123,7 @@ using std::cerr;
 
 	void DBus::Connection::set(DBusConnection * connection) {
 
+		lock_guard<recursive_mutex> lock(guard);
 		if(this->connection) {
 			std::runtime_error("Can't change connection handle");
 		}
@@ -139,6 +140,8 @@ using std::cerr;
 	}
 
 	DBus::Connection::~Connection() {
+
+		cout << "d-bus\tConnection destroyed" << endl;
 
 		active = false;
 
@@ -164,14 +167,14 @@ using std::cerr;
 
 			// Stop D-Bus connection
 			dbus_connection_unref(connection);
+
+			connection = nullptr;
 		}
 
 		if(thread) {
 			// Wait for d-bus thread
 			cout << "d-bus\tWaiting for service thread" << endl;
 			thread->join();
-			delete thread;
-			thread = nullptr;
 		}
 
 	}
@@ -179,10 +182,8 @@ using std::cerr;
 	/// @brief Subscribe to D-Bus signal.
 	void DBus::Connection::subscribe(void *id, const char *interface, const char *member, std::function<void(DBus::Message &message)> call) {
 
-		{
-			lock_guard<mutex> lock(guard);
-			getInterface(interface).members.emplace_back(id,member,call);
-		}
+		lock_guard<recursive_mutex> lock(guard);
+		getInterface(interface).members.emplace_back(id,member,call);
 
 		if(!active) {
 			start();
@@ -356,7 +357,7 @@ using std::cerr;
 
 	void DBus::Connection::start() {
 
-		lock_guard<mutex> lock(guard);
+		lock_guard<recursive_mutex> lock(guard);
 
 		if(thread)
 			return;
@@ -365,10 +366,10 @@ using std::cerr;
 		thread = new std::thread([this]{
 
 #ifdef DEBUG
-			cout << "Thread de conexão D-Bus iniciada" << endl;
+			cout << "d-bus\tService thread begin" << endl;
 #endif // DEBUG
 
-			while(active && dbus_connection_read_write(connection,500)) {
+			while(active && connection && dbus_connection_read_write(connection,500)) {
 				while(connection && dbus_connection_get_dispatch_status(connection) == DBUS_DISPATCH_DATA_REMAINS) {
 					dbus_connection_dispatch(connection);
 				}
@@ -376,8 +377,17 @@ using std::cerr;
 
 			active = false;
 
+			{
+				lock_guard<recursive_mutex> lock(guard);
+				if(thread) {
+					thread->detach();
+					delete thread;
+					thread = nullptr;
+				}
+			}
+
 #ifdef DEBUG
-			cout << "Thread de conexão D-Bus terminada" << endl;
+			cout << "d-bus\tService thread end" << endl;
 #endif // DEBUG
 
 		});

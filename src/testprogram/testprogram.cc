@@ -54,14 +54,26 @@ int main(int argc, char **argv) {
 				cout << "http://localhost:8989/api/1.0/agent/" << agent->getName() << ".xml" << endl;
 			}
 
-			DBus::Connection::getSessionInstance().subscribe(
+			DBus::Connection &session = DBus::Connection::getSessionInstance();
+
+			session.subscribe(
+				this,
+				"org.gnome.ScreenSaver",
+				"ActiveChanged",
+				[](DBus::Message &message) {
+					cout << "org.gnome.ScreenSaver.ActiveChanged" << endl;
+				}
+			);
+
+			session.subscribe(
 				this,
 				"com.example.signal",
 				"hello",
 				[](DBus::Message &message) {
-						cout << "d-bus\tGot signal!" << endl;
+					cout << "com.example.signal.hello" << endl;
 				}
 			);
+
 		}
 
 		/// @brief Deinitialize service.

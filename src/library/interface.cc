@@ -20,6 +20,7 @@
  #include <config.h>
  #include <udjat/tools/dbus.h>
  #include <udjat/worker.h>
+ #include <iostream>
 
  using namespace std;
 
@@ -27,7 +28,7 @@
 
 	DBus::Connection::Interface & DBus::Connection::getInterface(const char *name) {
 
-		std::lock_guard<mutex> lock(guard);
+		std::lock_guard<recursive_mutex> lock(guard);
 
 		for(auto interface=interfaces.begin(); interface != interfaces.end(); interface++) {
 			if(!interface->name.compare(name)) {
@@ -40,6 +41,8 @@
 		// Ativa filtro.
 		DBusError error;
 		dbus_error_init(&error);
+
+		cout << "d-bus\tWatching interface '" << name << "'" << endl;
 
 		dbus_bus_add_match(connection,Interface::getMatch(name).c_str(), &error);
 		dbus_connection_flush(connection);

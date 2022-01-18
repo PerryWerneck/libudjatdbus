@@ -36,7 +36,7 @@
 		cout << "d-bus\tsignal(" << interface << " " << member << ")" << endl;
 #endif // DEBUG
 
-		lock_guard<mutex> lock(guard);
+		lock_guard<recursive_mutex> lock(guard);
 
 		try {
 
@@ -46,6 +46,7 @@
 						if(!memb.name.compare(member)) {
 
 							try {
+
 								Message msg(message);
 								memb.call(msg);
 
@@ -81,10 +82,12 @@
 
 	}
 
-	DBusHandlerResult DBus::Connection::filter(DBusConnection *connection, DBusMessage *message, DBus::Connection *controller) {
+	DBusHandlerResult DBus::Connection::filter(DBusConnection *dbc, DBusMessage *message, DBus::Connection *connection) {
+
+		cout << "d-bus\tRunning filter" << endl;
 
 		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_SIGNAL) {
-			controller->on_signal(message);
+			return connection->on_signal(message);
 		}
 
 		// TODO: Filter method calls.

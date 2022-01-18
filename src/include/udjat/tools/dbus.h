@@ -126,7 +126,7 @@
 		private:
 
 			/// @brief Semaforo para serializar acessos.
-			static std::mutex guard;
+			static std::recursive_mutex guard;
 
 			/// @brief Conexão ao barramento D-Bus.
 			DBusConnection * connection = nullptr;
@@ -177,12 +177,15 @@
 			Interface & getInterface(const char *name);
 
 			/// @brief Message filter method.
-			static DBusHandlerResult filter(DBusConnection *, DBusMessage *, Connection *);
+			static DBusHandlerResult filter(DBusConnection *, DBusMessage *, DBus::Connection *);
 
 		public:
 
 			static Connection & getSystemInstance();
 			static Connection & getSessionInstance();
+
+			Connection(const Connection &) = delete;
+			Connection(const Connection *) = delete;
 
 			Connection();
 			Connection(const char *busname);

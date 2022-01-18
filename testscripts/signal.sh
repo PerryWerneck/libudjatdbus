@@ -1,3 +1,3 @@
 #!/bin/bash
-dbus-send --system --type=signal / com.example.signal string:"hello"
+dbus-send --session --type=signal / com.example.signal.hello string:"hello"
 
