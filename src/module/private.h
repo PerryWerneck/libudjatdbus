@@ -32,6 +32,7 @@
 
 	namespace DBus {
 
+		/*
 		class Alert : public Udjat::Alert {
 		private:
 			/// @brief The path to the object emitting the signal.
@@ -59,11 +60,13 @@
 			std::vector<Argument> arguments;
 
 		public:
-			Alert(const pugi::xml_node &node);
+			Alert(const pugi::xml_node &node, const char *defaults);
 			virtual ~Alert();
 
+			void activate(const Abstract::Agent &agent, const Abstract::State &state, std::shared_ptr<Alert> alert) const override;
 
-		}
+		};
+		*/
 
 	}
 
