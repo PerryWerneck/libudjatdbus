@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
 				[](DBus::Message &message) {
 
 					cout << "com.example.signal.hello " << DBus::Value(message).to_string() << endl;
+
 				}
 			);
 
