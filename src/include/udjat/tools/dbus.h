@@ -105,18 +105,17 @@
 			Udjat::Value & set(const float value) override;
 			Udjat::Value & set(const double value) override;
 
-			/*
-			Udjat::Value & get(const string &value) override;
-			Udjat::Value & get(const short &value) override;
-			Udjat::Value & get(const unsigned short &value) override;
-			Udjat::Value & get(const int &value) override;
-			Udjat::Value & get(const unsigned int &value) override;
-			Udjat::Value & get(const long &value) override;
-			Udjat::Value & get(const unsigned long &value) override;
-			Udjat::Value & get(const bool &value) override;
-			Udjat::Value & get(const float &value) override;
-			Udjat::Value & get(const double &value) override;
-			*/
+			const Udjat::Value & get(std::string &value) const override;
+			// const Udjat::Value & get(short &value) const override;
+			// const Udjat::Value & get(unsigned short &value) const override;
+			// const Udjat::Value & get(int &value) const override;
+			// const Udjat::Value & get(unsigned int &value) const override;
+			// const Udjat::Value & get(long &value) const override;
+			// const Udjat::Value & get(unsigned long &value) const override;
+			// const Udjat::Value & get(TimeStamp &value) const override;
+			const Udjat::Value & get(bool &value) const override;
+			// const Udjat::Value & get(float &value) const override;
+			// const Udjat::Value & get(double &value) const override;
 
 		};
 
@@ -131,7 +130,6 @@
 			~Message();
 
 			Message & pop(Value &value);
-
 
 		};
 

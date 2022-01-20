@@ -19,6 +19,7 @@
 
  #include <config.h>
  #include <udjat/tools/dbus.h>
+ #include <udjat/tools/value.h>
  #include <cstring>
  #include <string>
  #include <iostream>
@@ -408,6 +409,31 @@
 		}
 
 	}
+
+	const Udjat::Value & DBus::Value::get(bool &value) const {
+
+		if(this->type == DBUS_TYPE_BOOLEAN) {
+			value = this->value.bool_val;
+		} else {
+			throw runtime_error("The value is not a boolean");
+		}
+
+		return *this;
+	}
+
+	const Udjat::Value & DBus::Value::get(std::string &value) const {
+
+		if(this->type == DBUS_TYPE_STRING) {
+			value = this->value.str;
+		} else {
+			throw runtime_error("The value is not string");
+		}
+
+		return *this;
+
+	}
+
+
 
  }
 

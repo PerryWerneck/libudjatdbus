@@ -67,7 +67,10 @@ int main(int argc, char **argv) {
 				"ActiveChanged",
 				[](DBus::Message &message) {
 
-					cout << "org.gnome.ScreenSaver.ActiveChanged " << endl;
+					DBus::Value value;
+					message.pop(value);
+
+					cout << "org.gnome.ScreenSaver.ActiveChanged " << (value.as_bool() ? "Active" : "Inactive") << endl;
 				}
 			);
 
@@ -76,7 +79,11 @@ int main(int argc, char **argv) {
 				"com.example.signal",
 				"hello",
 				[](DBus::Message &message) {
-					cout << "com.example.signal.hello" << endl;
+
+					DBus::Value value;
+					message.pop(value);
+
+					cout << "com.example.signal.hello " << value.to_string() << endl;
 				}
 			);
 
