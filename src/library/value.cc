@@ -59,6 +59,11 @@
 		memset(&value,0,sizeof(value));
 	}
 
+	DBus::Value::Value(Message &message) : Value() {
+		set(message.getIter());
+		message.next();
+	}
+
 	DBus::Value::Value(int type, const char *str) : DBus::Value::Value() {
 
 		reset();
@@ -410,6 +415,24 @@
 
 	}
 
+	const Udjat::Value & DBus::Value::get(std::string &value) const {
+
+		switch(this->type) {
+		case DBUS_TYPE_STRING:
+			value = this->value.str;
+			break;
+
+		case DBUS_TYPE_BOOLEAN:
+			value = (this->value.bool_val ? "true" : "false");
+			break;
+
+		default:
+			throw runtime_error("Unable to convert dbus value to string");
+		}
+
+		return *this;
+
+	}
 	const Udjat::Value & DBus::Value::get(bool &value) const {
 
 		if(this->type == DBUS_TYPE_BOOLEAN) {
@@ -420,19 +443,6 @@
 
 		return *this;
 	}
-
-	const Udjat::Value & DBus::Value::get(std::string &value) const {
-
-		if(this->type == DBUS_TYPE_STRING) {
-			value = this->value.str;
-		} else {
-			throw runtime_error("The value is not string");
-		}
-
-		return *this;
-
-	}
-
 
 
  }

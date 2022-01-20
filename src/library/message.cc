@@ -34,6 +34,10 @@
 		dbus_message_unref(message);
 	}
 
+	bool DBus::Message::next() {
+		return dbus_message_iter_next(&iter);
+	}
+
 	DBus::Message & DBus::Message::pop(Value &value) {
 
 		if(value.set(&iter))

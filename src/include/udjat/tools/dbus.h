@@ -63,6 +63,7 @@
 			// String values have an strdup; the copy can invalidate the pointer.
 			Value(const Value *src);
 			Value(const Value &src);
+			Value(Message &message);
 
 			Value();
 			Value(int type, const char *value);
@@ -130,6 +131,20 @@
 			~Message();
 
 			Message & pop(Value &value);
+
+			inline DBusMessageIter * getIter() {
+				return &iter;
+			}
+
+			bool next();
+
+			template <typename T>
+			Message & pop(T &value) {
+				Value v;
+				pop(v);
+				v.get(value);
+				return this;
+			}
 
 		};
 
@@ -246,4 +261,16 @@
 
  }
 
+ /*
+ template <typename T>
+ inline Udjat::Value & operator<<(Udjat::DBus::Message &out, T value) {
+	return out.set(value);
+ }
+
+ template <typename T>
+ inline Udjat::Value & operator>> (const Udjat::DBus::Message &in, T &value ) {
+	in.get(value);
+	return in;
+ }
+ */
 
