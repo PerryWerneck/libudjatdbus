@@ -59,6 +59,22 @@
 
 	}
 
+	/// @brief Unsubscribe by id.
+	bool DBus::Connection::Interface::unsubscribe(void *id) {
+		members.remove_if([id](Listener &listener){
+			return listener.id == id;
+		});
+		return members.empty();
+	}
+
+	/// @brief Unsubscribe by memberName.
+	bool DBus::Connection::Interface::unsubscribe(void *id, const char *memberName) {
+		members.remove_if([id,memberName](Listener &listener){
+			return listener.id == id && strcmp(listener.name.c_str(),memberName) == 0;
+		});
+		return members.empty();
+	}
+
 	std::string DBus::Connection::Interface::getMatch(const char *name) {
 		std::string match{"type='signal',interface='"};
 		match += name;

@@ -33,7 +33,7 @@
 	namespace DBus {
 
 		class Connection;
-		class Interface;
+		//class Interface;
 		class Message;
 
 		/// @brief D-Bus Value
@@ -160,6 +160,10 @@
 				std::list<Listener> members;
 				Interface(const char *n) : name(n) { }
 
+				inline bool empty() const noexcept {
+					return members.empty();
+				}
+
 				/// @brief Obtém string de "match" para o nome informado.
 				static std::string getMatch(const char *name);
 
@@ -168,10 +172,18 @@
 					return getMatch(name.c_str());
 				}
 
+				/// @brief Unsubscribe by id.
+				bool unsubscribe(void *id);
+
+				/// @brief Unsubscribe by memberName.
+				bool unsubscribe(void *id, const char *memberName);
+
 			};
 
 			/// @brief Subscribed interfaces.
 			std::list<Interface> interfaces;
+
+			void removeMatch(DBus::Connection::Interface &interface);
 
 			/// @brief Obtém interface pelo nome, inclui se for preciso.
 			Interface & getInterface(const char *name);

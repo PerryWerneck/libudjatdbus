@@ -52,5 +52,5 @@ Makefile
 intl
 po
 *.pc
-
+ABOUT-NLS
 
