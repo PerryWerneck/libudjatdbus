@@ -101,9 +101,14 @@ using std::cerr;
 
 	DBus::Connection::Connection(const char *busname) : Connection() {
 
+		if(!(busname && *busname)) {
+			throw system_error(EINVAL,system_category(),"Invalid busname");
+		}
+
 		DBusError err;
 		dbus_error_init(&err);
 
+		cout << "d-bus\tOpening '" << busname << "'" << endl;
 		DBusConnection * connection = dbus_connection_open(busname, &err);
 		if(dbus_error_is_set(&err)) {
 			std::string message(err.message);

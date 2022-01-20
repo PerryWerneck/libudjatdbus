@@ -289,34 +289,33 @@
 
 		type = dbus_message_iter_get_arg_type(iter);
 
-		if(type == DBUS_TYPE_INVALID)
+		switch(type) {
+		case DBUS_TYPE_INVALID:
 			return false;
 
-		dbus_message_iter_get_basic(iter,&value);
-
-		if(type == DBUS_TYPE_STRING) {
-			// String, copy the value.
-			char * dup = strdup(value.str);
-			value.str = dup;
-			return true;
-		}
-
-		if(type == DBUS_TYPE_ARRAY) {
+		case DBUS_TYPE_ARRAY:
 			cerr << "d-bus\tUnsupported DBUS_TYPE_ARRAY value" << endl;
 			reset(Value::Type::Undefined);
 			return false;
-		}
 
-		if(type == DBUS_TYPE_DICT_ENTRY) {
+		case DBUS_TYPE_DICT_ENTRY:
 			cerr << "d-bus\tUnsupported DBUS_TYPE_DICT_ENTRY value" << endl;
 			reset(Value::Type::Undefined);
 			return false;
-		}
 
-		if(type == DBUS_TYPE_VARIANT) {
+		case DBUS_TYPE_VARIANT:
 			cerr << "d-bus\tUnsupported DBUS_TYPE_VARIANT value" << endl;
 			reset(Value::Type::Undefined);
 			return false;
+
+		default:
+			dbus_message_iter_get_basic(iter,&value);
+			if(type == DBUS_TYPE_STRING) {
+				// String, copy the value.
+				char * dup = strdup(value.str);
+				value.str = dup;
+			}
+
 		}
 
 		return true;

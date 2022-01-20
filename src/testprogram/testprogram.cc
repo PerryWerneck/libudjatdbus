@@ -37,6 +37,9 @@
 int main(int argc, char **argv) {
 
 	class Service : public SystemService {
+	private:
+		DBus::Connection *bus = nullptr;
+
 	protected:
 		/// @brief Initialize service.
 		void init() override {
@@ -56,18 +59,19 @@ int main(int argc, char **argv) {
 			}
 
 			//DBus::Connection &session = DBus::Connection::getSessionInstance();
-			DBus::Connection session(getenv("DBUS_SESSION_BUS_ADDRESS"));
+			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"));
 
-			session.subscribe(
+			bus->subscribe(
 				this,
 				"org.gnome.ScreenSaver",
 				"ActiveChanged",
 				[](DBus::Message &message) {
-					cout << "org.gnome.ScreenSaver.ActiveChanged" << endl;
+
+					cout << "org.gnome.ScreenSaver.ActiveChanged " << endl;
 				}
 			);
 
-			session.subscribe(
+			bus->subscribe(
 				this,
 				"com.example.signal",
 				"hello",
@@ -80,6 +84,7 @@ int main(int argc, char **argv) {
 
 		/// @brief Deinitialize service.
 		void deinit() override {
+			delete bus;
 			cout << Application::Name() << "\tDeinitializing" << endl;
 			Udjat::Module::unload();
 		}
