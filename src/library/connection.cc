@@ -24,27 +24,6 @@
 
  using namespace std;
 
- /*
-#include <ipc/dbus.h>
-#include <stdexcept>
-#include <cstring>
-#include <fstream>
-#include <sys/types.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <ext/stdio_filebuf.h>
-#include <systemd/sd-login.h>
-
-using std::clog;
-using std::endl;
-using std::cout;
-using std::string;
-using std::cerr;
-*/
-
  namespace Udjat {
 
 	std::recursive_mutex DBus::Connection::guard;
