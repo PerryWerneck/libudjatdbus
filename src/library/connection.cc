@@ -61,28 +61,73 @@ using std::cerr;
 		return instance;
 	}
 
-	DBus::Connection::Connection() {
-	}
+	DBus::Connection::Connection(DBusConnection * c, bool reg) : connection(c) {
 
-	DBus::Connection::Connection(DBusConnection * connection) : Connection() {
+		lock_guard<recursive_mutex> lock(guard);
 
-		// Register
-		DBusError err;
-		dbus_error_init(&err);
+		try {
 
-		dbus_bus_register(connection,&err);
-		if(dbus_error_is_set(&err)) {
-			std::string message(err.message);
-			dbus_error_free(&err);
-			throw std::runtime_error(message);
+			if(reg) {
+				// Register
+				DBusError err;
+				dbus_error_init(&err);
+
+				dbus_bus_register(connection,&err);
+				if(dbus_error_is_set(&err)) {
+					std::string message(err.message);
+					dbus_error_free(&err);
+					throw std::runtime_error(message);
+				}
+			}
+
+			if (dbus_connection_add_filter(connection, (DBusHandleMessageFunction) filter, this, NULL) == FALSE) {
+				throw std::runtime_error("Cant add filter to D-Bus connection");
+			}
+
+			// Não encerro o processo ao desconectar.
+			dbus_connection_set_exit_on_disconnect(connection, false);
+
+			active = true;
+			thread = new std::thread([this]{
+
+	#ifdef DEBUG
+				cout << "d-bus\tService thread begin" << endl;
+	#endif // DEBUG
+
+				while(active && connection && dbus_connection_read_write(connection,500)) {
+					while(connection && dbus_connection_get_dispatch_status(connection) == DBUS_DISPATCH_DATA_REMAINS) {
+						dbus_connection_dispatch(connection);
+					}
+				}
+
+				active = false;
+
+				{
+					lock_guard<recursive_mutex> lock(guard);
+					if(thread) {
+						thread->detach();
+						delete thread;
+						thread = nullptr;
+					}
+				}
+
+	#ifdef DEBUG
+				cout << "d-bus\tService thread end" << endl;
+	#endif // DEBUG
+
+			});
+
+		} catch(...) {
+
+			dbus_connection_unref(connection);
+			throw;
+
 		}
 
-		// Set!
-		set(connection);
 
 	}
 
-	DBus::Connection::Connection(DBusBusType type) : Connection() {
+	static DBusConnection * ConnectionFactory(DBusBusType type) {
 
 		DBusError err;
 		dbus_error_init(&err);
@@ -94,12 +139,13 @@ using std::cerr;
 			throw std::runtime_error(message);
 		}
 
-		set(connct);
-
+		return connct;
 	}
 
+	DBus::Connection::Connection(DBusBusType type) : Connection(ConnectionFactory(type),false) {
+	}
 
-	DBus::Connection::Connection(const char *busname) : Connection() {
+	static DBusConnection * ConnectionFactory(const char *busname) {
 
 		if(!(busname && *busname)) {
 			throw system_error(EINVAL,system_category(),"Invalid busname");
@@ -116,26 +162,14 @@ using std::cerr;
 			throw std::runtime_error(message);
 		}
 
-		try {
-
-			dbus_error_init(&err);
-
-			dbus_bus_register(connection,&err);
-			if(dbus_error_is_set(&err)) {
-				std::string message(err.message);
-				dbus_error_free(&err);
-				throw std::runtime_error(message);
-			}
-
-			set(connection);
-
-		} catch(...) {
-			dbus_connection_unref(connection);
-			throw;
-		}
+		return connection;
 
 	}
 
+	DBus::Connection::Connection(const char *busname) : Connection(ConnectionFactory(busname)) {
+	}
+
+	/*
 	void DBus::Connection::set(DBusConnection * connection) {
 
 		lock_guard<recursive_mutex> lock(guard);
@@ -153,6 +187,7 @@ using std::cerr;
 		// Não encerro o processo ao desconectar.
 		dbus_connection_set_exit_on_disconnect(connection, false);
 	}
+	*/
 
 	void DBus::Connection::removeMatch(DBus::Connection::Interface &intf) {
 		DBusError error;
@@ -198,13 +233,8 @@ using std::cerr;
 
 	/// @brief Subscribe to D-Bus signal.
 	void DBus::Connection::subscribe(void *id, const char *interface, const char *member, std::function<void(DBus::Message &message)> call) {
-
 		lock_guard<recursive_mutex> lock(guard);
 		getInterface(interface).members.emplace_back(id,member,call);
-
-		if(!active) {
-			start();
-		}
 	}
 
 	void DBus::Connection::unsubscribe(void *id, const char *interface, const char *memberName) {
@@ -237,6 +267,7 @@ using std::cerr;
 		});
 	}
 
+	/*
 	void DBus::Connection::start() {
 
 		lock_guard<recursive_mutex> lock(guard);
@@ -276,6 +307,7 @@ using std::cerr;
 
 
 	}
+	*/
 
 	/*
 	/// @brief Passagem de parâmetros para método D-Bus.

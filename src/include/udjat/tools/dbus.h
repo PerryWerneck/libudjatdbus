@@ -161,12 +161,8 @@
 			/// @brief Thread de serviço D-Bus.
 			std::thread * thread = nullptr;
 
-			void start();
-
 			/// @brief True se a conexão está ativa.
 			bool active = false;
-
-			void set(DBusConnection * connection);
 
 			/// @brief Handle signal
 			DBusHandlerResult on_signal(DBusMessage *message);
@@ -218,19 +214,19 @@
 			/// @brief Message filter method.
 			static DBusHandlerResult filter(DBusConnection *, DBusMessage *, DBus::Connection *);
 
+			Connection(DBusConnection * connection, bool reg = true);
+
 		public:
+
+			Connection(const char *busname);
+			Connection(DBusBusType type);
+			~Connection();
 
 			static Connection & getSystemInstance();
 			static Connection & getSessionInstance();
 
 			Connection(const Connection &) = delete;
 			Connection(const Connection *) = delete;
-
-			Connection();
-			Connection(const char *busname);
-			Connection(DBusConnection * connection);
-			Connection(DBusBusType type);
-			~Connection();
 
 			inline DBusConnection * getConnection() const {
 				return connection;
