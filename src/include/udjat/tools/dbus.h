@@ -161,9 +161,6 @@
 			/// @brief Thread de serviço D-Bus.
 			std::thread * thread = nullptr;
 
-			/// @brief True se a conexão está ativa.
-			bool active = false;
-
 			/// @brief Handle signal
 			DBusHandlerResult on_signal(DBusMessage *message);
 
@@ -201,12 +198,14 @@
 				/// @brief Unsubscribe by memberName.
 				bool unsubscribe(void *id, const char *memberName);
 
+				/// @brief Remove interface from connection.
+				void remove_from(DBusConnection * connection) noexcept;
 			};
 
 			/// @brief Subscribed interfaces.
 			std::list<Interface> interfaces;
 
-			void removeMatch(DBus::Connection::Interface &interface);
+			// void removeMatch(DBus::Connection::Interface &interface);
 
 			/// @brief Obtém interface pelo nome, inclui se for preciso.
 			Interface & getInterface(const char *name);
@@ -218,12 +217,18 @@
 
 		public:
 
-			Connection(const char *busname);
-			Connection(DBusBusType type);
-			~Connection();
+			/// @brief Get singleton connection to system bus for root user, user bus for others.
+			static Connection & getInstance();
 
+			/// @brief Get singleton connection to the system bus.
 			static Connection & getSystemInstance();
+
+			/// @brief Get singleton connection to the session bus.
 			static Connection & getSessionInstance();
+
+			/// @brief Get connection to a named bus.
+			Connection(const char *busname);
+			~Connection();
 
 			Connection(const Connection &) = delete;
 			Connection(const Connection *) = delete;
@@ -231,6 +236,9 @@
 			inline DBusConnection * getConnection() const {
 				return connection;
 			}
+
+			/// @brief Dispatcher
+			static void dispatch(DBusConnection * connection) noexcept;
 
 			/// @brief Subscribe to D-Bus signal.
 			void subscribe(void *id, const char *interface, const char *member, std::function<void(DBus::Message &message)> call);

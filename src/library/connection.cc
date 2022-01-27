@@ -21,6 +21,7 @@
  #include <udjat/tools/dbus.h>
  #include <udjat/worker.h>
  #include <iostream>
+ #include <unistd.h>
 
  using namespace std;
 
@@ -30,19 +31,47 @@
 
 	static bool use_thread = true;
 
+	DBus::Connection & DBus::Connection::getInstance() {
+		if(getuid() == 0) {
+			return getSystemInstance();
+		}
+		return getSessionInstance();
+	}
+
+	static DBusConnection * ConnectionFactory(DBusBusType type) {
+
+		DBusError err;
+		dbus_error_init(&err);
+
+		DBusConnection * connct = dbus_bus_get(type, &err);
+		if(dbus_error_is_set(&err)) {
+			std::string message(err.message);
+			dbus_error_free(&err);
+			throw std::runtime_error(message);
+		}
+
+		return connct;
+	}
+
 	DBus::Connection & DBus::Connection::getSystemInstance() {
 		lock_guard<recursive_mutex> lock(guard);
-		static DBus::Connection instance(DBUS_BUS_SYSTEM);
+		static DBus::Connection instance(ConnectionFactory(DBUS_BUS_SYSTEM));
 		return instance;
 	}
 
 	DBus::Connection & DBus::Connection::getSessionInstance() {
 		lock_guard<recursive_mutex> lock(guard);
-		static DBus::Connection instance(DBUS_BUS_SESSION);
+		static DBus::Connection instance(ConnectionFactory(DBUS_BUS_SESSION));
 		return instance;
 	}
 
 	DBus::Connection::Connection(DBusConnection * c, bool reg) : connection(c) {
+
+		static bool initialized = false;
+		if(!initialized) {
+			cout << "d-bus\tInitializing thread system" << endl;
+			dbus_threads_init_default();
+		}
 
 		lock_guard<recursive_mutex> lock(guard);
 
@@ -70,35 +99,22 @@
 
 			if(use_thread) {
 
-				active = true;
-				thread = new std::thread([this]{
+				thread = new std::thread([this] {
 
-	#ifdef DEBUG
 					cout << "d-bus\tService thread begin" << endl;
-	#endif // DEBUG
-
-					while(active && connection && dbus_connection_read_write(connection,500) && use_thread) {
-						while(connection && dbus_connection_get_dispatch_status(connection) == DBUS_DISPATCH_DATA_REMAINS) {
-							dbus_connection_dispatch(connection);
-						}
+					auto connct = connection;
+					dbus_connection_ref(connct);
+					while(connection && dbus_connection_read_write(connct,100) && use_thread) {
+						dispatch(connct);
 					}
-
-					active = false;
-
-					{
-						lock_guard<recursive_mutex> lock(guard);
-						if(thread) {
-							thread->detach();
-							delete thread;
-							thread = nullptr;
-						}
-					}
-
-		#ifdef DEBUG
+					cout << "d-bus\tFlushing connection" << endl;
+					dbus_connection_flush(connct);
+					dbus_connection_unref(connct);
 					cout << "d-bus\tService thread end" << endl;
-		#endif // DEBUG
+
 
 				});
+
 			}
 
 		} catch(...) {
@@ -109,24 +125,6 @@
 		}
 
 
-	}
-
-	static DBusConnection * ConnectionFactory(DBusBusType type) {
-
-		DBusError err;
-		dbus_error_init(&err);
-
-		DBusConnection * connct = dbus_bus_get(type, &err);
-		if(dbus_error_is_set(&err)) {
-			std::string message(err.message);
-			dbus_error_free(&err);
-			throw std::runtime_error(message);
-		}
-
-		return connct;
-	}
-
-	DBus::Connection::Connection(DBusBusType type) : Connection(ConnectionFactory(type),false) {
 	}
 
 	static DBusConnection * ConnectionFactory(const char *busname) {
@@ -153,6 +151,7 @@
 	DBus::Connection::Connection(const char *busname) : Connection(ConnectionFactory(busname)) {
 	}
 
+	/*
 	void DBus::Connection::removeMatch(DBus::Connection::Interface &intf) {
 		DBusError error;
 		dbus_error_init(&error);
@@ -161,117 +160,41 @@
 		dbus_connection_flush(connection);
 
 		if (dbus_error_is_set(&error)) {
-			std::cerr << "d-bus\t" << error.message << std::endl;
+			cerr << "d-bus\t" << error.message << endl;
+			dbus_error_free(&error);
 		}
 	}
+	*/
 
 	DBus::Connection::~Connection() {
 
 		cout << "d-bus\tConnection destroyed" << endl;
-
-		active = false;
-
 		// Remove listeners.
+#ifdef DEBUG
+		cout << "d-bus\tRemoving interfaces" << endl;
+#endif // DEBUG
 		interfaces.remove_if([this](Interface &intf) {
-			removeMatch(intf);
+			intf.remove_from(connection);
 			return true;
 		});
 
-		if(connection) {
-			// Remove filter
-			dbus_connection_remove_filter(connection,(DBusHandleMessageFunction) filter, this);
+#ifdef DEBUG
+		cout << "d-bus\tRemoving filter" << endl;
+#endif // DEBUG
+		// Remove filter
+		dbus_connection_remove_filter(connection,(DBusHandleMessageFunction) filter, this);
 
-			// Stop D-Bus connection
-			dbus_connection_unref(connection);
+		// Stop D-Bus connection
+		dbus_connection_unref(connection);
 
-			connection = nullptr;
-		}
-
+		connection = nullptr;
 		if(thread) {
-			// Wait for d-bus thread
 			cout << "d-bus\tWaiting for service thread" << endl;
 			thread->join();
+			delete thread;
 		}
 
 	}
-
-	/// @brief Subscribe to D-Bus signal.
-	void DBus::Connection::subscribe(void *id, const char *interface, const char *member, std::function<void(DBus::Message &message)> call) {
-		lock_guard<recursive_mutex> lock(guard);
-		getInterface(interface).members.emplace_back(id,member,call);
-	}
-
-	void DBus::Connection::unsubscribe(void *id, const char *interface, const char *memberName) {
-
-		lock_guard<recursive_mutex> lock(guard);
-
-		if(getInterface(interface).unsubscribe(id,memberName)) {
-
-			interfaces.remove_if([this](Interface &interface ){
-				if(interface.empty()) {
-					removeMatch(interface);
-					return true;
-				}
-				return false;
-			});
-
-		}
-
-	}
-
-	void DBus::Connection::unsubscribe(void *id) {
-
-		lock_guard<recursive_mutex> lock(guard);
-		interfaces.remove_if([this,id](Interface &interface){
-			if(interface.unsubscribe(id)) {
-				removeMatch(interface);
-				return true;
-			}
-			return false;
-		});
-	}
-
-	/*
-	void DBus::Connection::start() {
-
-		lock_guard<recursive_mutex> lock(guard);
-
-		if(thread)
-			return;
-
-		active = true;
-		thread = new std::thread([this]{
-
-#ifdef DEBUG
-			cout << "d-bus\tService thread begin" << endl;
-#endif // DEBUG
-
-			while(active && connection && dbus_connection_read_write(connection,500)) {
-				while(connection && dbus_connection_get_dispatch_status(connection) == DBUS_DISPATCH_DATA_REMAINS) {
-					dbus_connection_dispatch(connection);
-				}
-			}
-
-			active = false;
-
-			{
-				lock_guard<recursive_mutex> lock(guard);
-				if(thread) {
-					thread->detach();
-					delete thread;
-					thread = nullptr;
-				}
-			}
-
-#ifdef DEBUG
-			cout << "d-bus\tService thread end" << endl;
-#endif // DEBUG
-
-		});
-
-
-	}
-	*/
 
 	/*
 	/// @brief Passagem de parâmetros para método D-Bus.

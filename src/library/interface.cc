@@ -82,5 +82,28 @@
 		return match;
 	}
 
+	void DBus::Connection::Interface::remove_from(DBusConnection * connection) noexcept {
+
+#ifdef DEBUG
+		cout << "d-bus\tRemoving interface '" << name << "'" << endl;
+#endif // DEBUG
+
+		DBusError error;
+		dbus_error_init(&error);
+
+		{
+			lock_guard<recursive_mutex> lock(guard);
+			dbus_bus_remove_match(connection,getMatch().c_str(), &error);
+		}
+
+		if(dbus_error_is_set(&error)) {
+			cerr << "d-bus\tError '" << error.message << "' removing interface '" << name << "'" << std::endl;
+			dbus_error_free(&error);
+		}
+
+		//dbus_connection_flush(connection); // NOTE: Check if this is really necessary.
+
+ 	}
+
  }
 
