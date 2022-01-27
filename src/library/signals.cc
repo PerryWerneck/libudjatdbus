@@ -32,11 +32,11 @@
 
 		lock_guard<recursive_mutex> lock(guard);
 
-		if(getInterface(interface).unsubscribe(id,memberName)) {
+		if(getInterface(interface).unsubscribe(this,id,memberName)) {
 
 			interfaces.remove_if([this](Interface &interface ){
 				if(interface.empty()) {
-					interface.remove_from(connection);
+					interface.remove_from(this);
 					return true;
 				}
 				return false;
@@ -50,8 +50,8 @@
 
 		lock_guard<recursive_mutex> lock(guard);
 		interfaces.remove_if([this,id](Interface &interface){
-			if(interface.unsubscribe(id)) {
-				interface.remove_from(connection);
+			if(interface.unsubscribe(this,id)) {
+				interface.remove_from(this);
 				return true;
 			}
 			return false;

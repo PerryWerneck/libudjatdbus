@@ -40,7 +40,7 @@
 		DBusError error;
 		dbus_error_init(&error);
 
-		cout << name << "\tConnecting to " << name << endl;
+		cout << this->name << "\tConnecting to " << name << endl;
 
 		dbus_bus_add_match(connection,Interface::getMatch(name).c_str(), &error);
 		dbus_connection_flush(connection);
@@ -58,10 +58,10 @@
 	}
 
 	/// @brief Unsubscribe by id.
-	bool DBus::Connection::Interface::unsubscribe(void *id) {
-		members.remove_if([this,id](Listener &listener){
+	bool DBus::Connection::Interface::unsubscribe(const DBus::Connection *connection, void *id) {
+		members.remove_if([this,connection,id](Listener &listener){
 			if(listener.id == id) {
-				cout << name << "\tUnsubscribing from " << this->name << "." << listener.name << endl;
+				cout << connection->c_str() << "\tUnsubscribing from " << this->name << "." << listener.name << endl;
 				return true;
 			}
 			return false;
@@ -70,9 +70,13 @@
 	}
 
 	/// @brief Unsubscribe by memberName.
-	bool DBus::Connection::Interface::unsubscribe(void *id, const char *memberName) {
-		members.remove_if([id,memberName](Listener &listener){
-			return listener.id == id && strcmp(listener.name.c_str(),memberName) == 0;
+	bool DBus::Connection::Interface::unsubscribe(const DBus::Connection *connection, void *id, const char *memberName) {
+		members.remove_if([id,this,memberName,connection](Listener &listener){
+			if(listener.id == id && strcmp(listener.name.c_str(),memberName) == 0) {
+				cout << connection->c_str() << "\tUnsubscribing from " << this->name << "." << listener.name << endl;
+				return true;
+			}
+			return false;
 		});
 		return members.empty();
 	}
@@ -84,16 +88,16 @@
 		return match;
 	}
 
-	void DBus::Connection::Interface::remove_from(DBusConnection * connection) noexcept {
+	void DBus::Connection::Interface::remove_from(const DBus::Connection * connection) noexcept {
 
-		cout << name << "\tDisconnecting from " << name << endl;
+		cout << connection->c_str() << "\tDisconnecting from " << name << endl;
 
 		DBusError error;
 		dbus_error_init(&error);
 
 		{
 			lock_guard<recursive_mutex> lock(guard);
-			dbus_bus_remove_match(connection,getMatch().c_str(), &error);
+			dbus_bus_remove_match(connection->getConnection(),getMatch().c_str(), &error);
 		}
 
 		if(dbus_error_is_set(&error)) {

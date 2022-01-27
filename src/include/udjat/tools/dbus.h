@@ -196,13 +196,13 @@
 				}
 
 				/// @brief Unsubscribe by id.
-				bool unsubscribe(void *id);
+				bool unsubscribe(const DBus::Connection *connection, void *id);
 
 				/// @brief Unsubscribe by memberName.
-				bool unsubscribe(void *id, const char *memberName);
+				bool unsubscribe(const DBus::Connection *connection, void *id, const char *memberName);
 
 				/// @brief Remove interface from connection.
-				void remove_from(DBusConnection * connection) noexcept;
+				void remove_from(const DBus::Connection * connection) noexcept;
 			};
 
 			/// @brief Subscribed interfaces.
@@ -238,6 +238,11 @@
 
 			inline DBusConnection * getConnection() const {
 				return connection;
+			}
+
+			/// @brief Get connection name.
+			inline const char * c_str() const noexcept {
+				return name.c_str();
 			}
 
 			/// @brief Dispatcher

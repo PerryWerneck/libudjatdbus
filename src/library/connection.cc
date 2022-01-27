@@ -56,13 +56,13 @@
 
 	DBus::Connection & DBus::Connection::getSystemInstance() {
 		lock_guard<recursive_mutex> lock(guard);
-		static DBus::Connection instance(ConnectionFactory(DBUS_BUS_SYSTEM));
+		static DBus::Connection instance(ConnectionFactory(DBUS_BUS_SYSTEM),"sysbus");
 		return instance;
 	}
 
 	DBus::Connection & DBus::Connection::getSessionInstance() {
 		lock_guard<recursive_mutex> lock(guard);
-		static DBus::Connection instance(ConnectionFactory(DBUS_BUS_SESSION));
+		static DBus::Connection instance(ConnectionFactory(DBUS_BUS_SESSION),"userbus");
 		return instance;
 	}
 
@@ -158,7 +158,7 @@
 		cout << name << "\tConnection destroyed" << endl;
 		// Remove listeners.
 		interfaces.remove_if([this](Interface &intf) {
-			intf.remove_from(connection);
+			intf.remove_from(this);
 			return true;
 		});
 
