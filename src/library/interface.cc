@@ -61,8 +61,12 @@
 
 	/// @brief Unsubscribe by id.
 	bool DBus::Connection::Interface::unsubscribe(void *id) {
-		members.remove_if([id](Listener &listener){
-			return listener.id == id;
+		members.remove_if([this,id](Listener &listener){
+			if(listener.id == id) {
+				cout << "d-bus\tUnsubscribing from " << this->name << "." << listener.name << endl;
+				return true;
+			}
+			return false;
 		});
 		return members.empty();
 	}
