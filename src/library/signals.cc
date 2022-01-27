@@ -24,6 +24,7 @@
 
 	void DBus::Connection::subscribe(void *id, const char *interface, const char *member, std::function<void(DBus::Message &message)> call) {
 		lock_guard<recursive_mutex> lock(guard);
+		cout << name << "\tSubscribing to " << interface << "." << member << endl;
 		getInterface(interface).members.emplace_back(id,member,call);
 	}
 

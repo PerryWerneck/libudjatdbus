@@ -66,11 +66,11 @@
 		return instance;
 	}
 
-	DBus::Connection::Connection(DBusConnection * c, bool reg) : connection(c) {
+	DBus::Connection::Connection(DBusConnection * c, const char *n, bool reg) : name(n), connection(c) {
 
 		static bool initialized = false;
 		if(!initialized) {
-			cout << "d-bus\tInitializing thread system" << endl;
+			cout << name << "\tInitializing thread system" << endl;
 			dbus_threads_init_default();
 		}
 
@@ -102,18 +102,18 @@
 
 				thread = new std::thread([this] {
 
-					pthread_setname_np(pthread_self(),"d-bus");
+					pthread_setname_np(pthread_self(),name.c_str());
 
-					cout << "d-bus\tService thread begin" << endl;
+					cout << name << "\tService thread begin" << endl;
 					auto connct = connection;
 					dbus_connection_ref(connct);
 					while(connection && dbus_connection_read_write(connct,100) && use_thread) {
 						dispatch(connct);
 					}
-					cout << "d-bus\tFlushing connection" << endl;
+					cout << name << "\tFlushing connection" << endl;
 					dbus_connection_flush(connct);
 					dbus_connection_unref(connct);
-					cout << "d-bus\tService thread end" << endl;
+					cout << name << "\tService thread end" << endl;
 
 				});
 
@@ -150,39 +150,18 @@
 
 	}
 
-	DBus::Connection::Connection(const char *busname) : Connection(ConnectionFactory(busname)) {
+	DBus::Connection::Connection(const char *busname, const char *name) : Connection(ConnectionFactory(busname),name) {
 	}
-
-	/*
-	void DBus::Connection::removeMatch(DBus::Connection::Interface &intf) {
-		DBusError error;
-		dbus_error_init(&error);
-
-		dbus_bus_remove_match(connection,intf.getMatch().c_str(), &error);
-		dbus_connection_flush(connection);
-
-		if (dbus_error_is_set(&error)) {
-			cerr << "d-bus\t" << error.message << endl;
-			dbus_error_free(&error);
-		}
-	}
-	*/
 
 	DBus::Connection::~Connection() {
 
-		cout << "d-bus\tConnection destroyed" << endl;
+		cout << name << "\tConnection destroyed" << endl;
 		// Remove listeners.
-#ifdef DEBUG
-		cout << "d-bus\tRemoving interfaces" << endl;
-#endif // DEBUG
 		interfaces.remove_if([this](Interface &intf) {
 			intf.remove_from(connection);
 			return true;
 		});
 
-#ifdef DEBUG
-		cout << "d-bus\tRemoving filter" << endl;
-#endif // DEBUG
 		// Remove filter
 		dbus_connection_remove_filter(connection,(DBusHandleMessageFunction) filter, this);
 
@@ -191,7 +170,7 @@
 
 		connection = nullptr;
 		if(thread) {
-			cout << "d-bus\tWaiting for service thread" << endl;
+			cout << name << "\tWaiting for service thread" << endl;
 			thread->join();
 			delete thread;
 		}

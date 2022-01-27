@@ -33,7 +33,7 @@
 		const char *interface	= dbus_message_get_interface(message);
 
 #ifdef DEBUG
-		cout << "d-bus\tsignal(" << interface << " " << member << ")" << endl;
+		cout << name << "\tsignal(" << interface << " " << member << ")" << endl;
 #endif // DEBUG
 
 		lock_guard<recursive_mutex> lock(guard);
@@ -52,11 +52,11 @@
 
 							} catch(const exception &e) {
 
-								cerr << "d-bus\tError '" << e.what() << "' processing signal " << interface << "." << member << endl;
+								cerr << name << "\tError '" << e.what() << "' processing signal " << interface << "." << member << endl;
 
 							} catch(...) {
 
-								cerr << "d-bus\tUnexpected error processing signal " << interface << "." << member << endl;
+								cerr << name << "\tUnexpected error processing signal " << interface << "." << member << endl;
 
 							}
 
@@ -69,11 +69,11 @@
 
 		} catch(const exception &e) {
 
-			cerr << "d-bus\t" << interface << " " << member << ": " << e.what() << endl;
+			cerr << name << "\t" << interface << " " << member << ": " << e.what() << endl;
 
 		} catch(...) {
 
-			cerr << "d-bus\t" << interface << " " << member << ": Unexpected error" << endl;
+			cerr << name << "\t" << interface << " " << member << ": Unexpected error" << endl;
 
 		}
 
@@ -82,10 +82,6 @@
 	}
 
 	DBusHandlerResult DBus::Connection::filter(DBusConnection *dbc, DBusMessage *message, DBus::Connection *connection) {
-
-#ifdef DEBUG
-		cout << "d-bus\tRunning filter" << endl;
-#endif // DEBUG
 
 		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_SIGNAL) {
 			return connection->on_signal(message);

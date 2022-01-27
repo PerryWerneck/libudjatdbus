@@ -36,13 +36,11 @@
 			}
 		}
 
-		// Interface não existe na lista.
-
-		// Ativa filtro.
+		// Not found, create a new filter.
 		DBusError error;
 		dbus_error_init(&error);
 
-		cout << "d-bus\tWatching interface '" << name << "'" << endl;
+		cout << name << "\tConnecting to " << name << endl;
 
 		dbus_bus_add_match(connection,Interface::getMatch(name).c_str(), &error);
 		dbus_connection_flush(connection);
@@ -63,7 +61,7 @@
 	bool DBus::Connection::Interface::unsubscribe(void *id) {
 		members.remove_if([this,id](Listener &listener){
 			if(listener.id == id) {
-				cout << "d-bus\tUnsubscribing from " << this->name << "." << listener.name << endl;
+				cout << name << "\tUnsubscribing from " << this->name << "." << listener.name << endl;
 				return true;
 			}
 			return false;
@@ -88,9 +86,7 @@
 
 	void DBus::Connection::Interface::remove_from(DBusConnection * connection) noexcept {
 
-#ifdef DEBUG
-		cout << "d-bus\tRemoving interface '" << name << "'" << endl;
-#endif // DEBUG
+		cout << name << "\tDisconnecting from " << name << endl;
 
 		DBusError error;
 		dbus_error_init(&error);
@@ -101,7 +97,7 @@
 		}
 
 		if(dbus_error_is_set(&error)) {
-			cerr << "d-bus\tError '" << error.message << "' removing interface '" << name << "'" << std::endl;
+			cerr << name << "\tError '" << error.message << "' removing interface '" << name << "'" << std::endl;
 			dbus_error_free(&error);
 		}
 

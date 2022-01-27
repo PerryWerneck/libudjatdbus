@@ -148,9 +148,12 @@
 
 		};
 
-		/// @brief Conexão com o barramento D-Bus.
+		/// @brief D-Bus connection.
 		class UDJAT_API Connection {
 		private:
+
+			/// @brief Connection name.
+			std::string name;
 
 			/// @brief Semaforo para serializar acessos.
 			static std::recursive_mutex guard;
@@ -213,7 +216,7 @@
 			/// @brief Message filter method.
 			static DBusHandlerResult filter(DBusConnection *, DBusMessage *, DBus::Connection *);
 
-			Connection(DBusConnection * connection, bool reg = true);
+			Connection(DBusConnection * connection, const char *name = "d-bus", bool reg = true);
 
 		public:
 
@@ -227,7 +230,7 @@
 			static Connection & getSessionInstance();
 
 			/// @brief Get connection to a named bus.
-			Connection(const char *busname);
+			Connection(const char *busname, const char *connection_name = "d-bus");
 			~Connection();
 
 			Connection(const Connection &) = delete;
