@@ -52,15 +52,14 @@
 
 							} catch(const exception &e) {
 
-								cerr << "d-bus\tError '" << e.what() << "' processing signal" << endl;
+								cerr << "d-bus\tError '" << e.what() << "' processing signal " << interface << "." << member << endl;
 
 							} catch(...) {
 
-								cerr << "d-bus\tUnexpected error processing signal" << endl;
+								cerr << "d-bus\tUnexpected error processing signal " << interface << "." << member << endl;
 
 							}
 
-							break;
 						}
 
 					}
@@ -84,7 +83,9 @@
 
 	DBusHandlerResult DBus::Connection::filter(DBusConnection *dbc, DBusMessage *message, DBus::Connection *connection) {
 
+#ifdef DEBUG
 		cout << "d-bus\tRunning filter" << endl;
+#endif // DEBUG
 
 		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_SIGNAL) {
 			return connection->on_signal(message);
