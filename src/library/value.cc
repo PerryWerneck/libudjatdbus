@@ -19,6 +19,7 @@
 
  #include <config.h>
  #include <udjat/tools/dbus.h>
+ #include <udjat/tools/value.h>
  #include <cstring>
  #include <string>
  #include <iostream>
@@ -56,6 +57,11 @@
 	DBus::Value::Value() {
 		type = DBUS_TYPE_INVALID;
 		memset(&value,0,sizeof(value));
+	}
+
+	DBus::Value::Value(Message &message) : Value() {
+		set(message.getIter());
+		message.next();
 	}
 
 	DBus::Value::Value(int type, const char *str) : DBus::Value::Value() {
@@ -289,34 +295,33 @@
 
 		type = dbus_message_iter_get_arg_type(iter);
 
-		if(type == DBUS_TYPE_INVALID)
+		switch(type) {
+		case DBUS_TYPE_INVALID:
 			return false;
 
-		dbus_message_iter_get_basic(iter,&value);
-
-		if(type == DBUS_TYPE_STRING) {
-			// String, copy the value.
-			char * dup = strdup(value.str);
-			value.str = dup;
-			return true;
-		}
-
-		if(type == DBUS_TYPE_ARRAY) {
+		case DBUS_TYPE_ARRAY:
 			cerr << "d-bus\tUnsupported DBUS_TYPE_ARRAY value" << endl;
 			reset(Value::Type::Undefined);
 			return false;
-		}
 
-		if(type == DBUS_TYPE_DICT_ENTRY) {
+		case DBUS_TYPE_DICT_ENTRY:
 			cerr << "d-bus\tUnsupported DBUS_TYPE_DICT_ENTRY value" << endl;
 			reset(Value::Type::Undefined);
 			return false;
-		}
 
-		if(type == DBUS_TYPE_VARIANT) {
+		case DBUS_TYPE_VARIANT:
 			cerr << "d-bus\tUnsupported DBUS_TYPE_VARIANT value" << endl;
 			reset(Value::Type::Undefined);
 			return false;
+
+		default:
+			dbus_message_iter_get_basic(iter,&value);
+			if(type == DBUS_TYPE_STRING) {
+				// String, copy the value.
+				char * dup = strdup(value.str);
+				value.str = dup;
+			}
+
 		}
 
 		return true;
@@ -409,6 +414,36 @@
 		}
 
 	}
+
+	const Udjat::Value & DBus::Value::get(std::string &value) const {
+
+		switch(this->type) {
+		case DBUS_TYPE_STRING:
+			value = this->value.str;
+			break;
+
+		case DBUS_TYPE_BOOLEAN:
+			value = (this->value.bool_val ? "true" : "false");
+			break;
+
+		default:
+			throw runtime_error("Unable to convert dbus value to string");
+		}
+
+		return *this;
+
+	}
+	const Udjat::Value & DBus::Value::get(bool &value) const {
+
+		if(this->type == DBUS_TYPE_BOOLEAN) {
+			value = this->value.bool_val;
+		} else {
+			throw runtime_error("The value is not a boolean");
+		}
+
+		return *this;
+	}
+
 
  }
 

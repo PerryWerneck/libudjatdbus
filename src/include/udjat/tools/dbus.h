@@ -33,7 +33,7 @@
 	namespace DBus {
 
 		class Connection;
-		class Interface;
+		//class Interface;
 		class Message;
 
 		/// @brief D-Bus Value
@@ -63,6 +63,7 @@
 			// String values have an strdup; the copy can invalidate the pointer.
 			Value(const Value *src);
 			Value(const Value &src);
+			Value(Message &message);
 
 			Value();
 			Value(int type, const char *value);
@@ -105,6 +106,18 @@
 			Udjat::Value & set(const float value) override;
 			Udjat::Value & set(const double value) override;
 
+			const Udjat::Value & get(std::string &value) const override;
+			// const Udjat::Value & get(short &value) const override;
+			// const Udjat::Value & get(unsigned short &value) const override;
+			// const Udjat::Value & get(int &value) const override;
+			// const Udjat::Value & get(unsigned int &value) const override;
+			// const Udjat::Value & get(long &value) const override;
+			// const Udjat::Value & get(unsigned long &value) const override;
+			// const Udjat::Value & get(TimeStamp &value) const override;
+			const Udjat::Value & get(bool &value) const override;
+			// const Udjat::Value & get(float &value) const override;
+			// const Udjat::Value & get(double &value) const override;
+
 		};
 
 		/// @brief D-Bus message
@@ -118,6 +131,20 @@
 			~Message();
 
 			Message & pop(Value &value);
+
+			inline DBusMessageIter * getIter() {
+				return &iter;
+			}
+
+			bool next();
+
+			template <typename T>
+			Message & pop(T &value) {
+				Value v;
+				pop(v);
+				v.get(value);
+				return this;
+			}
 
 		};
 
@@ -160,6 +187,10 @@
 				std::list<Listener> members;
 				Interface(const char *n) : name(n) { }
 
+				inline bool empty() const noexcept {
+					return members.empty();
+				}
+
 				/// @brief Obtém string de "match" para o nome informado.
 				static std::string getMatch(const char *name);
 
@@ -168,10 +199,18 @@
 					return getMatch(name.c_str());
 				}
 
+				/// @brief Unsubscribe by id.
+				bool unsubscribe(void *id);
+
+				/// @brief Unsubscribe by memberName.
+				bool unsubscribe(void *id, const char *memberName);
+
 			};
 
 			/// @brief Subscribed interfaces.
 			std::list<Interface> interfaces;
+
+			void removeMatch(DBus::Connection::Interface &interface);
 
 			/// @brief Obtém interface pelo nome, inclui se for preciso.
 			Interface & getInterface(const char *name);
@@ -222,4 +261,16 @@
 
  }
 
+ /*
+ template <typename T>
+ inline Udjat::Value & operator<<(Udjat::DBus::Message &out, T value) {
+	return out.set(value);
+ }
+
+ template <typename T>
+ inline Udjat::Value & operator>> (const Udjat::DBus::Message &in, T &value ) {
+	in.get(value);
+	return in;
+ }
+ */
 

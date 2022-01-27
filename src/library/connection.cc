@@ -98,11 +98,17 @@ using std::cerr;
 
 	}
 
+
 	DBus::Connection::Connection(const char *busname) : Connection() {
+
+		if(!(busname && *busname)) {
+			throw system_error(EINVAL,system_category(),"Invalid busname");
+		}
 
 		DBusError err;
 		dbus_error_init(&err);
 
+		cout << "d-bus\tOpening '" << busname << "'" << endl;
 		DBusConnection * connection = dbus_connection_open(busname, &err);
 		if(dbus_error_is_set(&err)) {
 			std::string message(err.message);
@@ -111,6 +117,15 @@ using std::cerr;
 		}
 
 		try {
+
+			dbus_error_init(&err);
+
+			dbus_bus_register(connection,&err);
+			if(dbus_error_is_set(&err)) {
+				std::string message(err.message);
+				dbus_error_free(&err);
+				throw std::runtime_error(message);
+			}
 
 			set(connection);
 
@@ -139,6 +154,18 @@ using std::cerr;
 		dbus_connection_set_exit_on_disconnect(connection, false);
 	}
 
+	void DBus::Connection::removeMatch(DBus::Connection::Interface &intf) {
+		DBusError error;
+		dbus_error_init(&error);
+
+		dbus_bus_remove_match(connection,intf.getMatch().c_str(), &error);
+		dbus_connection_flush(connection);
+
+		if (dbus_error_is_set(&error)) {
+			std::cerr << "d-bus\t" << error.message << std::endl;
+		}
+	}
+
 	DBus::Connection::~Connection() {
 
 		cout << "d-bus\tConnection destroyed" << endl;
@@ -147,17 +174,7 @@ using std::cerr;
 
 		// Remove listeners.
 		interfaces.remove_if([this](Interface &intf) {
-
-			DBusError error;
-			dbus_error_init(&error);
-
-			dbus_bus_remove_match(connection,intf.getMatch().c_str(), &error);
-			dbus_connection_flush(connection);
-
-			if (dbus_error_is_set(&error)) {
-				std::cerr << "d-bus\t" << error.message << std::endl;
-			}
-
+			removeMatch(intf);
 			return true;
 		});
 
@@ -190,170 +207,35 @@ using std::cerr;
 		}
 	}
 
-	/*
-	/// @brief Obtém valor do ambiente de usuário.
-	DBus::Connection * DBus::Connection::get(uid_t uid, const char *sid) {
+	void DBus::Connection::unsubscribe(void *id, const char *interface, const char *memberName) {
 
-		DBus::Connection * rc = nullptr;
+		lock_guard<recursive_mutex> lock(guard);
 
-		if(!uid) {
-			return new Connection(DBUS_BUS_SYSTEM);
-		}
+		if(getInterface(interface).unsubscribe(id,memberName)) {
 
-		// Find user bus.
-		// https://stackoverflow.com/questions/6496847/access-another-users-d-bus-session
-		{
-			DIR * dir = opendir("/proc");
-			if(!dir) {
-					throw std::system_error(errno, std::system_category());
-			}
-
-			struct dirent *ent;
-			while((ent=readdir(dir))!=NULL && !rc) {
-
-				if(!atoi(ent->d_name)) {
-					continue;
+			interfaces.remove_if([this](Interface &interface ){
+				if(interface.empty()) {
+					removeMatch(interface);
+					return true;
 				}
-
-				/// @brief Arquivo no /proc/[PID]/environ
-				class Environ {
-				private:
-					int fd = -1;
-
-				public:
-					Environ(DIR * dir, const char *name) : fd(openat(dirfd(dir),(string{name} + "/environ").c_str(),O_RDONLY)) {
-	#ifdef DEBUG
-						if(fd > 0) {
-							cout << "Abri FD " << fd << endl;
-						}
-	#endif // DEBUG
-					}
-
-					~Environ() {
-
-						if(fd > 0) {
-	#ifdef DEBUG
-							cout << "Fechei FD " << fd << endl;
-	#endif // DEBUG
-							close(fd);
-
-						}
-					}
-
-					operator bool() const {
-						return fd >= 0;
-					}
-
-					uid_t getUID() {
-						struct stat st;
-						if(fstat(fd,&st) < 0)
-							return (uid_t) -1;
-						return st.st_uid;
-					}
-
-					int getFD() {
-						return this->fd;
-					}
-				};
-
-				Environ environ(dir,ent->d_name);
-
-				if(!environ || environ.getUID() != uid) {
-					continue;
-				}
-
-				// Check session ID (if necessary)
-				if(sid) {
-					char *sname = nullptr;
-
-					// Se o processo não for associado a uma sessão ignora.
-					if(sd_pid_get_session(atoi(ent->d_name), &sname) == -ENODATA || !sname)
-						continue;
-
-					int sval = strcmp(sid,sname);
-					free(sname);
-
-					if(sval)
-						continue;
-
-				}
-
-				// Scan for Dbus address
-				{
-					char buffer[4096];
-					ssize_t sz = read(environ.getFD(),buffer,4095);
-					if(sz > 0) {
-						buffer[sz] = 0;
-
-						static const char *name = "DBUS_SESSION_BUS_ADDRESS";
-						static const size_t szName = strlen(name);
-
-						for(const char *ptr = buffer; *ptr; ptr += (strlen(ptr)+1)) {
-							if(strncmp(ptr,name,szName) == 0 && ptr[szName] == '=') {
-
-								string busName(ptr+szName+1);
-
-								uid_t saved_uid = geteuid();
-								if(seteuid(uid) < 0) {
-
-									cerr << "Can't set efective UID: " << strerror(errno) << endl;
-
-								} else {
-
-									try {
-
-										DBusError err;
-										dbus_error_init(&err);
-
-										DBusConnection * connection = dbus_connection_open(busName.c_str(), &err);
-										if(dbus_error_is_set(&err)) {
-											std::string message(err.message);
-											dbus_error_free(&err);
-											throw std::runtime_error(message);
-										}
-
-										rc = new DBus::Connection(connection);
-
-									} catch(const std::exception &e) {
-
-										cerr << "Can't open D-Bus session " << busName << ": " << e.what() << endl;
-
-									} catch(...) {
-
-										cerr << "Unexpected error opening D-bus session " << busName << endl;
-
-									}
-
-									seteuid(saved_uid);
-
-								}
-
-								break;
-							}
-						}
-					}
-				}
-
-			}
-
-			closedir(dir);
+				return false;
+			});
 
 		}
 
-
-		if(!rc) {
-
-			if(sid) {
-				throw std::runtime_error(string("Can't find D-Bus address for user ") + std::to_string(uid) + " on session " + sid);
-			} else {
-				throw std::runtime_error(string("Can't find D-Bus address for user ") + std::to_string(uid));
-			}
-
-		}
-
-		return rc;
 	}
-	*/
+
+	void DBus::Connection::unsubscribe(void *id) {
+
+		lock_guard<recursive_mutex> lock(guard);
+		interfaces.remove_if([this,id](Interface &interface){
+			if(interface.unsubscribe(id)) {
+				removeMatch(interface);
+				return true;
+			}
+			return false;
+		});
+	}
 
 	void DBus::Connection::start() {
 

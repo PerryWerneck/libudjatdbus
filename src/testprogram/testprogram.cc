@@ -27,6 +27,7 @@
  #include <udjat/module.h>
  #include <iostream>
  #include <memory>
+ #include <cstdlib>
 
  using namespace std;
  using namespace Udjat;
@@ -36,6 +37,9 @@
 int main(int argc, char **argv) {
 
 	class Service : public SystemService {
+	private:
+		DBus::Connection *bus = nullptr;
+
 	protected:
 		/// @brief Initialize service.
 		void init() override {
@@ -54,23 +58,28 @@ int main(int argc, char **argv) {
 				cout << "http://localhost:8989/api/1.0/agent/" << agent->getName() << ".xml" << endl;
 			}
 
-			DBus::Connection &session = DBus::Connection::getSessionInstance();
+			//DBus::Connection &session = DBus::Connection::getSessionInstance();
+			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"));
 
-			session.subscribe(
+			bus->subscribe(
 				this,
 				"org.gnome.ScreenSaver",
 				"ActiveChanged",
 				[](DBus::Message &message) {
-					cout << "org.gnome.ScreenSaver.ActiveChanged" << endl;
+
+					cout << "org.gnome.ScreenSaver.ActiveChanged " << DBus::Value(message).to_string() << endl;
+
 				}
 			);
 
-			session.subscribe(
+			bus->subscribe(
 				this,
 				"com.example.signal",
 				"hello",
 				[](DBus::Message &message) {
-					cout << "com.example.signal.hello" << endl;
+
+					cout << "com.example.signal.hello " << DBus::Value(message).to_string() << endl;
+
 				}
 			);
 
@@ -78,6 +87,7 @@ int main(int argc, char **argv) {
 
 		/// @brief Deinitialize service.
 		void deinit() override {
+			delete bus;
 			cout << Application::Name() << "\tDeinitializing" << endl;
 			Udjat::Module::unload();
 		}
