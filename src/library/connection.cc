@@ -22,6 +22,7 @@
  #include <udjat/worker.h>
  #include <iostream>
  #include <unistd.h>
+ #include <pthread.h>
 
  using namespace std;
 
@@ -101,6 +102,8 @@
 
 				thread = new std::thread([this] {
 
+					pthread_setname_np(pthread_self(),"d-bus");
+
 					cout << "d-bus\tService thread begin" << endl;
 					auto connct = connection;
 					dbus_connection_ref(connct);
@@ -111,7 +114,6 @@
 					dbus_connection_flush(connct);
 					dbus_connection_unref(connct);
 					cout << "d-bus\tService thread end" << endl;
-
 
 				});
 
