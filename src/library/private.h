@@ -24,16 +24,16 @@
  #include <iostream>
 
  using namespace std;
+ using namespace Udjat;
 
- namespace Udjat {
+ extern "C" {
 
-	namespace DBus {
+	UDJAT_PRIVATE void handle_dispatch_status(DBusConnection *c, DBusDispatchStatus status, DBus::Connection *connection);
 
-		UDJAT_PRIVATE dbus_bool_t add_watch(DBusWatch *w, DBus::Connection *connection);
-		UDJAT_PRIVATE void remove_watch(DBusWatch *w, DBus::Connection *connection);
-		UDJAT_PRIVATE void toggle_watch(DBusWatch *w, DBus::Connection *connection);
-
-	}
+	UDJAT_PRIVATE dbus_bool_t add_watch(DBusWatch *w, DBus::Connection *connection);
+	UDJAT_PRIVATE void remove_watch(DBusWatch *w, DBus::Connection *connection);
+	UDJAT_PRIVATE void toggle_watch(DBusWatch *w, DBus::Connection *connection);
 
  }
+
 
