@@ -18,6 +18,7 @@
  */
 
  #include <config.h>
+ #include "private.h"
  #include <udjat/tools/dbus.h>
  #include <udjat/worker.h>
  #include <iostream>
@@ -30,7 +31,7 @@
 
 	std::recursive_mutex DBus::Connection::guard;
 
-	static bool use_thread = true;
+	static bool use_thread = false;
 
 	DBus::Connection & DBus::Connection::getInstance() {
 		if(getuid() == 0) {
@@ -99,7 +100,9 @@
 			dbus_connection_set_exit_on_disconnect(connection, false);
 
 			if(use_thread) {
-
+				//
+				// Thread mode
+				//
 				thread = new std::thread([this] {
 
 					pthread_setname_np(pthread_self(),name.c_str());
@@ -107,7 +110,7 @@
 					cout << name << "\tService thread begin" << endl;
 					auto connct = connection;
 					dbus_connection_ref(connct);
-					while(connection && dbus_connection_read_write(connct,100) && use_thread) {
+					while(connection && dbus_connection_read_write(connct,100)) {
 						dispatch(connct);
 					}
 					cout << name << "\tFlushing connection" << endl;
@@ -116,6 +119,32 @@
 					cout << name << "\tService thread end" << endl;
 
 				});
+
+			} else {
+				//
+				// Non thread mode
+				//
+				if(!dbus_connection_set_watch_functions(
+					connection,
+					(DBusAddWatchFunction) add_watch,
+					(DBusRemoveWatchFunction) remove_watch,
+					(DBusWatchToggledFunction) toggle_watch,
+					this,
+					nullptr)
+				) {
+					throw runtime_error("dbus_connection_set_watch_functions has failed");
+				}
+
+				if(!dbus_connection_set_timeout_functions(
+					connection,
+					(DBusAddTimeoutFunction) add_timeout,
+					(DBusRemoveTimeoutFunction) remove_timeout,
+					(DBusTimeoutToggledFunction) toggle_timeout,
+					this,
+					nullptr)
+				) {
+					throw runtime_error("dbus_connection_set_timeout_functions has failed");
+				}
 
 			}
 
