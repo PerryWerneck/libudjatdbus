@@ -61,6 +61,27 @@ int main(int argc, char **argv) {
 			//DBus::Connection &session = DBus::Connection::getSessionInstance();
 			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"));
 
+			bus->call(
+				"org.gnome.ScreenSaver",
+				"/org/gnome/ScreenSaver",
+				"org.gnome.ScreenSaver",
+				"GetActiveTime",
+				[](DBus::Message & message) {
+
+					if(message) {
+
+						unsigned int active;
+						message.pop(active);
+
+						cout << "org.gnome.ScreenSaver.ActiveTime=" << active << endl;
+
+					} else {
+
+						cerr << "Error '" << message.error_message() << "' getting screensaver active time" << endl;
+					}
+				}
+			);
+
 			bus->subscribe(
 				this,
 				"org.gnome.ScreenSaver",

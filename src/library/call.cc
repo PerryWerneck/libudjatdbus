@@ -29,9 +29,9 @@
 	struct CallParameters {
 
 		DBus::Connection *connection;
-		const std::function<void(DBus::Message &)> &call;
+		const std::function<void(DBus::Message &)> call;
 
-		constexpr CallParameters(DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c), call(f) {
+		CallParameters(DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c), call(f) {
 		}
 
 	};

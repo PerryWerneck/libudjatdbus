@@ -109,7 +109,7 @@
 			// const Udjat::Value & get(short &value) const override;
 			// const Udjat::Value & get(unsigned short &value) const override;
 			// const Udjat::Value & get(int &value) const override;
-			// const Udjat::Value & get(unsigned int &value) const override;
+			const Udjat::Value & get(unsigned int &value) const override;
 			// const Udjat::Value & get(long &value) const override;
 			// const Udjat::Value & get(unsigned long &value) const override;
 			// const Udjat::Value & get(TimeStamp &value) const override;
@@ -162,7 +162,7 @@
 				Value v;
 				pop(v);
 				v.get(value);
-				return this;
+				return *this;
 			}
 
 			inline const char * error_name() const {
