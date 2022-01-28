@@ -33,7 +33,6 @@
 	namespace DBus {
 
 		class Connection;
-		//class Interface;
 		class Message;
 
 		/// @brief D-Bus Value
@@ -123,17 +122,33 @@
 		/// @brief D-Bus message
 		class UDJAT_API Message {
 		private:
-			DBusMessage *message;
-			DBusMessageIter iter;
+
+			struct {
+				DBusMessage *value = nullptr;
+				DBusMessageIter iter;
+			} message;
+
+			struct {
+				bool valid = false;		/// @brief True if this is an error message.
+				std::string name;		/// @brief Error name.
+				std::string message;	/// @brief Error Message.
+			} error;
 
 		public:
+			Message(const Message &message) = delete;
+			Message(const Message *message) = delete;
+
+			Message(const DBusError &error);
 			Message(DBusMessage *m);
+
 			~Message();
 
 			Message & pop(Value &value);
 
-			inline DBusMessageIter * getIter() {
-				return &iter;
+			DBusMessageIter * getIter();
+
+			inline bool failed() const {
+				return error.valid;
 			}
 
 			bool next();
@@ -257,7 +272,6 @@
 			/// @brief Unsubscribe all signals created by 'id'.
 			void unsubscribe(void *id);
 
-			/*
 			/// @brief call method
 			void call(	const char *destination,
 						const char *path,
@@ -265,7 +279,6 @@
 						const char *member,
 						std::function<void(Message & message)> call
 					);
-			*/
 
 		};
 

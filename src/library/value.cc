@@ -140,7 +140,7 @@
 
 	}
 
-	Udjat::Value & DBus::Value::set(const Udjat::Value &value) {
+	Udjat::Value & DBus::Value::set(const Udjat::Value UDJAT_UNUSED(&value)) {
 		throw system_error(ENOTSUP,system_category(),"Cant set value");
 	}
 
