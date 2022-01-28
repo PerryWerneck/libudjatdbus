@@ -26,6 +26,7 @@
  namespace Udjat {
 
 	DBus::Message::Message(const DBusError &error) {
+		this->message.value = nullptr;
 		this->error.valid = true;
 		this->error.name = error.name;
 		this->error.message = error.message;
@@ -38,7 +39,9 @@
 	}
 
 	DBus::Message::~Message() {
-		dbus_message_unref(message.value);
+		if(message.value) {
+			dbus_message_unref(message.value);
+		}
 	}
 
 	DBusMessageIter * DBus::Message::getIter() {

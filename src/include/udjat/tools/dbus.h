@@ -143,6 +143,10 @@
 
 			~Message();
 
+			inline operator bool() const {
+				return !error.valid;
+			}
+
 			Message & pop(Value &value);
 
 			DBusMessageIter * getIter();
@@ -159,6 +163,14 @@
 				pop(v);
 				v.get(value);
 				return this;
+			}
+
+			inline const char * error_name() const {
+				return this->error.name.c_str();
+			}
+
+			inline const char * error_message() const {
+				return error.message.c_str();
 			}
 
 		};
