@@ -36,13 +36,11 @@
 			}
 		}
 
-		// Interface não existe na lista.
-
-		// Ativa filtro.
+		// Not found, create a new filter.
 		DBusError error;
 		dbus_error_init(&error);
 
-		cout << "d-bus\tWatching interface '" << name << "'" << endl;
+		cout << this->name << "\tConnecting to " << name << endl;
 
 		dbus_bus_add_match(connection,Interface::getMatch(name).c_str(), &error);
 		dbus_connection_flush(connection);
@@ -60,17 +58,25 @@
 	}
 
 	/// @brief Unsubscribe by id.
-	bool DBus::Connection::Interface::unsubscribe(void *id) {
-		members.remove_if([id](Listener &listener){
-			return listener.id == id;
+	bool DBus::Connection::Interface::unsubscribe(const DBus::Connection *connection, void *id) {
+		members.remove_if([this,connection,id](Listener &listener){
+			if(listener.id == id) {
+				cout << connection->c_str() << "\tUnsubscribing from " << this->name << "." << listener.name << endl;
+				return true;
+			}
+			return false;
 		});
 		return members.empty();
 	}
 
 	/// @brief Unsubscribe by memberName.
-	bool DBus::Connection::Interface::unsubscribe(void *id, const char *memberName) {
-		members.remove_if([id,memberName](Listener &listener){
-			return listener.id == id && strcmp(listener.name.c_str(),memberName) == 0;
+	bool DBus::Connection::Interface::unsubscribe(const DBus::Connection *connection, void *id, const char *memberName) {
+		members.remove_if([id,this,memberName,connection](Listener &listener){
+			if(listener.id == id && strcmp(listener.name.c_str(),memberName) == 0) {
+				cout << connection->c_str() << "\tUnsubscribing from " << this->name << "." << listener.name << endl;
+				return true;
+			}
+			return false;
 		});
 		return members.empty();
 	}
@@ -81,6 +87,27 @@
 		match += "'";
 		return match;
 	}
+
+	void DBus::Connection::Interface::remove_from(const DBus::Connection * connection) noexcept {
+
+		cout << connection->c_str() << "\tDisconnecting from " << name << endl;
+
+		DBusError error;
+		dbus_error_init(&error);
+
+		{
+			lock_guard<recursive_mutex> lock(guard);
+			dbus_bus_remove_match(connection->getConnection(),getMatch().c_str(), &error);
+		}
+
+		if(dbus_error_is_set(&error)) {
+			cerr << name << "\tError '" << error.message << "' removing interface '" << name << "'" << std::endl;
+			dbus_error_free(&error);
+		}
+
+		//dbus_connection_flush(connection); // NOTE: Check if this is really necessary.
+
+ 	}
 
  }
 

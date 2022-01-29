@@ -43,13 +43,19 @@
 		</Linker>
 		<Unit filename="src/include/config.h" />
 		<Unit filename="src/include/udjat/tools/dbus.h" />
+		<Unit filename="src/library/call.cc" />
 		<Unit filename="src/library/connection.cc" />
+		<Unit filename="src/library/dispatcher.cc" />
 		<Unit filename="src/library/filter.cc" />
 		<Unit filename="src/library/interface.cc" />
 		<Unit filename="src/library/message.cc" />
+		<Unit filename="src/library/private.h" />
 		<Unit filename="src/library/request.cc" />
 		<Unit filename="src/library/response.cc" />
+		<Unit filename="src/library/signals.cc" />
+		<Unit filename="src/library/timeout.cc" />
 		<Unit filename="src/library/value.cc" />
+		<Unit filename="src/library/watch.cc" />
 		<Unit filename="src/library/worker.cc" />
 		<Unit filename="src/module/init.cc" />
 		<Unit filename="src/module/private.h" />

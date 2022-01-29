@@ -25,23 +25,48 @@
 
  namespace Udjat {
 
-	DBus::Message::Message(DBusMessage *m) : message(m) {
+	DBus::Message::Message(const DBusError &error) {
+		this->message.value = nullptr;
+		this->error.valid = true;
+		this->error.name = error.name;
+		this->error.message = error.message;
+	}
+
+	DBus::Message::Message(DBusMessage *message) {
+		this->message.value = message;
 		dbus_message_ref(message);
-		dbus_message_iter_init(message, &iter);
+		dbus_message_iter_init(this->message.value, &this->message.iter);
 	}
 
 	DBus::Message::~Message() {
-		dbus_message_unref(message);
+		if(message.value) {
+			dbus_message_unref(message.value);
+		}
 	}
 
+	DBusMessageIter * DBus::Message::getIter() {
+		if(error.valid) {
+			throw runtime_error(error.message);
+		}
+		return & this->message.iter;
+	}
+
+
 	bool DBus::Message::next() {
-		return dbus_message_iter_next(&iter);
+		if(error.valid) {
+			throw runtime_error(error.message);
+		}
+		return dbus_message_iter_next(&message.iter);
 	}
 
 	DBus::Message & DBus::Message::pop(Value &value) {
 
-		if(value.set(&iter))
-			dbus_message_iter_next(&iter);
+		if(error.valid) {
+			throw runtime_error(error.message);
+		}
+
+		if(value.set(&message.iter))
+			dbus_message_iter_next(&message.iter);
 
 		return *this;
 	}

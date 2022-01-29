@@ -26,6 +26,17 @@
 
  using namespace std;
 
+ /// @brief Launch runtime error if the dbus type is invalid or unsupported.
+ #define EXCEPTION_ON_UNSUPPORTED_OR_INVALID \
+			case DBUS_TYPE_INVALID: \
+				throw runtime_error("Value is undefined"); \
+			case DBUS_TYPE_ARRAY: \
+				throw runtime_error("Unsupported DBUS_TYPE_ARRAY value"); \
+			case DBUS_TYPE_DICT_ENTRY: \
+				throw runtime_error("Unsupported DBUS_TYPE_DICT_ENTRY value"); \
+			case DBUS_TYPE_VARIANT: \
+				throw runtime_error("Unsupported DBUS_TYPE_VARIANT value");
+
  namespace Udjat {
 
  	DBus::Value::Value(const Value *src) {
@@ -140,7 +151,7 @@
 
 	}
 
-	Udjat::Value & DBus::Value::set(const Udjat::Value &value) {
+	Udjat::Value & DBus::Value::set(const Udjat::Value UDJAT_UNUSED(&value)) {
 		throw system_error(ENOTSUP,system_category(),"Cant set value");
 	}
 
@@ -418,6 +429,8 @@
 	const Udjat::Value & DBus::Value::get(std::string &value) const {
 
 		switch(this->type) {
+		EXCEPTION_ON_UNSUPPORTED_OR_INVALID
+
 		case DBUS_TYPE_STRING:
 			value = this->value.str;
 			break;
@@ -433,17 +446,83 @@
 		return *this;
 
 	}
+
 	const Udjat::Value & DBus::Value::get(bool &value) const {
 
 		if(this->type == DBUS_TYPE_BOOLEAN) {
 			value = this->value.bool_val;
+
+		} else if(this->type == DBUS_TYPE_STRING) {
+
+			char str = toupper(this->value.str[0]);
+			if(str == 'T' || str == 'V' || str == '1') {
+				value = true;
+			} else if(str == 'F' || str == '0') {
+				value = false;
+			} else {
+				throw runtime_error(string{"Cant convert '"} + this->value.str + "' to boolean");
+			}
+
 		} else {
-			throw runtime_error("The value is not a boolean");
+
+			unsigned int v;
+			get(v);
+			value = (v != 0);
+
 		}
 
 		return *this;
 	}
 
+	const Udjat::Value & DBus::Value::get(unsigned int &value) const {
+
+		switch(this->type) {
+		EXCEPTION_ON_UNSUPPORTED_OR_INVALID
+
+		case DBUS_TYPE_STRING:
+			value = (unsigned int) stoi(this->value.str);
+			break;
+
+		case DBUS_TYPE_BOOLEAN:
+			value = (this->value.bool_val ? 1 : 0);
+			break;
+
+		case DBUS_TYPE_INT16:
+			value = (unsigned int) this->value.i16;
+			break;
+
+		case DBUS_TYPE_INT32:
+			value = (unsigned int) this->value.i32;
+			break;
+
+		case DBUS_TYPE_INT64:
+			value = (unsigned int) this->value.i64;
+			break;
+
+		case DBUS_TYPE_UINT16:
+			value = this->value.u16;
+			break;
+
+		case DBUS_TYPE_UINT32:
+			value = this->value.u32;
+			break;
+
+		case DBUS_TYPE_UINT64:
+			value = this->value.u64;
+			break;
+
+		case DBUS_TYPE_DOUBLE:
+			value = (unsigned int) this->value.dbl;
+			break;
+
+		default:
+			throw runtime_error( string{"Unable to convert dbus value "} + ((char) type) + " to unsigned int");
+
+		}
+
+		return *this;
+
+	}
 
  }
 

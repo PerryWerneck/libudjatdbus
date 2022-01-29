@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 
 			// udjat_module_init();
 
-			auto root = Abstract::Agent::init("*.xml");
+			auto root = Udjat::init("test.xml");
 
 			cout << "http://localhost:8989/api/1.0/info/modules.xml" << endl;
 			cout << "http://localhost:8989/api/1.0/info/workers.xml" << endl;
@@ -60,6 +60,27 @@ int main(int argc, char **argv) {
 
 			//DBus::Connection &session = DBus::Connection::getSessionInstance();
 			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"));
+
+			bus->call(
+				"org.gnome.ScreenSaver",
+				"/org/gnome/ScreenSaver",
+				"org.gnome.ScreenSaver",
+				"GetActiveTime",
+				[](DBus::Message & message) {
+
+					if(message) {
+
+						unsigned int active;
+						message.pop(active);
+
+						cout << "org.gnome.ScreenSaver.ActiveTime=" << active << endl;
+
+					} else {
+
+						cerr << "Error '" << message.error_message() << "' getting screensaver active time" << endl;
+					}
+				}
+			);
 
 			bus->subscribe(
 				this,
