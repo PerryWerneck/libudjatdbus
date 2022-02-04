@@ -109,6 +109,15 @@ int main(int argc, char **argv) {
 				}
 			);
 
+			DBus::Signal(
+				"com.example.signal.welcome",
+				"test",
+				"/agent/simple"
+			)
+				.push_back("Simple D-Bus signal")
+				.push_back((uint16_t) 10)
+				.send();
+
 		}
 
 		/// @brief Deinitialize service.

@@ -267,6 +267,17 @@
 				return connection;
 			}
 
+			/// @brief Adds a message to the outgoing message queue.
+			/// @param message The message to add.
+			inline dbus_bool_t send(DBusMessage *message) const {
+				return dbus_connection_send(connection,message,NULL);
+			}
+
+			/// @brief Blocks until the outgoing message queue is empty.
+			inline void flush() const {
+				return dbus_connection_flush(connection);
+			}
+
 			/// @brief Get connection name.
 			inline const char * c_str() const noexcept {
 				return name.c_str();
@@ -294,20 +305,58 @@
 
 		};
 
+		/// @brief D-Bus signal
+		class UDJAT_API Signal {
+		private:
+
+			/// @brief The D-Bus message.
+			DBusMessage *message;
+
+			/// @brief The message iter.
+			DBusMessageIter iter;
+
+		public:
+			Signal(const char *iface, const char *member, const char *path);
+			~Signal();
+
+			/// @brief Emit signal to the system bus.
+			void system();
+
+			/// @brief Emit signal to the session bus.
+			void session();
+
+			void send();
+
+			/// @brief Emit the signal to the connection.
+			void send(Connection &connection);
+
+			/// @brief Add values to signal.
+			Signal & push_back(const char *value);
+
+			inline Signal & push_back(const std::string &value) {
+				return push_back(value.c_str());
+			}
+
+			Signal & push_back(const bool value);
+
+			Signal & push_back(const int16_t value);
+			Signal & push_back(const uint16_t value);
+
+			Signal & push_back(const int32_t value);
+			Signal & push_back(const uint32_t value);
+
+			Signal & push_back(const int64_t value);
+			Signal & push_back(const uint64_t value);
+
+		};
+
 	}
 
  }
 
- /*
  template <typename T>
- inline Udjat::Value & operator<<(Udjat::DBus::Message &out, T value) {
-	return out.set(value);
+ inline Udjat::DBus::Signal & operator<<(Udjat::DBus::Signal &signal, T value) {
+	return signal.push_back(value);
  }
 
- template <typename T>
- inline Udjat::Value & operator>> (const Udjat::DBus::Message &in, T &value ) {
-	in.get(value);
-	return in;
- }
- */
 
