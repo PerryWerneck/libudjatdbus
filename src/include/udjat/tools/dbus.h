@@ -48,8 +48,8 @@
 			/// @brief Value children.
 			std::map<std::string,Value *> children;
 
-			/// @brief Check if the value dont have a signagture.
-			/// @return true if the value can be added on signatured.
+			/// @brief Check if the value dont have a signature.
+			/// @return true if the value can be added on signature.
 			inline bool noSignature() const noexcept {
 				return (type == DBUS_TYPE_INVALID || type == DBUS_TYPE_ARRAY || type == DBUS_TYPE_DICT_ENTRY);
 			}
@@ -182,13 +182,16 @@
 			/// @brief Connection name.
 			std::string name;
 
-			/// @brief Semaforo para serializar acessos.
+			/// @brief Mutex for serialization.
 			static std::recursive_mutex guard;
 
 			/// @brief Conexão ao barramento D-Bus.
 			DBusConnection * connection = nullptr;
 
-			/// @brief Thread de serviço D-Bus.
+			/// @brief Using threads?
+			static bool use_thread;
+
+			/// @brief Service thread.
 			std::thread * thread = nullptr;
 
 			/// @brief Handle signal
