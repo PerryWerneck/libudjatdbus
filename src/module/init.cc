@@ -17,18 +17,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+ #include <config.h>
  #include "private.h"
  #include <udjat/module.h>
+ #include <udjat/moduleinfo.h>
 
  using namespace Udjat;
 
- static const Udjat::ModuleInfo moduleinfo {
-	PACKAGE_NAME,								// The module name.
-	"UDJat D-Bus module", 						// The module description.
-	PACKAGE_VERSION, 							// The module version.
-	PACKAGE_URL, 								// The package URL.
-	PACKAGE_BUGREPORT 							// The bug report address.
- };
+ static const Udjat::ModuleInfo moduleinfo { "UDJat D-Bus module" };
 
  /// @brief Register udjat module.
  Udjat::Module * udjat_module_init() {
@@ -38,7 +34,7 @@
 
 	public:
 
-		Controller() : Udjat::Module("d-bus",&moduleinfo) {
+		Controller() : Udjat::Module("d-bus",moduleinfo) {
 		};
 
 		virtual ~Controller() {
