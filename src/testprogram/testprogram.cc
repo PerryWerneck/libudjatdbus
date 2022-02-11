@@ -45,18 +45,23 @@ int main(int argc, char **argv) {
 		void init() override {
 			cout << Application::Name() << "\tInitializing" << endl;
 
-			// udjat_module_init();
+			SystemService::init();
 
-			auto root = Udjat::init("test.xml");
+			if(Module::find("httpd")) {
+				if(Module::find("information")) {
+					cout << "http://localhost:8989/api/1.0/info/modules.xml" << endl;
+					cout << "http://localhost:8989/api/1.0/info/workers.xml" << endl;
+					cout << "http://localhost:8989/api/1.0/info/factories.xml" << endl;
+				}
+				cout << "http://localhost:8989/api/1.0/agent.xml" << endl;
+				cout << "http://localhost:8989/api/1.0/alerts.xml" << endl;
+			}
 
-			cout << "http://localhost:8989/api/1.0/info/modules.xml" << endl;
-			cout << "http://localhost:8989/api/1.0/info/workers.xml" << endl;
-			cout << "http://localhost:8989/api/1.0/info/factories.xml" << endl;
-			cout << "http://localhost:8989/api/1.0/agent.xml" << endl;
-
+			/*
 			for(auto agent : *root) {
 				cout << "http://localhost:8989/api/1.0/agent/" << agent->getName() << ".xml" << endl;
 			}
+			*/
 
 			//DBus::Connection &session = DBus::Connection::getSessionInstance();
 			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"));
@@ -104,6 +109,15 @@ int main(int argc, char **argv) {
 				}
 			);
 
+			DBus::Signal(
+				"com.example.signal.welcome",
+				"test",
+				"/agent/simple"
+			)
+				.push_back("Simple D-Bus signal")
+				.push_back((uint16_t) 10)
+				.send();
+
 		}
 
 		/// @brief Deinitialize service.
@@ -114,7 +128,8 @@ int main(int argc, char **argv) {
 		}
 
 	public:
-		Service() = default;
+		Service() : SystemService{"./test.xml"} {
+		}
 
 
 	};

@@ -52,6 +52,7 @@
 		<Unit filename="src/library/private.h" />
 		<Unit filename="src/library/request.cc" />
 		<Unit filename="src/library/response.cc" />
+		<Unit filename="src/library/signal.cc" />
 		<Unit filename="src/library/signals.cc" />
 		<Unit filename="src/library/timeout.cc" />
 		<Unit filename="src/library/value.cc" />

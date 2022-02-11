@@ -30,8 +30,7 @@
  namespace Udjat {
 
 	std::recursive_mutex DBus::Connection::guard;
-
-	static bool use_thread = false;
+	bool DBus::Connection::use_thread = false;
 
 	DBus::Connection & DBus::Connection::getInstance() {
 		if(getuid() == 0) {
