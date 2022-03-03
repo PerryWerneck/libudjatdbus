@@ -30,7 +30,6 @@
  namespace Udjat {
 
 	std::recursive_mutex DBus::Connection::guard;
-	bool DBus::Connection::use_thread = false;
 
 	DBus::Connection & DBus::Connection::getInstance() {
 		if(getuid() == 0) {
@@ -194,13 +193,42 @@
 		dbus_connection_remove_filter(connection,(DBusHandleMessageFunction) filter, this);
 
 		// Stop D-Bus connection
-		dbus_connection_unref(connection);
-
-		connection = nullptr;
 		if(thread) {
+
+			dbus_connection_unref(connection);
+			connection = nullptr;
 			cout << name << "\tWaiting for service thread" << endl;
 			thread->join();
 			delete thread;
+
+		} else if(!use_thread) {
+
+			cout << name << "\tRestoring d-bus watchers" << endl;
+
+			if(!dbus_connection_set_watch_functions(
+				connection,
+				(DBusAddWatchFunction) NULL,
+				(DBusRemoveWatchFunction) NULL,
+				(DBusWatchToggledFunction) NULL,
+				this,
+				nullptr)
+			) {
+				cerr << "dbus\tdbus_connection_set_watch_functions has failed" << endl;
+			}
+
+			if(!dbus_connection_set_timeout_functions(
+				connection,
+				(DBusAddTimeoutFunction) NULL,
+				(DBusRemoveTimeoutFunction) NULL,
+				(DBusTimeoutToggledFunction) NULL,
+				NULL,
+				nullptr)
+			) {
+				cerr << "dbus\tdbus_connection_set_timeout_functions has failed" << endl;
+			}
+
+			dbus_connection_unref(connection);
+			connection = nullptr;
 		}
 
 	}
