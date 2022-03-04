@@ -20,6 +20,7 @@
  #include <config.h>
  #include "private.h"
  #include <udjat/tools/dbus.h>
+ #include <udjat/tools/mainloop.h>
  #include <udjat/worker.h>
  #include <iostream>
  #include <unistd.h>
@@ -153,7 +154,6 @@
 
 		}
 
-
 	}
 
 	static DBusConnection * ConnectionFactory(const char *busname) {
@@ -230,6 +230,8 @@
 			dbus_connection_unref(connection);
 			connection = nullptr;
 		}
+
+		Udjat::MainLoop::getInstance().remove(this);
 
 	}
 
