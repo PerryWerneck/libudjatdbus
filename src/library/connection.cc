@@ -70,8 +70,12 @@
 
 		static bool initialized = false;
 		if(!initialized) {
-			cout << name << "\tInitializing thread system" << endl;
+
+			initialized = true;
+
+			// Initialize d-bus threads.
 			dbus_threads_init_default();
+
 		}
 
 		lock_guard<recursive_mutex> lock(guard);
@@ -123,6 +127,11 @@
 				//
 				// Non thread mode
 				//
+
+				// Initialize Main loop.
+				MainLoop::getInstance();
+
+				// Set watch functions.
 				if(!dbus_connection_set_watch_functions(
 					connection,
 					(DBusAddWatchFunction) add_watch,
@@ -134,6 +143,7 @@
 					throw runtime_error("dbus_connection_set_watch_functions has failed");
 				}
 
+				// Set timeout functions.
 				if(!dbus_connection_set_timeout_functions(
 					connection,
 					(DBusAddTimeoutFunction) add_timeout,
