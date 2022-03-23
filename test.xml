@@ -2,7 +2,13 @@
 
 <config>
 
-	<module name='http' required='no' />
+	<module name='http' required='no'>
+		<!-- https://github.com/civetweb/civetweb/blob/master/docs/api/mg_start.md -->
+		<option name='listening_ports' value='8989' />
+		<option name='request_timeout_ms' value='10000' />
+		<option name='enable_auth_domain_check' value='no' />
+	</module>
+	
 	<module name='information' required='no' />
 
 	<agent name='intvalue' type='integer' value='0'>
