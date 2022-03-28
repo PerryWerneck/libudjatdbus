@@ -20,6 +20,7 @@
  #include <config.h>
  #include "private.h"
  #include <udjat/tools/dbus.h>
+ #include <udjat/tools/mainloop.h>
  #include <udjat/worker.h>
  #include <iostream>
  #include <unistd.h>
@@ -30,7 +31,6 @@
  namespace Udjat {
 
 	std::recursive_mutex DBus::Connection::guard;
-	bool DBus::Connection::use_thread = false;
 
 	DBus::Connection & DBus::Connection::getInstance() {
 		if(getuid() == 0) {
@@ -70,8 +70,12 @@
 
 		static bool initialized = false;
 		if(!initialized) {
-			cout << name << "\tInitializing thread system" << endl;
+
+			initialized = true;
+
+			// Initialize d-bus threads.
 			dbus_threads_init_default();
+
 		}
 
 		lock_guard<recursive_mutex> lock(guard);
@@ -123,6 +127,11 @@
 				//
 				// Non thread mode
 				//
+
+				// Initialize Main loop.
+				MainLoop::getInstance();
+
+				// Set watch functions.
 				if(!dbus_connection_set_watch_functions(
 					connection,
 					(DBusAddWatchFunction) add_watch,
@@ -134,6 +143,7 @@
 					throw runtime_error("dbus_connection_set_watch_functions has failed");
 				}
 
+				// Set timeout functions.
 				if(!dbus_connection_set_timeout_functions(
 					connection,
 					(DBusAddTimeoutFunction) add_timeout,
@@ -153,7 +163,6 @@
 			throw;
 
 		}
-
 
 	}
 
@@ -194,14 +203,45 @@
 		dbus_connection_remove_filter(connection,(DBusHandleMessageFunction) filter, this);
 
 		// Stop D-Bus connection
-		dbus_connection_unref(connection);
-
-		connection = nullptr;
 		if(thread) {
+
+			dbus_connection_unref(connection);
+			connection = nullptr;
 			cout << name << "\tWaiting for service thread" << endl;
 			thread->join();
 			delete thread;
+
+		} else if(!use_thread) {
+
+			cout << name << "\tRestoring d-bus watchers" << endl;
+
+			if(!dbus_connection_set_watch_functions(
+				connection,
+				(DBusAddWatchFunction) NULL,
+				(DBusRemoveWatchFunction) NULL,
+				(DBusWatchToggledFunction) NULL,
+				this,
+				nullptr)
+			) {
+				cerr << "dbus\tdbus_connection_set_watch_functions has failed" << endl;
+			}
+
+			if(!dbus_connection_set_timeout_functions(
+				connection,
+				(DBusAddTimeoutFunction) NULL,
+				(DBusRemoveTimeoutFunction) NULL,
+				(DBusTimeoutToggledFunction) NULL,
+				NULL,
+				nullptr)
+			) {
+				cerr << "dbus\tdbus_connection_set_timeout_functions has failed" << endl;
+			}
+
+			dbus_connection_unref(connection);
+			connection = nullptr;
 		}
+
+		Udjat::MainLoop::getInstance().remove(this);
 
 	}
 

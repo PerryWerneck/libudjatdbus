@@ -189,7 +189,7 @@
 			DBusConnection * connection = nullptr;
 
 			/// @brief Using threads?
-			static bool use_thread;
+			bool use_thread = false;
 
 			/// @brief Service thread.
 			std::thread * thread = nullptr;
