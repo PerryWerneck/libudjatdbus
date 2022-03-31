@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 			*/
 
 			//DBus::Connection &session = DBus::Connection::getSessionInstance();
-			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"));
+			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"),"session-bus");
 
 			bus->call(
 				"org.gnome.ScreenSaver",
@@ -131,6 +131,8 @@ int main(int argc, char **argv) {
 		Service() : SystemService{"./test.xml"} {
 		}
 
+		virtual ~Service() {
+		}
 
 	};
 

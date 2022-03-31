@@ -207,7 +207,7 @@
 
 			dbus_connection_unref(connection);
 			connection = nullptr;
-			cout << name << "\tWaiting for service thread" << endl;
+			cout << name << "\tWaiting for service thread " << thread << endl;
 			thread->join();
 			delete thread;
 
