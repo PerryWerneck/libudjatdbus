@@ -25,6 +25,11 @@
 
  namespace Udjat {
 
+	DBus::Message::Message(const char *destination, const char *path, const char *iface, const char *method) {
+		message.value = dbus_message_new_method_call(destination, path, iface, method);
+		dbus_message_iter_init_append(message.value, &message.iter);
+	}
+
 	DBus::Message::Message(const DBusError &error) {
 		this->message.value = nullptr;
 		this->error.valid = true;
@@ -67,6 +72,90 @@
 
 		if(value.set(&message.iter))
 			dbus_message_iter_next(&message.iter);
+
+		return *this;
+	}
+
+	DBus::Message & DBus::Message::push_back(const char *value) {
+		if(!dbus_message_iter_append_basic(&message.iter,DBUS_TYPE_STRING,&value)) {
+			throw runtime_error("Can't add value to d-bus iterator");
+		}
+		return *this;
+	}
+
+	DBus::Message & DBus::Message::push_back(const bool value) {
+
+		dbus_bool_t dvalue = value;
+
+		if(!dbus_message_iter_append_basic(&message.iter,DBUS_TYPE_BOOLEAN,&dvalue)) {
+			throw runtime_error("Can't add value to d-bus iterator");
+		}
+
+		return *this;
+	}
+
+	DBus::Message & DBus::Message::push_back(const int16_t value) {
+
+		dbus_int16_t dvalue = value;
+
+		if(!dbus_message_iter_append_basic(&message.iter,DBUS_TYPE_INT16,&dvalue)) {
+			throw runtime_error("Can't add value to d-bus iterator");
+		}
+
+		return *this;
+	}
+
+	DBus::Message & DBus::Message::push_back(const uint16_t value) {
+
+		dbus_uint16_t dvalue = value;
+
+		if(!dbus_message_iter_append_basic(&message.iter,DBUS_TYPE_UINT16,&dvalue)) {
+			throw runtime_error("Can't add value to d-bus iterator");
+		}
+
+		return *this;
+	}
+
+	DBus::Message & DBus::Message::push_back(const int32_t value) {
+
+		dbus_int32_t dvalue = value;
+
+		if(!dbus_message_iter_append_basic(&message.iter,DBUS_TYPE_INT32,&dvalue)) {
+			throw runtime_error("Can't add value to d-bus iterator");
+		}
+
+		return *this;
+	}
+
+	DBus::Message & DBus::Message::push_back(const uint32_t value) {
+
+		dbus_uint32_t dvalue = value;
+
+		if(!dbus_message_iter_append_basic(&message.iter,DBUS_TYPE_UINT32,&dvalue)) {
+			throw runtime_error("Can't add value to d-bus iterator");
+		}
+
+		return *this;
+	}
+
+	DBus::Message & DBus::Message::push_back(const int64_t value) {
+
+		dbus_int64_t dvalue = value;
+
+		if(!dbus_message_iter_append_basic(&message.iter,DBUS_TYPE_INT64,&dvalue)) {
+			throw runtime_error("Can't add value to d-bus iterator");
+		}
+
+		return *this;
+	}
+
+	DBus::Message & DBus::Message::push_back(const uint64_t value) {
+
+		dbus_uint64_t dvalue = value;
+
+		if(!dbus_message_iter_append_basic(&message.iter,DBUS_TYPE_UINT64,&dvalue)) {
+			throw runtime_error("Can't add value to d-bus iterator");
+		}
 
 		return *this;
 	}

@@ -99,12 +99,7 @@
 		delete parameters;
 	}
 
-	void DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, std::function<void(DBus::Message & message)> call) {
-
-		DBusMessage * message = dbus_message_new_method_call(destination,path,interface,member);
-		if(message == NULL) {
-			throw std::runtime_error("Error creating DBus method call");
-		}
+	void DBus::Connection::call(DBusMessage * message, std::function<void(Message & message)> call) {
 
 		DBusPendingCall *pending = NULL;
 
@@ -122,6 +117,26 @@
 		}
 
 		dbus_pending_call_unref(pending);
+
+	}
+
+	void DBus::Connection::call(const Message &message, std::function<void(Message & message)> call) {
+		DBusMessage *msg = (DBusMessage *) message;
+		if(!msg) {
+			throw runtime_error("Empty D-Bus message");
+		}
+		this->call(msg,call);
+	}
+
+	void DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, std::function<void(DBus::Message & message)> call) {
+
+		DBusMessage * message = dbus_message_new_method_call(destination,path,interface,member);
+		if(message == NULL) {
+			throw std::runtime_error("Error creating DBus method call");
+		}
+
+		this->call(message,call);
+
 		dbus_message_unref(message);
 
 	}

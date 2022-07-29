@@ -121,12 +121,14 @@
 
 		/// @brief D-Bus message
 		class UDJAT_API Message {
-		private:
+		protected:
 
 			struct {
 				DBusMessage *value = nullptr;
 				DBusMessageIter iter;
 			} message;
+
+		private:
 
 			struct {
 				bool valid = false;		/// @brief True if this is an error message.
@@ -138,10 +140,15 @@
 			Message(const Message &message) = delete;
 			Message(const Message *message) = delete;
 
+			Message(const char *destination, const char *path, const char *iface, const char *method);
 			Message(const DBusError &error);
 			Message(DBusMessage *m);
 
 			~Message();
+
+			inline operator DBusMessage *() const noexcept {
+				return message.value;
+			}
 
 			inline operator bool() const {
 				return !error.valid;
@@ -172,6 +179,23 @@
 			inline const char * error_message() const {
 				return error.message.c_str();
 			}
+
+			Message & push_back(const char *value);
+
+			inline Message & push_back(const std::string &value) {
+				return push_back(value.c_str());
+			}
+
+			Message & push_back(const bool value);
+
+			Message & push_back(const int16_t value);
+			Message & push_back(const uint16_t value);
+
+			Message & push_back(const int32_t value);
+			Message & push_back(const uint32_t value);
+
+			Message & push_back(const int64_t value);
+			Message & push_back(const uint64_t value);
 
 		};
 
@@ -298,11 +322,19 @@
 			/// @brief Unsubscribe all signals created by 'id'.
 			void unsubscribe(void *id);
 
-			/// @brief call method
+			/// @brief Call method
+			void call(DBusMessage * message, std::function<void(Message & message)> call);
+
+			/// @brief Call method
 			void call(	const char *destination,
 						const char *path,
 						const char *interface,
 						const char *member,
+						std::function<void(Message & message)> call
+					);
+
+			/// @brief Call method
+			void call(	const Message &message,
 						std::function<void(Message & message)> call
 					);
 
@@ -362,4 +394,8 @@
 	return signal.push_back(value);
  }
 
+ template <typename T>
+ inline Udjat::DBus::Message & operator<<(Udjat::DBus::Message &message, T value) {
+	return message.push_back(value);
+ }
 
