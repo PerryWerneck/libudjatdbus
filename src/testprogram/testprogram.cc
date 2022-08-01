@@ -28,6 +28,7 @@
  #include <iostream>
  #include <memory>
  #include <cstdlib>
+ #include <unistd.h>
 
  using namespace std;
  using namespace Udjat;
@@ -71,10 +72,10 @@ int main(int argc, char **argv) {
 					"Inhibit"							// Method
 				};
 
-				message	<< "what"
+				message	<< "sleep"
 						<< "who"
 						<< "why"
-						<< "mode";
+						<< "delay";
 
 				// Get system bus
 				DBus::Connection::getSystemInstance().call(message,[](DBus::Message &response){
@@ -82,6 +83,11 @@ int main(int argc, char **argv) {
 					if(response) {
 
 						cout << "SUCCESS" << endl;
+						int fd = DBus::Value(response).getFD();
+
+						cout << "FD=" << fd << endl;
+
+						::close(fd);
 
 					} else {
 

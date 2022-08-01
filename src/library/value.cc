@@ -474,6 +474,15 @@
 		return *this;
 	}
 
+	int DBus::Value::getFD() const {
+
+		if(type != DBUS_TYPE_UNIX_FD) {
+			throw runtime_error("Value is not a file handle");
+		}
+
+		return value.fd;
+	}
+
 	const Udjat::Value & DBus::Value::get(unsigned int &value) const {
 
 		switch(this->type) {

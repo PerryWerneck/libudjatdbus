@@ -117,6 +117,8 @@
 			// const Udjat::Value & get(float &value) const override;
 			// const Udjat::Value & get(double &value) const override;
 
+			int getFD() const;
+
 		};
 
 		/// @brief D-Bus message
