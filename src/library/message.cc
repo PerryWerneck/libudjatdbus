@@ -38,9 +38,39 @@
 	}
 
 	DBus::Message::Message(DBusMessage *message) {
-		this->message.value = message;
-		dbus_message_ref(message);
-		dbus_message_iter_init(this->message.value, &this->message.iter);
+
+		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_ERROR) {
+
+			error.valid = true;
+			error.name = dbus_message_get_error_name(message);
+
+#ifdef DEBUG
+			cout << "Error name=" << error.name << endl;
+#endif // DEBUG
+
+			// Get error message.
+			DBusMessageIter iter;
+			dbus_message_iter_init(message, &iter);
+
+			error.message.clear();
+			if(dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING) {
+				DBusBasicValue value;
+				dbus_message_iter_get_basic(&iter,&value);
+				error.message = value.str;
+#ifdef DEBUG
+				cout << "Error message=" << error.message << endl;
+#endif // DEBUG
+			}
+
+
+		} else {
+
+			this->message.value = message;
+			dbus_message_ref(message);
+			dbus_message_iter_init(this->message.value, &this->message.iter);
+
+		}
+
 	}
 
 	DBus::Message::~Message() {

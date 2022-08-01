@@ -63,6 +63,35 @@ int main(int argc, char **argv) {
 			}
 			*/
 
+			{
+				DBus::Message message{
+					"org.freedesktop.login1",			// Destination
+					"/org/freedesktop/login1",			// Path
+					"org.freedesktop.login1.Manager",	// Interface
+					"Inhibit"							// Method
+				};
+
+				message	<< "what"
+						<< "who"
+						<< "why"
+						<< "mode";
+
+				// Get system bus
+				DBus::Connection::getSystemInstance().call(message,[](DBus::Message &response){
+
+					if(response) {
+
+						cout << "SUCCESS" << endl;
+
+					} else {
+
+						cout << "FAILED" << endl;
+					}
+
+				});
+
+			}
+
 			//DBus::Connection &session = DBus::Connection::getSessionInstance();
 			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"),"session-bus");
 
