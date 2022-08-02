@@ -67,7 +67,7 @@
 	return TRUE;
  }
 
- void remove_timeout(DBusTimeout *t, DBus::Connection *connection) {
+ void remove_timeout(DBusTimeout *t, DBus::Connection UDJAT_UNUSED(*connection)) {
 
 	TimeoutContext *ctx = (TimeoutContext *) dbus_timeout_get_data(t);
 
@@ -77,7 +77,7 @@
 	}
  }
 
- void toggle_timeout(DBusTimeout *t, DBus::Connection *connection) {
+ void toggle_timeout(DBusTimeout *t, DBus::Connection UDJAT_UNUSED(*connection)) {
 
 	TimeoutContext *ctx = (TimeoutContext *) dbus_timeout_get_data(t);
 

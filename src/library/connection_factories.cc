@@ -48,7 +48,7 @@
 		return connct;
 	}
 
-	DBusConnection * DBus::Connection::Factory(uid_t uid) {
+	DBusConnection * DBus::Connection::Factory(uid_t uid, const char *sid) {
 
 		/// @brief File on /proc/[PID]/environ
 		class Environ {
@@ -111,6 +111,12 @@
 					if(sd_pid_get_session(atoi(ent->d_name), &sname) == -ENODATA)
 						continue;
 
+					// Test if it's the required session.
+					if(sid && *sid && strcmp(sid,sname)) {
+						free(sname);
+						continue;
+					}
+
 					free(sname);
 
 				}
@@ -135,6 +141,11 @@
 								dbus_error_free(&err);
 								connection = nullptr;
 							}
+#ifdef DEBUG
+							else {
+								cout << "dbus\tGot user connection on " << ptr << endl;
+							}
+#endif // DEBUG
 
 							break;
 						}

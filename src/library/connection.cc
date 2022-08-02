@@ -139,7 +139,7 @@
 
 	}
 
-	DBus::Connection::Connection(uid_t uid) : Connection(Factory(uid), "user") {
+	DBus::Connection::Connection(uid_t uid, const char *sid) : Connection(Factory(uid,sid), "user") {
 
 		// Replace session name with user's login name.
 

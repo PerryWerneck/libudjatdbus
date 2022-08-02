@@ -153,6 +153,12 @@ int main(int argc, char **argv) {
 				.push_back((uint16_t) 10)
 				.send();
 
+
+			// Test user bus
+			{
+				cout << "------------------------------------------------" << endl;
+				DBus::Connection usercon((uid_t) 1000);
+			}
 		}
 
 		/// @brief Deinitialize service.

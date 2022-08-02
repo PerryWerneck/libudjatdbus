@@ -206,7 +206,7 @@
 		private:
 
 			static DBusConnection * Factory(DBusBusType type);
-			static DBusConnection * Factory(uid_t uid);
+			static DBusConnection * Factory(uid_t uid, const char *sid);
 
 			/// @brief Connection name.
 			std::string name;
@@ -292,7 +292,9 @@
 			Connection(const char *busname, const char *connection_name = "d-bus");
 
 			/// @brief Get connection to user bus.
-			Connection(uid_t uid);
+			/// @param uid User ID.
+			/// @param sid Session ID.
+			Connection(uid_t uid, const char *sid = nullptr);
 
 			~Connection();
 
