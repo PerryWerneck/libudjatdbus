@@ -159,6 +159,43 @@ int main(int argc, char **argv) {
 				cout << "------------------------------------------------" << endl;
 				DBus::Connection usercon((uid_t) 1000);
 			}
+
+			// Test notification
+			try {
+				DBus::Message message{
+					"org.freedesktop.Notifications",		// Destination
+					"/org/freedesktop/Notifications",		// Path
+					"org.freedesktop.Notifications",		// Interface
+					"Notify"								// Method
+				};
+
+				// susssasa{sv}i
+
+				message	<< PACKAGE_NAME
+						<< ((unsigned int) 0)
+						<< "gtk-dialog-info"
+						<< "Remote instalation service"
+						<< "This machine is acting as an installation server, keep it active";
+
+				message.push_back(DBus::Value(DBUS_TYPE_ARRAY)); // Actions '[]' array
+
+				message	<< "" // Hints {sv} dict:string:variadic
+						<< ((int) 5);
+
+				DBus::Connection::getSessionInstance().call(message,[](DBus::Message &response){
+
+					if(!response) {
+
+						error() << "Error '" << response.error_name() << "' sending notification"
+								<< endl << response.error_message() << endl;
+
+					}
+
+				});
+			} catch(const std::exception &e) {
+
+				cout << "-----------------------------" << endl << e.what() << endl << "------------------------------" << endl;
+			}
 		}
 
 		/// @brief Deinitialize service.

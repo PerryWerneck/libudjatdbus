@@ -190,4 +190,10 @@
 		return *this;
 	}
 
+	DBus::Message & DBus::Message::push_back(const DBus::Value &value) {
+		value.get(&message.iter);
+		return *this;
+
+	}
+
  }

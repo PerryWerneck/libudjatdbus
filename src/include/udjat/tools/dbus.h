@@ -65,7 +65,7 @@
 			Value(Message &message);
 
 			Value();
-			Value(int type, const char *value);
+			Value(int type, const char *value = nullptr);
 			virtual ~Value();
 
 			/// @brief Add value on iter.
@@ -152,6 +152,10 @@
 				return message.value;
 			}
 
+			inline operator DBusMessageIter *() noexcept {
+				return &message.iter;
+			}
+
 			inline operator bool() const {
 				return !error.valid;
 			}
@@ -181,6 +185,8 @@
 			inline const char * error_message() const {
 				return error.message.c_str();
 			}
+
+			Message & push_back(const DBus::Value &value);
 
 			Message & push_back(const char *value);
 
