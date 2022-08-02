@@ -205,6 +205,9 @@
 		class UDJAT_API Connection {
 		private:
 
+			static DBusConnection * Factory(DBusBusType type);
+			static DBusConnection * Factory(uid_t uid);
+
 			/// @brief Connection name.
 			std::string name;
 
@@ -287,6 +290,10 @@
 
 			/// @brief Get connection to a named bus.
 			Connection(const char *busname, const char *connection_name = "d-bus");
+
+			/// @brief Get connection to user bus.
+			Connection(uid_t uid);
+
 			~Connection();
 
 			Connection(const Connection &) = delete;

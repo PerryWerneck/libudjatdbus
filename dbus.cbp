@@ -45,6 +45,7 @@
 		<Unit filename="src/include/udjat/tools/dbus.h" />
 		<Unit filename="src/library/call.cc" />
 		<Unit filename="src/library/connection.cc" />
+		<Unit filename="src/library/connection_factories.cc" />
 		<Unit filename="src/library/dispatcher.cc" />
 		<Unit filename="src/library/filter.cc" />
 		<Unit filename="src/library/interface.cc" />
