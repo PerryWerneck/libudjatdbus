@@ -139,6 +139,16 @@
 				std::string message;	/// @brief Error Message.
 			} error;
 
+			inline Message & add() {
+				return *this;
+			}
+
+			template<typename T, typename... Targs>
+			Message & add(const T &value, Targs... Fargs) {
+				push_back(value);
+				return add(Fargs...);
+			}
+
 		public:
 			Message(const Message &message) = delete;
 			Message(const Message *message) = delete;
@@ -149,7 +159,7 @@
 			Message(const char *destination, const char *path, const char *iface, const char *method, const T &value, Targs... Fargs)
 				: Message(destination,path,iface,method) {
 				push_back(value);
-				push_back(Fargs...);
+				add(Fargs...);
 			}
 
 			Message(const DBusError &error);
@@ -215,16 +225,6 @@
 			Message & push_back(const uint64_t value);
 
 			Message & push_back(const std::vector<std::string> &elements);
-
-			inline Message & push_back() {
-				return *this;
-			}
-
-			template<typename T, typename... Targs>
-			Message & push_back(const T &value, Targs... Fargs) {
-				push_back(value);
-				return push_back(Fargs...);
-			}
 
 		};
 
@@ -398,6 +398,16 @@
 			/// @brief The message iter.
 			DBusMessageIter iter;
 
+			inline Signal & add() noexcept {
+				return *this;
+			}
+
+			template<typename T, typename... Targs>
+			Signal & add(T &value, Targs... Fargs) {
+				push_back(value);
+				return add(Fargs...);
+			}
+
 		public:
 			Signal(const char *iface, const char *member, const char *path);
 
@@ -405,7 +415,7 @@
 			Signal(const char *iface, const char *member, const char *path, const T &value, Targs... Fargs)
 				: Signal(iface,member,path) {
 				push_back(value);
-				push_back(Fargs...);
+				add(Fargs...);
 			}
 
 			~Signal();
@@ -438,16 +448,6 @@
 
 			Signal & push_back(const int64_t value);
 			Signal & push_back(const uint64_t value);
-
-			inline Signal & push_back() noexcept {
-				return *this;
-			}
-
-			template<typename T, typename... Targs>
-			Signal & push_back(const T &value, Targs... Fargs) {
-				push_back(value);
-				return push_back(Fargs...);
-			}
 
 		};
 

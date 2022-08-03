@@ -81,7 +81,7 @@
 
 	}
 
-	DBusHandlerResult DBus::Connection::filter(DBusConnection *dbc, DBusMessage *message, DBus::Connection *connection) {
+	DBusHandlerResult DBus::Connection::filter(DBusConnection UDJAT_UNUSED(*dbc), DBusMessage *message, DBus::Connection *connection) {
 
 		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_SIGNAL) {
 			return connection->on_signal(message);
