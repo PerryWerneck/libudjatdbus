@@ -393,6 +393,14 @@
 
 		public:
 			Signal(const char *iface, const char *member, const char *path);
+
+			template<typename T, typename... Targs>
+			Signal(const char *iface, const char *member, const char *path, const T &value, Targs... Fargs)
+				: Signal(iface,member,path) {
+				push_back(value);
+				push_back(Fargs...);
+			}
+
 			~Signal();
 
 			/// @brief Emit signal to the system bus.
@@ -423,6 +431,12 @@
 
 			Signal & push_back(const int64_t value);
 			Signal & push_back(const uint64_t value);
+
+			template<typename T, typename... Targs>
+			Signal & push_back(const T &value, Targs... Fargs) {
+				push_back(value);
+				return push_back(Fargs...);
+			}
 
 		};
 

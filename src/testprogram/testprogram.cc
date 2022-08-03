@@ -144,6 +144,7 @@ int main(int argc, char **argv) {
 				}
 			);
 
+			/*
 			DBus::Signal(
 				"com.example.signal.welcome",
 				"test",
@@ -152,7 +153,15 @@ int main(int argc, char **argv) {
 				.push_back("Simple D-Bus signal")
 				.push_back((uint16_t) 10)
 				.send();
+			*/
 
+			DBus::Signal(
+				"com.example.signal.welcome",
+				"test",
+				"/agent/simple",
+				"Simple D-Bus signal",
+				(uint16_t) 10
+			).send();
 
 			// Test user bus
 			{
