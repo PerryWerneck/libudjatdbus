@@ -6,6 +6,7 @@ SONAME=@SONAME@
 
 LIBRARY_SOURCES= \
 	$(wildcard src/library/*.cc) \
+	$(wildcard src/library/message/*.cc) \
 	$(wildcard src/library/os/@OSNAME@/*.cc)
 
 MODULE_SOURCES= \

@@ -181,7 +181,8 @@ int main(int argc, char **argv) {
 					((unsigned int) 0),
 					"gtk-dialog-info",
 					"Remote instalation service",
-					"This machine is acting as an installation server, keep it active"
+					"This machine is acting as an installation server, keep it active",
+					std::vector<std::string>()
 				};
 
 				/*
@@ -199,9 +200,10 @@ int main(int argc, char **argv) {
 						<< "gtk-dialog-info"
 						<< "Remote instalation service"
 						<< "This machine is acting as an installation server, keep it active";
-				*/
 
 				message.push_back(DBus::Value(DBUS_TYPE_ARRAY)); // Actions '[]' array
+				*/
+
 
 				message	<< "" // Hints {sv} dict:string:variadic
 						<< ((int) 5);

@@ -51,6 +51,8 @@
 		<Unit filename="src/library/filter.cc" />
 		<Unit filename="src/library/interface.cc" />
 		<Unit filename="src/library/message.cc" />
+		<Unit filename="src/library/message/message.cc" />
+		<Unit filename="src/library/message/push_back.cc" />
 		<Unit filename="src/library/private.h" />
 		<Unit filename="src/library/request.cc" />
 		<Unit filename="src/library/response.cc" />

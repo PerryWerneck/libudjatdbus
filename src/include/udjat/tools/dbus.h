@@ -27,6 +27,7 @@
  #include <list>
  #include <map>
  #include <thread>
+ #include <vector>
 
  namespace Udjat {
 
@@ -212,6 +213,12 @@
 
 			Message & push_back(const int64_t value);
 			Message & push_back(const uint64_t value);
+
+			Message & push_back(const std::vector<std::string> &elements);
+
+			inline Message & push_back() {
+				return *this;
+			}
 
 			template<typename T, typename... Targs>
 			Message & push_back(const T &value, Targs... Fargs) {
@@ -432,6 +439,10 @@
 			Signal & push_back(const int64_t value);
 			Signal & push_back(const uint64_t value);
 
+			inline Signal & push_back() noexcept {
+				return *this;
+			}
+
 			template<typename T, typename... Targs>
 			Signal & push_back(const T &value, Targs... Fargs) {
 				push_back(value);
@@ -445,12 +456,12 @@
  }
 
  template <typename T>
- inline Udjat::DBus::Signal & operator<<(Udjat::DBus::Signal &signal, T value) {
+ inline Udjat::DBus::Signal & operator<<(Udjat::DBus::Signal &signal, const T value) {
 	return signal.push_back(value);
  }
 
  template <typename T>
- inline Udjat::DBus::Message & operator<<(Udjat::DBus::Message &message, T value) {
+ inline Udjat::DBus::Message & operator<<(Udjat::DBus::Message &message, const T value) {
 	return message.push_back(value);
  }
 
