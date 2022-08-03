@@ -162,6 +162,20 @@ int main(int argc, char **argv) {
 
 			// Test notification
 			try {
+
+				DBus::Message message{
+					"org.freedesktop.Notifications",		// Destination
+					"/org/freedesktop/Notifications",		// Path
+					"org.freedesktop.Notifications",		// Interface
+					"Notify",								// Method
+					PACKAGE_NAME,
+					((unsigned int) 0),
+					"gtk-dialog-info",
+					"Remote instalation service",
+					"This machine is acting as an installation server, keep it active"
+				};
+
+				/*
 				DBus::Message message{
 					"org.freedesktop.Notifications",		// Destination
 					"/org/freedesktop/Notifications",		// Path
@@ -176,6 +190,7 @@ int main(int argc, char **argv) {
 						<< "gtk-dialog-info"
 						<< "Remote instalation service"
 						<< "This machine is acting as an installation server, keep it active";
+				*/
 
 				message.push_back(DBus::Value(DBUS_TYPE_ARRAY)); // Actions '[]' array
 

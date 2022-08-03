@@ -143,6 +143,14 @@
 			Message(const Message *message) = delete;
 
 			Message(const char *destination, const char *path, const char *iface, const char *method);
+
+			template<typename T, typename... Targs>
+			Message(const char *destination, const char *path, const char *iface, const char *method, const T &value, Targs... Fargs)
+				: Message(destination,path,iface,method) {
+				push_back(value);
+				push_back(Fargs...);
+			}
+
 			Message(const DBusError &error);
 			Message(DBusMessage *m);
 
@@ -204,6 +212,12 @@
 
 			Message & push_back(const int64_t value);
 			Message & push_back(const uint64_t value);
+
+			template<typename T, typename... Targs>
+			Message & push_back(const T &value, Targs... Fargs) {
+				push_back(value);
+				return push_back(Fargs...);
+			}
 
 		};
 
