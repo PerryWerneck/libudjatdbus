@@ -311,6 +311,10 @@
 				return connection;
 			}
 
+			inline void flush() noexcept {
+				dbus_connection_flush(connection);
+			}
+
 			/// @brief Adds a message to the outgoing message queue.
 			/// @param message The message to add.
 			inline dbus_bool_t send(DBusMessage *message) const {
@@ -340,7 +344,13 @@
 			void unsubscribe(void *id);
 
 			/// @brief Call method
-			void call(DBusMessage * message, std::function<void(Message & message)> call);
+			void call(DBusMessage * message, const std::function<void(Message & message)> &call);
+
+			/// @brief Call method (syncronous);
+			void call(DBusMessage * message);
+
+			/// @brief Call method (syncronous);
+			void call_and_wait(DBusMessage * message, const std::function<void(Message & message)> &call);
 
 			/// @brief Call method
 			void call(	const char *destination,

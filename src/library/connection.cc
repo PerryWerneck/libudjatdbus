@@ -172,6 +172,9 @@
 	DBus::Connection::~Connection() {
 
 		cout << name << "\tConnection destroyed" << endl;
+
+		flush();
+
 		// Remove listeners.
 		interfaces.remove_if([this](Interface &intf) {
 			intf.remove_from(this);
