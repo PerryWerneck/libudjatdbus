@@ -170,6 +170,7 @@ int main(int argc, char **argv) {
 			}
 
 			// Test notification
+			cout << "---[ Message Test Begin ]--------------------------------------------" << endl;
 			try {
 
 				DBus::Message message{
@@ -185,7 +186,27 @@ int main(int argc, char **argv) {
 					std::vector<std::string>()
 				};
 
-				/*
+				DBus::Connection::getSessionInstance().call_and_wait(message,[](DBus::Message &response){
+
+					if(response.failed()) {
+
+						error() << "Error '" << response.error_name() << "' sending notification"
+								<< endl << response.error_message() << endl;
+
+					} else {
+
+						info() << "Success??" << endl;
+					}
+
+
+				});
+			} catch(const std::exception &e) {
+
+				cout << "-----------------------------" << endl << e.what() << endl << "------------------------------" << endl;
+			}
+
+			try {
+
 				DBus::Message message{
 					"org.freedesktop.Notifications",		// Destination
 					"/org/freedesktop/Notifications",		// Path
@@ -193,28 +214,23 @@ int main(int argc, char **argv) {
 					"Notify"								// Method
 				};
 
-				// susssasa{sv}i
-
 				message	<< PACKAGE_NAME
 						<< ((unsigned int) 0)
 						<< "gtk-dialog-info"
 						<< "Remote instalation service"
-						<< "This machine is acting as an installation server, keep it active";
+						<< "This machine is acting as an installation server, keep it active"
+						<< std::vector<std::string>();
 
-				message.push_back(DBus::Value(DBUS_TYPE_ARRAY)); // Actions '[]' array
-				*/
+				DBus::Connection::getSessionInstance().call_and_wait(message,[](DBus::Message &response){
 
-
-				message	<< "" // Hints {sv} dict:string:variadic
-						<< ((int) 5);
-
-				DBus::Connection::getSessionInstance().call(message,[](DBus::Message &response){
-
-					if(!response) {
+					if(response.failed()) {
 
 						error() << "Error '" << response.error_name() << "' sending notification"
 								<< endl << response.error_message() << endl;
 
+					} else {
+
+						info() << "Success??" << endl;
 					}
 
 				});
@@ -222,6 +238,8 @@ int main(int argc, char **argv) {
 
 				cout << "-----------------------------" << endl << e.what() << endl << "------------------------------" << endl;
 			}
+
+			cout << "---[ Message Test Finish ]--------------------------------------------" << endl;
 		}
 
 		/// @brief Deinitialize service.

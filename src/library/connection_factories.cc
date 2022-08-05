@@ -130,23 +130,39 @@
 
 							// Found session address, try to open it.
 
-							DBusError err;
-							dbus_error_init(&err);
+							// Get an static lock guard to avoid another change
+							static mutex guard;
+							lock_guard<mutex> lock(guard);
 
-							ptr += 25;
+							// Save application EUID and switch to required UID.
+							uid_t saved_uid = geteuid();
+							if(seteuid(uid) < 0) {
 
-							connection = dbus_connection_open(ptr, &err);
-							if(dbus_error_is_set(&err)) {
-								clog << "dbus\tError '" << err.message << "' opening BUS " << ptr << endl;
-								dbus_error_free(&err);
-								connection = nullptr;
+								cerr << "dbus\tCan't set efective UID: " << strerror(errno) << endl;
+
+							} else {
+
+								DBusError err;
+								dbus_error_init(&err);
+
+								ptr += 25;
+
+								connection = dbus_connection_open(ptr, &err);
+								if(dbus_error_is_set(&err)) {
+									clog << "dbus\tError '" << err.message << "' opening BUS " << ptr << endl;
+									dbus_error_free(&err);
+									connection = nullptr;
+								}
+	#ifdef DEBUG
+								else {
+									cout << "dbus\tGot user connection on " << ptr << endl;
+								}
+	#endif // DEBUG
+
+								// Restore to saved UID.
+								seteuid(saved_uid);
+
 							}
-#ifdef DEBUG
-							else {
-								cout << "dbus\tGot user connection on " << ptr << endl;
-							}
-#endif // DEBUG
-
 							break;
 						}
 					}
