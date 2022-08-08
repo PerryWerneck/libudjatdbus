@@ -106,6 +106,10 @@
 
 	void DBus::Connection::call(DBusMessage * message) {
 
+		if(!connection) {
+			throw runtime_error("D-Bus connection is not available");
+		}
+
 		DBusError error;
 		dbus_error_init(&error);
 
@@ -132,6 +136,10 @@
 	}
 
 	void DBus::Connection::call_and_wait(DBusMessage * message, const std::function<void(Message & message)> &call) {
+
+		if(!connection) {
+			throw runtime_error("D-Bus connection is not available");
+		}
 
 		DBusError error;
 		dbus_error_init(&error);
@@ -181,6 +189,10 @@
 	}
 
 	void DBus::Connection::call(DBusMessage * message, const std::function<void(Message & message)> &call) {
+
+		if(!connection) {
+			throw runtime_error("D-Bus connection is not available");
+		}
 
 		DBusPendingCall *pending = NULL;
 
