@@ -315,6 +315,10 @@
 			/// @brief Get singleton connection to the session bus.
 			static Connection & getSessionInstance();
 
+			inline operator bool() const {
+				return this->connection != nullptr;
+			}
+
 			/// @brief Get connection to a named bus.
 			Connection(const char *busname, const char *connection_name = "d-bus");
 
@@ -332,9 +336,7 @@
 				return connection;
 			}
 
-			inline void flush() noexcept {
-				dbus_connection_flush(connection);
-			}
+			void flush() noexcept;
 
 			/// @brief Adds a message to the outgoing message queue.
 			/// @param message The message to add.

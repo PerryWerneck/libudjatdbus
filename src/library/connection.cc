@@ -25,6 +25,7 @@
  #include <iostream>
  #include <unistd.h>
  #include <pthread.h>
+ #include <pwd.h>
 
  using namespace std;
 
@@ -142,6 +143,22 @@
 	DBus::Connection::Connection(uid_t uid, const char *sid) : Connection(Factory(uid,sid), "user") {
 
 		// Replace session name with user's login name.
+		int bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+		if (bufsize < 0)
+				bufsize = 16384;
+
+		string rc;
+		char * buf = new char[bufsize];
+
+		struct passwd     pwd;
+		struct passwd   * result;
+		if(getpwuid_r(uid, &pwd, buf, bufsize, &result)) {
+			name = "U";
+			name += to_string(uid);
+		} else {
+			name = buf;
+		}
+		delete[] buf;
 
 	}
 
@@ -181,50 +198,64 @@
 			return true;
 		});
 
-		// Remove filter
-		dbus_connection_remove_filter(connection,(DBusHandleMessageFunction) filter, this);
+		if(connection) {
 
-		// Stop D-Bus connection
-		if(thread) {
+			// Remove filter
+			dbus_connection_remove_filter(connection,(DBusHandleMessageFunction) filter, this);
 
-			dbus_connection_unref(connection);
-			connection = nullptr;
-			cout << name << "\tWaiting for service thread " << thread << endl;
-			thread->join();
-			delete thread;
+			// Stop D-Bus connection
+			if(thread) {
 
-		} else if(!use_thread) {
+				cout << name << "\tWaiting for service thread " << thread << endl;
+				thread->join();
+				delete thread;
 
-			cout << name << "\tRestoring d-bus watchers" << endl;
+				dbus_connection_unref(connection);
+				connection = nullptr;
 
-			if(!dbus_connection_set_watch_functions(
-				connection,
-				(DBusAddWatchFunction) NULL,
-				(DBusRemoveWatchFunction) NULL,
-				(DBusWatchToggledFunction) NULL,
-				this,
-				nullptr)
-			) {
-				cerr << "dbus\tdbus_connection_set_watch_functions has failed" << endl;
+			} else if(!use_thread) {
+
+				cout << name << "\tRestoring d-bus watchers" << endl;
+
+				if(!dbus_connection_set_watch_functions(
+					connection,
+					(DBusAddWatchFunction) NULL,
+					(DBusRemoveWatchFunction) NULL,
+					(DBusWatchToggledFunction) NULL,
+					this,
+					nullptr)
+				) {
+					cerr << name << "\tdbus_connection_set_watch_functions has failed" << endl;
+				}
+
+				if(!dbus_connection_set_timeout_functions(
+					connection,
+					(DBusAddTimeoutFunction) NULL,
+					(DBusRemoveTimeoutFunction) NULL,
+					(DBusTimeoutToggledFunction) NULL,
+					NULL,
+					nullptr)
+				) {
+					cerr << name << "\tdbus_connection_set_timeout_functions has failed" << endl;
+				}
+
+				dbus_connection_unref(connection);
+				connection = nullptr;
 			}
 
-			if(!dbus_connection_set_timeout_functions(
-				connection,
-				(DBusAddTimeoutFunction) NULL,
-				(DBusRemoveTimeoutFunction) NULL,
-				(DBusTimeoutToggledFunction) NULL,
-				NULL,
-				nullptr)
-			) {
-				cerr << "dbus\tdbus_connection_set_timeout_functions has failed" << endl;
-			}
+		} else {
 
-			dbus_connection_unref(connection);
-			connection = nullptr;
+			clog << name << "\tConnection was already disabled" << endl;
 		}
 
 		Udjat::MainLoop::getInstance().remove(this);
 
+	}
+
+	void DBus::Connection::flush() noexcept {
+		if(connection) {
+			dbus_connection_flush(connection);
+		}
 	}
 
  }
