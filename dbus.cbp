@@ -8,10 +8,11 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output=".bin/Debug/udjat-test" prefix_auto="1" extension_auto="1" />
+				<Option output=".bin/Debug/udjat" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="-f" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-DDEBUG=1" />
@@ -45,10 +46,12 @@
 		<Unit filename="src/include/udjat/tools/dbus.h" />
 		<Unit filename="src/library/call.cc" />
 		<Unit filename="src/library/connection.cc" />
+		<Unit filename="src/library/connection_factories.cc" />
 		<Unit filename="src/library/dispatcher.cc" />
 		<Unit filename="src/library/filter.cc" />
 		<Unit filename="src/library/interface.cc" />
-		<Unit filename="src/library/message.cc" />
+		<Unit filename="src/library/message/message.cc" />
+		<Unit filename="src/library/message/push_back.cc" />
 		<Unit filename="src/library/private.h" />
 		<Unit filename="src/library/request.cc" />
 		<Unit filename="src/library/response.cc" />

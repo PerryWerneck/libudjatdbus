@@ -80,52 +80,56 @@
 		reset();
 		this->type = type;
 
-		switch(type) {
-		case DBUS_TYPE_BYTE:
-			value.byt = str[0];
-			break;
+		if(str) {
 
-		case DBUS_TYPE_BOOLEAN:
-			value.bool_val = (std::stoi(str) != 0);
-			break;
+			switch(type) {
+			case DBUS_TYPE_BYTE:
+				value.byt = str[0];
+				break;
 
-		case DBUS_TYPE_INT16:
-			value.i16 = std::stoi(str);
-			break;
+			case DBUS_TYPE_BOOLEAN:
+				value.bool_val = (std::stoi(str) != 0);
+				break;
 
-		case DBUS_TYPE_UINT16:
-			value.u16 = std::stoi(str);
-			break;
+			case DBUS_TYPE_INT16:
+				value.i16 = std::stoi(str);
+				break;
 
-		case DBUS_TYPE_INT32:
-			value.i32 = std::stol(str);
-			break;
+			case DBUS_TYPE_UINT16:
+				value.u16 = std::stoi(str);
+				break;
 
-		case DBUS_TYPE_UINT32:
-			value.u32 = std::stoul(str);
-			break;
+			case DBUS_TYPE_INT32:
+				value.i32 = std::stol(str);
+				break;
 
-		case DBUS_TYPE_INT64:
-			value.i64 = std::stoll(str);
-			break;
+			case DBUS_TYPE_UINT32:
+				value.u32 = std::stoul(str);
+				break;
 
-		case DBUS_TYPE_UINT64:
-			value.u64 = std::stoull(str);
-			break;
+			case DBUS_TYPE_INT64:
+				value.i64 = std::stoll(str);
+				break;
 
-		case DBUS_TYPE_DOUBLE:
-			value.dbl = stod(str);
-			break;
+			case DBUS_TYPE_UINT64:
+				value.u64 = std::stoull(str);
+				break;
 
-		case DBUS_TYPE_STRING:
-			value.str = strdup(str);
+			case DBUS_TYPE_DOUBLE:
+				value.dbl = stod(str);
+				break;
+
+			case DBUS_TYPE_STRING:
+				value.str = strdup(str);
 #ifdef DEBUG
-			cout << "value(" << ((char) this->type) << ")='" << value.str << "' (" << ((void *) value.str) << endl;
+				cout << "value(" << ((char) this->type) << ")='" << value.str << "' (" << ((void *) value.str) << endl;
 #endif // DEBUG
-			break;
+				break;
 
-		default:
-			throw runtime_error("Unexpected type id");
+			default:
+				throw runtime_error("Unexpected type id");
+			}
+
 		}
 
 	}
@@ -472,6 +476,15 @@
 		}
 
 		return *this;
+	}
+
+	int DBus::Value::getFD() const {
+
+		if(type != DBUS_TYPE_UNIX_FD) {
+			throw runtime_error("Value is not a file handle");
+		}
+
+		return value.fd;
 	}
 
 	const Udjat::Value & DBus::Value::get(unsigned int &value) const {

@@ -27,6 +27,7 @@
  #include <list>
  #include <map>
  #include <thread>
+ #include <vector>
 
  namespace Udjat {
 
@@ -65,7 +66,7 @@
 			Value(Message &message);
 
 			Value();
-			Value(int type, const char *value);
+			Value(int type, const char *value = nullptr);
 			virtual ~Value();
 
 			/// @brief Add value on iter.
@@ -117,16 +118,20 @@
 			// const Udjat::Value & get(float &value) const override;
 			// const Udjat::Value & get(double &value) const override;
 
+			int getFD() const;
+
 		};
 
 		/// @brief D-Bus message
 		class UDJAT_API Message {
-		private:
+		protected:
 
 			struct {
 				DBusMessage *value = nullptr;
 				DBusMessageIter iter;
 			} message;
+
+		private:
 
 			struct {
 				bool valid = false;		/// @brief True if this is an error message.
@@ -134,14 +139,41 @@
 				std::string message;	/// @brief Error Message.
 			} error;
 
+			inline Message & add() {
+				return *this;
+			}
+
+			template<typename T, typename... Targs>
+			Message & add(const T &value, Targs... Fargs) {
+				push_back(value);
+				return add(Fargs...);
+			}
+
 		public:
 			Message(const Message &message) = delete;
 			Message(const Message *message) = delete;
+
+			Message(const char *destination, const char *path, const char *iface, const char *method);
+
+			template<typename T, typename... Targs>
+			Message(const char *destination, const char *path, const char *iface, const char *method, const T &value, Targs... Fargs)
+				: Message(destination,path,iface,method) {
+				push_back(value);
+				add(Fargs...);
+			}
 
 			Message(const DBusError &error);
 			Message(DBusMessage *m);
 
 			~Message();
+
+			inline operator DBusMessage *() const noexcept {
+				return message.value;
+			}
+
+			inline operator DBusMessageIter *() noexcept {
+				return &message.iter;
+			}
 
 			inline operator bool() const {
 				return !error.valid;
@@ -173,11 +205,35 @@
 				return error.message.c_str();
 			}
 
+			Message & push_back(const DBus::Value &value);
+
+			Message & push_back(const char *value);
+
+			inline Message & push_back(const std::string &value) {
+				return push_back(value.c_str());
+			}
+
+			Message & push_back(const bool value);
+
+			Message & push_back(const int16_t value);
+			Message & push_back(const uint16_t value);
+
+			Message & push_back(const int32_t value);
+			Message & push_back(const uint32_t value);
+
+			Message & push_back(const int64_t value);
+			Message & push_back(const uint64_t value);
+
+			Message & push_back(const std::vector<std::string> &elements);
+
 		};
 
 		/// @brief D-Bus connection.
 		class UDJAT_API Connection {
 		private:
+
+			static DBusConnection * Factory(DBusBusType type);
+			static DBusConnection * Factory(uid_t uid, const char *sid);
 
 			/// @brief Connection name.
 			std::string name;
@@ -259,8 +315,18 @@
 			/// @brief Get singleton connection to the session bus.
 			static Connection & getSessionInstance();
 
+			inline operator bool() const {
+				return this->connection != nullptr;
+			}
+
 			/// @brief Get connection to a named bus.
 			Connection(const char *busname, const char *connection_name = "d-bus");
+
+			/// @brief Get connection to user bus.
+			/// @param uid User ID.
+			/// @param sid Session ID.
+			Connection(uid_t uid, const char *sid = nullptr);
+
 			~Connection();
 
 			Connection(const Connection &) = delete;
@@ -269,6 +335,8 @@
 			inline DBusConnection * getConnection() const {
 				return connection;
 			}
+
+			void flush() noexcept;
 
 			/// @brief Adds a message to the outgoing message queue.
 			/// @param message The message to add.
@@ -298,11 +366,25 @@
 			/// @brief Unsubscribe all signals created by 'id'.
 			void unsubscribe(void *id);
 
-			/// @brief call method
+			/// @brief Call method
+			void call(DBusMessage * message, const std::function<void(Message & message)> &call);
+
+			/// @brief Call method (syncronous);
+			void call(DBusMessage * message);
+
+			/// @brief Call method (syncronous);
+			void call_and_wait(DBusMessage * message, const std::function<void(Message & message)> &call);
+
+			/// @brief Call method
 			void call(	const char *destination,
 						const char *path,
 						const char *interface,
 						const char *member,
+						std::function<void(Message & message)> call
+					);
+
+			/// @brief Call method
+			void call(	const Message &message,
 						std::function<void(Message & message)> call
 					);
 
@@ -318,8 +400,26 @@
 			/// @brief The message iter.
 			DBusMessageIter iter;
 
+			inline Signal & add() noexcept {
+				return *this;
+			}
+
+			template<typename T, typename... Targs>
+			Signal & add(T &value, Targs... Fargs) {
+				push_back(value);
+				return add(Fargs...);
+			}
+
 		public:
 			Signal(const char *iface, const char *member, const char *path);
+
+			template<typename T, typename... Targs>
+			Signal(const char *iface, const char *member, const char *path, const T &value, Targs... Fargs)
+				: Signal(iface,member,path) {
+				push_back(value);
+				add(Fargs...);
+			}
+
 			~Signal();
 
 			/// @brief Emit signal to the system bus.
@@ -358,8 +458,12 @@
  }
 
  template <typename T>
- inline Udjat::DBus::Signal & operator<<(Udjat::DBus::Signal &signal, T value) {
+ inline Udjat::DBus::Signal & operator<<(Udjat::DBus::Signal &signal, const T value) {
 	return signal.push_back(value);
  }
 
+ template <typename T>
+ inline Udjat::DBus::Message & operator<<(Udjat::DBus::Message &message, const T value) {
+	return message.push_back(value);
+ }
 

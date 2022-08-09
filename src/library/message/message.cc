@@ -25,6 +25,11 @@
 
  namespace Udjat {
 
+	DBus::Message::Message(const char *destination, const char *path, const char *iface, const char *method) {
+		message.value = dbus_message_new_method_call(destination, path, iface, method);
+		dbus_message_iter_init_append(message.value, &message.iter);
+	}
+
 	DBus::Message::Message(const DBusError &error) {
 		this->message.value = nullptr;
 		this->error.valid = true;
@@ -33,9 +38,39 @@
 	}
 
 	DBus::Message::Message(DBusMessage *message) {
-		this->message.value = message;
-		dbus_message_ref(message);
-		dbus_message_iter_init(this->message.value, &this->message.iter);
+
+		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_ERROR) {
+
+			error.valid = true;
+			error.name = dbus_message_get_error_name(message);
+
+#ifdef DEBUG
+			cout << "Error name=" << error.name << endl;
+#endif // DEBUG
+
+			// Get error message.
+			DBusMessageIter iter;
+			dbus_message_iter_init(message, &iter);
+
+			error.message.clear();
+			if(dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING) {
+				DBusBasicValue value;
+				dbus_message_iter_get_basic(&iter,&value);
+				error.message = value.str;
+#ifdef DEBUG
+				cout << "Error message=" << error.message << endl;
+#endif // DEBUG
+			}
+
+
+		} else {
+
+			this->message.value = message;
+			dbus_message_ref(message);
+			dbus_message_iter_init(this->message.value, &this->message.iter);
+
+		}
+
 	}
 
 	DBus::Message::~Message() {

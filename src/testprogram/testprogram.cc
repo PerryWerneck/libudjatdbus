@@ -28,6 +28,7 @@
  #include <iostream>
  #include <memory>
  #include <cstdlib>
+ #include <unistd.h>
 
  using namespace std;
  using namespace Udjat;
@@ -63,8 +64,42 @@ int main(int argc, char **argv) {
 			}
 			*/
 
+			{
+				DBus::Message message{
+					"org.freedesktop.login1",			// Destination
+					"/org/freedesktop/login1",			// Path
+					"org.freedesktop.login1.Manager",	// Interface
+					"Inhibit"							// Method
+				};
+
+				message	<< "sleep"
+						<< "who"
+						<< "why"
+						<< "delay";
+
+				// Get system bus
+				DBus::Connection::getSystemInstance().call(message,[](DBus::Message &response){
+
+					if(response) {
+
+						cout << "SUCCESS" << endl;
+						int fd = DBus::Value(response).getFD();
+
+						cout << "FD=" << fd << endl;
+
+						::close(fd);
+
+					} else {
+
+						cout << "FAILED" << endl;
+					}
+
+				});
+
+			}
+
 			//DBus::Connection &session = DBus::Connection::getSessionInstance();
-			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"));
+			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"),"session-bus");
 
 			bus->call(
 				"org.gnome.ScreenSaver",
@@ -109,6 +144,7 @@ int main(int argc, char **argv) {
 				}
 			);
 
+			/*
 			DBus::Signal(
 				"com.example.signal.welcome",
 				"test",
@@ -117,7 +153,93 @@ int main(int argc, char **argv) {
 				.push_back("Simple D-Bus signal")
 				.push_back((uint16_t) 10)
 				.send();
+			*/
 
+			DBus::Signal(
+				"com.example.signal.welcome",
+				"test",
+				"/agent/simple",
+				"Simple D-Bus signal",
+				(uint16_t) 10
+			).send();
+
+			// Test user bus
+			{
+				cout << "------------------------------------------------" << endl;
+				DBus::Connection usercon((uid_t) 1000);
+			}
+
+			// Test notification
+			cout << "---[ Message Test Begin ]--------------------------------------------" << endl;
+			try {
+
+				DBus::Message message{
+					"org.freedesktop.Notifications",		// Destination
+					"/org/freedesktop/Notifications",		// Path
+					"org.freedesktop.Notifications",		// Interface
+					"Notify",								// Method
+					PACKAGE_NAME,
+					((unsigned int) 0),
+					"gtk-dialog-info",
+					"Remote instalation service",
+					"This machine is acting as an installation server, keep it active",
+					std::vector<std::string>()
+				};
+
+				DBus::Connection::getSessionInstance().call_and_wait(message,[](DBus::Message &response){
+
+					if(response.failed()) {
+
+						error() << "Error '" << response.error_name() << "' sending notification"
+								<< endl << response.error_message() << endl;
+
+					} else {
+
+						info() << "Success??" << endl;
+					}
+
+
+				});
+			} catch(const std::exception &e) {
+
+				cout << "-----------------------------" << endl << e.what() << endl << "------------------------------" << endl;
+			}
+
+			try {
+
+				DBus::Message message{
+					"org.freedesktop.Notifications",		// Destination
+					"/org/freedesktop/Notifications",		// Path
+					"org.freedesktop.Notifications",		// Interface
+					"Notify"								// Method
+				};
+
+				message	<< PACKAGE_NAME
+						<< ((unsigned int) 0)
+						<< "gtk-dialog-info"
+						<< "Remote instalation service"
+						<< "This machine is acting as an installation server, keep it active"
+						<< std::vector<std::string>();
+
+				DBus::Connection::getSessionInstance().call_and_wait(message,[](DBus::Message &response){
+
+					if(response.failed()) {
+
+						error() << "Error '" << response.error_name() << "' sending notification"
+								<< endl << response.error_message() << endl;
+
+					} else {
+
+						info() << "Success??" << endl;
+					}
+
+				});
+			} catch(const std::exception &e) {
+
+				cout << "-----------------------------" << endl << e.what() << endl << "------------------------------" << endl;
+			}
+
+			cout << "---[ Message Test Finish ]--------------------------------------------" << endl;
 		}
 
 		/// @brief Deinitialize service.
@@ -131,6 +253,8 @@ int main(int argc, char **argv) {
 		Service() : SystemService{"./test.xml"} {
 		}
 
+		virtual ~Service() {
+		}
 
 	};
 

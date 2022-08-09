@@ -25,6 +25,7 @@
  #include <iostream>
  #include <unistd.h>
  #include <pthread.h>
+ #include <pwd.h>
 
  using namespace std;
 
@@ -37,33 +38,6 @@
 			return getSystemInstance();
 		}
 		return getSessionInstance();
-	}
-
-	static DBusConnection * ConnectionFactory(DBusBusType type) {
-
-		DBusError err;
-		dbus_error_init(&err);
-
-		DBusConnection * connct = dbus_bus_get(type, &err);
-		if(dbus_error_is_set(&err)) {
-			std::string message(err.message);
-			dbus_error_free(&err);
-			throw std::runtime_error(message);
-		}
-
-		return connct;
-	}
-
-	DBus::Connection & DBus::Connection::getSystemInstance() {
-		lock_guard<recursive_mutex> lock(guard);
-		static DBus::Connection instance(ConnectionFactory(DBUS_BUS_SYSTEM),"sysbus");
-		return instance;
-	}
-
-	DBus::Connection & DBus::Connection::getSessionInstance() {
-		lock_guard<recursive_mutex> lock(guard);
-		static DBus::Connection instance(ConnectionFactory(DBUS_BUS_SESSION),"userbus");
-		return instance;
 	}
 
 	DBus::Connection::Connection(DBusConnection * c, const char *n, bool reg) : name(n), connection(c) {
@@ -166,6 +140,28 @@
 
 	}
 
+	DBus::Connection::Connection(uid_t uid, const char *sid) : Connection(Factory(uid,sid), "user") {
+
+		// Replace session name with user's login name.
+		int bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+		if (bufsize < 0)
+				bufsize = 16384;
+
+		string rc;
+		char * buf = new char[bufsize];
+
+		struct passwd     pwd;
+		struct passwd   * result;
+		if(getpwuid_r(uid, &pwd, buf, bufsize, &result)) {
+			name = "U";
+			name += to_string(uid);
+		} else {
+			name = buf;
+		}
+		delete[] buf;
+
+	}
+
 	static DBusConnection * ConnectionFactory(const char *busname) {
 
 		if(!(busname && *busname)) {
@@ -193,128 +189,74 @@
 	DBus::Connection::~Connection() {
 
 		cout << name << "\tConnection destroyed" << endl;
+
+		flush();
+
 		// Remove listeners.
 		interfaces.remove_if([this](Interface &intf) {
 			intf.remove_from(this);
 			return true;
 		});
 
-		// Remove filter
-		dbus_connection_remove_filter(connection,(DBusHandleMessageFunction) filter, this);
+		if(connection) {
 
-		// Stop D-Bus connection
-		if(thread) {
+			// Remove filter
+			dbus_connection_remove_filter(connection,(DBusHandleMessageFunction) filter, this);
 
-			dbus_connection_unref(connection);
-			connection = nullptr;
-			cout << name << "\tWaiting for service thread" << endl;
-			thread->join();
-			delete thread;
+			// Stop D-Bus connection
+			if(thread) {
 
-		} else if(!use_thread) {
+				cout << name << "\tWaiting for service thread " << thread << endl;
+				thread->join();
+				delete thread;
 
-			cout << name << "\tRestoring d-bus watchers" << endl;
+				dbus_connection_unref(connection);
+				connection = nullptr;
 
-			if(!dbus_connection_set_watch_functions(
-				connection,
-				(DBusAddWatchFunction) NULL,
-				(DBusRemoveWatchFunction) NULL,
-				(DBusWatchToggledFunction) NULL,
-				this,
-				nullptr)
-			) {
-				cerr << "dbus\tdbus_connection_set_watch_functions has failed" << endl;
+			} else if(!use_thread) {
+
+				cout << name << "\tRestoring d-bus watchers" << endl;
+
+				if(!dbus_connection_set_watch_functions(
+					connection,
+					(DBusAddWatchFunction) NULL,
+					(DBusRemoveWatchFunction) NULL,
+					(DBusWatchToggledFunction) NULL,
+					this,
+					nullptr)
+				) {
+					cerr << name << "\tdbus_connection_set_watch_functions has failed" << endl;
+				}
+
+				if(!dbus_connection_set_timeout_functions(
+					connection,
+					(DBusAddTimeoutFunction) NULL,
+					(DBusRemoveTimeoutFunction) NULL,
+					(DBusTimeoutToggledFunction) NULL,
+					NULL,
+					nullptr)
+				) {
+					cerr << name << "\tdbus_connection_set_timeout_functions has failed" << endl;
+				}
+
+				dbus_connection_unref(connection);
+				connection = nullptr;
 			}
 
-			if(!dbus_connection_set_timeout_functions(
-				connection,
-				(DBusAddTimeoutFunction) NULL,
-				(DBusRemoveTimeoutFunction) NULL,
-				(DBusTimeoutToggledFunction) NULL,
-				NULL,
-				nullptr)
-			) {
-				cerr << "dbus\tdbus_connection_set_timeout_functions has failed" << endl;
-			}
+		} else {
 
-			dbus_connection_unref(connection);
-			connection = nullptr;
+			clog << name << "\tConnection was already disabled" << endl;
 		}
 
 		Udjat::MainLoop::getInstance().remove(this);
 
 	}
 
-	/*
-	/// @brief Passagem de parâmetros para método D-Bus.
-	struct MethodData {
-		std::function<void(DBusMessage * message, DBusError *error)> call;
-	};
-
-	static void dbus_call_reply(DBusPendingCall *pending, void *user_data) {
-
-		MethodData *data = (MethodData *) user_data;
-
-		DBusError error;
-		dbus_error_init(&error);
-
-		if(!dbus_pending_call_get_completed(pending)) {
-
-			dbus_set_error_const(&error, "Failed", "DBus Error");
-			data->call(nullptr,&error);
-
-			dbus_pending_call_cancel(pending);
-
-
-		} else {
-
-			// Got response
-			DBusMessage * message = dbus_pending_call_steal_reply(pending);
-
-			if(message) {
-				data->call(message,&error);
-				dbus_message_unref(message);
-			} else {
-				dbus_set_error_const(&error, "empty", "No response");
-				data->call(message,&error);
-			}
-
+	void DBus::Connection::flush() noexcept {
+		if(connection) {
+			dbus_connection_flush(connection);
 		}
-
-		dbus_error_free(&error);
-
-		delete data;
 	}
-
-	void DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, std::function<void(DBusMessage * message, DBusError *error)> call) {
-
-		DBusMessage * message = dbus_message_new_method_call(destination,path,interface,member);
-		if(message == NULL) {
-			throw std::runtime_error("Can't create DBus method call");
-		}
-
-		DBusPendingCall *pc = NULL;
-
-		if(!dbus_connection_send_with_reply(connection,message,&pc,DBUS_TIMEOUT_USE_DEFAULT)) {
-			throw std::runtime_error("Can't send DBus method call");
-		}
-
-		MethodData * data = new MethodData();
-		data->call = call;
-
-		if(!dbus_pending_call_set_notify(pc, dbus_call_reply, data, NULL)) {
-			dbus_pending_call_unref(pc);
-			dbus_message_unref(message);
-			delete data;
-			throw std::runtime_error("Can't set notify method");
-		}
-
-		dbus_pending_call_unref(pc);
-		dbus_message_unref(message);
-
-	}
-	*/
-
 
  }
 

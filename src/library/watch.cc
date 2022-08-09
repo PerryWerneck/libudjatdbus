@@ -30,10 +30,14 @@
 	DBusWatch			* watch			= nullptr;
 
  protected:
-	bool call(const MainLoop::Event events) const override;
+	bool call(const MainLoop::Event events) override;
 
  public:
-	Context(DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(c,f,(MainLoop::Event) e), connection(c), watch(w) {
+	Context(DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Event) e), connection(c), watch(w) {
+	}
+
+	const void * id() const noexcept override {
+		return (const void *) watch;
 	}
 
 	void set(int fd) {
@@ -67,6 +71,10 @@
 						event
 					);
 
+#ifdef DEBUG
+	cout << "d-bus\t*** Adding watch " << context->id() << " from connection " << connection << endl;
+#endif // DEBUG
+
 	dbus_watch_set_data(watch, context.get(), NULL);
 
 	MainLoop::getInstance().push_back(context);
@@ -78,9 +86,13 @@
 
 	Context *context = (Context *) dbus_watch_get_data(watch);
 
+#ifdef DEBUG
+	cout << "d-bus\t*** Removing watch " << context->id() << endl;
+#endif // DEBUG
+
 	if(context) {
 		dbus_watch_set_data(watch, NULL, NULL);
-		context->clear();
+		MainLoop::getInstance().remove(context);
 	}
 
  }
@@ -90,6 +102,10 @@
 	Context *context = (Context *) dbus_watch_get_data(watch);
 
 	if(context) {
+
+#ifdef DEBUG
+		cout << "d-bus\t*** Toggle watch " << context->id() << endl;
+#endif // DEBUG
 
 		context->set(dbus_watch_get_unix_fd(watch));
 
@@ -103,144 +119,76 @@
 
  }
 
- bool Context::call(const MainLoop::Event events) const {
+ bool Context::call(const MainLoop::Event events) {
+
+#ifdef DEBUG
+	cout << "d-bus\t*** Activity on watch " << id() << " events=" << events;
+#endif // DEBUG
+
+	if(!dbus_watch_get_enabled(watch)) {
+#ifdef DEBUG
+		cout << " DISABLED" << endl;
+#endif // DEBUG
+		disable();
+		return true;
+	}
 
 	unsigned int flags = 0;
 
-	if (events & POLLIN)
+	if (events & POLLIN) {
 		flags |= DBUS_WATCH_READABLE;
+#ifdef DEBUG
+		cout << " DBUS_WATCH_READABLE";
+#endif // DEBUG
+	}
 
-	if (events & POLLOUT)
+	if (events & POLLOUT) {
 		flags |= DBUS_WATCH_WRITABLE;
+#ifdef DEBUG
+		cout << " DBUS_WATCH_WRITABLE";
+#endif // DEBUG
+	}
 
-	if (events & POLLHUP)
+	if (events & POLLHUP) {
 		flags |= DBUS_WATCH_HANGUP;
+#ifdef DEBUG
+		cout << " DBUS_WATCH_HANGUP";
+#endif // DEBUG
+	}
 
-	if (events & POLLERR)
+	if (events & POLLERR) {
 		flags |= DBUS_WATCH_ERROR;
+#ifdef DEBUG
+		cout << " DBUS_WATCH_ERROR";
+#endif // DEBUG
+	}
+
+#ifdef DEBUG
+	cout << endl;
+#endif // DEBUG
 
 	if(dbus_watch_handle(watch, flags) == FALSE) {
 		cerr << "d-bus\tdbus_watch_handle() failed" << endl;
 		return false;
 	}
 
+	/*
 	// http://lists.freedesktop.org/archives/dbus/2007-October/008859.html
 	while(!dbus_watch_handle(watch, flags)) {
 		clog << "d-bus\tdbus_watch_handle needs more memory" << endl;
 		sleep(1);
 	}
+	*/
 
-	handle_dispatch_status(connection->getConnection(), DBUS_DISPATCH_DATA_REMAINS, connection);
+	DBusConnection *c = connection->getConnection();
+	dbus_connection_ref(c);
+	while (dbus_connection_get_dispatch_status(c) == DBUS_DISPATCH_DATA_REMAINS)
+        dbus_connection_dispatch(c);
+	dbus_connection_unref(c);
 
-	return true;
- }
-
- /*
- static void handle_watch(short events, WatchContext *ctx) {
-
-	unsigned int flags = 0;
-
-	if (events & POLLIN)
-		flags |= DBUS_WATCH_READABLE;
-
-	if (events & POLLOUT)
-		flags |= DBUS_WATCH_WRITABLE;
-
-	if (events & POLLHUP)
-		flags |= DBUS_WATCH_HANGUP;
-
-	if (events & POLLERR)
-		flags |= DBUS_WATCH_ERROR;
-
-	if (dbus_watch_handle(ctx->watch, flags) == FALSE) {
-		cerr << "d-bus\tdbus_watch_handle() failed" << endl;
-	}
-
-	// http://lists.freedesktop.org/archives/dbus/2007-October/008859.html
-	while(!dbus_watch_handle(ctx->watch, flags)) {
-		clog << "d-bus\tdbus_watch_handle needs more memory" << endl;
-		sleep(1);
-	}
-
-	handle_dispatch_status(ctx->conn, DBUS_DISPATCH_DATA_REMAINS, ctx->obj);
-
- }
-
- dbus_bool_t add_watch(DBusWatch *w, DBus::Connection *obj) {
-
-	WatchContext *ctx = new WatchContext();
-
-	dbus_watch_set_data(w, ctx, NULL);
-
-	ctx->conn 	= obj->getConnection();
-	ctx->obj	= obj;
-	ctx->watch	= w;
-	ctx->fd		= dbus_watch_get_unix_fd(w);
-
-	unsigned int flags = dbus_watch_get_flags(w);
-
-	if (flags & DBUS_WATCH_READABLE)
-		ctx->event |= POLLIN;
-
-	if (flags & DBUS_WATCH_WRITABLE)
-		ctx->event |= POLLOUT;
-
-	if (flags & DBUS_WATCH_HANGUP)
-		ctx->event |= POLLHUP;
-
-	if (flags & DBUS_WATCH_ERROR)
-		ctx->event |= POLLERR;
-
-	if (dbus_watch_get_enabled(w)) {
-		MainLoop::getInstance().insert(
-				(void *) ctx,
-				ctx->fd,
-				(MainLoop::Event) ctx->event,
-				[ctx](const MainLoop::Event events){
-					handle_watch((short) events, ctx);
-					return true;
-				});
-
-	}
+	//handle_dispatch_status(connection->getConnection(), DBUS_DISPATCH_DATA_REMAINS, ctx);
 
 	return true;
  }
 
- void remove_watch(DBusWatch *w, DBus::Connection UDJAT_UNUSED(*obj)) {
-
-	WatchContext *ctx = (WatchContext *) dbus_watch_get_data(w);
-
-	if(ctx) {
-		MainLoop::getInstance().remove(ctx);
-		delete ctx;
-	}
-
- }
-
- void toggle_watch(DBusWatch *w, DBus::Connection UDJAT_UNUSED(*obj)) {
-
-	WatchContext *ctx = (WatchContext *) dbus_watch_get_data(w);
-
-	if(ctx) {
-
-		MainLoop::getInstance().remove(ctx);
-
-		ctx->fd = dbus_watch_get_unix_fd(w);
-
-		if (dbus_watch_get_enabled(w)) {
-			MainLoop::getInstance().insert(
-					(void *) ctx,
-					ctx->fd,
-					(MainLoop::Event) ctx->event,
-					[ctx](const MainLoop::Event events){
-						handle_watch((short) events, ctx);
-						return true;
-					});
-
-		}
-
-	}
-
- }
-*/
 

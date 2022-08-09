@@ -28,10 +28,15 @@
 	/// @brief Parameters for method call.
 	struct CallParameters {
 
-		DBus::Connection *connection;
+		DBusConnection * connection;
 		const std::function<void(DBus::Message &)> call;
 
-		CallParameters(DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c), call(f) {
+		CallParameters(DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c->getConnection()), call(f) {
+			dbus_connection_ref(connection);
+		}
+
+		~CallParameters() {
+			dbus_connection_unref(connection);
 		}
 
 	};
@@ -99,11 +104,94 @@
 		delete parameters;
 	}
 
-	void DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, std::function<void(DBus::Message & message)> call) {
+	void DBus::Connection::call(DBusMessage * message) {
 
-		DBusMessage * message = dbus_message_new_method_call(destination,path,interface,member);
-		if(message == NULL) {
-			throw std::runtime_error("Error creating DBus method call");
+		if(!connection) {
+			throw runtime_error("D-Bus connection is not available");
+		}
+
+		DBusError error;
+		dbus_error_init(&error);
+
+		DBusMessage * response =
+			dbus_connection_send_with_reply_and_block(
+				connection,
+				message,
+				DBUS_TIMEOUT_USE_DEFAULT,
+				&error
+			);
+
+		if(response) {
+			dbus_message_unref(response);
+		}
+
+		if(dbus_error_is_set(&error)) {
+
+			string message{error.message};
+			dbus_error_free(&error);
+			throw runtime_error(message);
+
+		}
+
+	}
+
+	void DBus::Connection::call_and_wait(DBusMessage * message, const std::function<void(Message & message)> &call) {
+
+		if(!connection) {
+			throw runtime_error("D-Bus connection is not available");
+		}
+
+		DBusError error;
+		dbus_error_init(&error);
+
+		DBusMessage * response =
+			dbus_connection_send_with_reply_and_block(
+				connection,
+				message,
+				DBUS_TIMEOUT_USE_DEFAULT,
+				&error
+			);
+
+		if(dbus_error_is_set(&error)) {
+
+			DBus::Message message{error};
+
+			try {
+
+				call(message);
+
+			} catch(...) {
+
+				dbus_error_free(&error);
+				throw;
+			}
+
+			dbus_error_free(&error);
+
+		} else if(response) {
+
+			DBus::Message message{response};
+
+			try {
+
+				call(message);
+
+			} catch(...) {
+
+				dbus_message_unref(response);
+				throw;
+			}
+
+			dbus_message_unref(response);
+
+		}
+
+	}
+
+	void DBus::Connection::call(DBusMessage * message, const std::function<void(Message & message)> &call) {
+
+		if(!connection) {
+			throw runtime_error("D-Bus connection is not available");
 		}
 
 		DBusPendingCall *pending = NULL;
@@ -122,6 +210,26 @@
 		}
 
 		dbus_pending_call_unref(pending);
+
+	}
+
+	void DBus::Connection::call(const Message &message, std::function<void(Message & message)> call) {
+		DBusMessage *msg = (DBusMessage *) message;
+		if(!msg) {
+			throw runtime_error("Empty D-Bus message");
+		}
+		this->call(msg,call);
+	}
+
+	void DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, std::function<void(DBus::Message & message)> call) {
+
+		DBusMessage * message = dbus_message_new_method_call(destination,path,interface,member);
+		if(message == NULL) {
+			throw std::runtime_error("Error creating DBus method call");
+		}
+
+		this->call(message,call);
+
 		dbus_message_unref(message);
 
 	}
