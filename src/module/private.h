@@ -22,7 +22,7 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/dbus.h>
- #include <udjat/alert.h>
+ #include <udjat/alerts/abstract.h>
  #include <iostream>
  #include <system_error>
 
@@ -33,7 +33,7 @@
 	namespace DBus {
 
 		/*
-		class Alert : public Udjat::Alert {
+		class Alert : public Udjat::Abstract::Alert {
 		private:
 			/// @brief The path to the object emitting the signal.
 			const char *path = nullptr;
