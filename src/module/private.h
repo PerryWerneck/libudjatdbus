@@ -22,7 +22,7 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/dbus.h>
- #include <udjat/alerts/abstract.h>
+ #include <udjat/alert/abstract.h>
  #include <iostream>
  #include <system_error>
 
@@ -32,7 +32,6 @@
 
 	namespace DBus {
 
-		/*
 		class Alert : public Udjat::Abstract::Alert {
 		private:
 			/// @brief The path to the object emitting the signal.
@@ -46,27 +45,21 @@
 
 			/// @brief D-Bus message argument.
 			struct Argument {
-
-				/// @brief D-Bus data type.
-				int type;
-
-				/// @brief D-Bus value.
-				const char *value;
-
-				Argument(const pugi::xml_node &node);
-
+				int type = DBUS_TYPE_INVALID;
+				DBusBasicValue value;
+				Argument(const Abstract::Object &parent, const char *group, const pugi::xml_node &node);
 			};
 
+			/// @brief D-Bus message arguments.
 			std::vector<Argument> arguments;
 
 		public:
-			Alert(const pugi::xml_node &node, const char *defaults);
+			Alert(const Abstract::Object &parent, const pugi::xml_node &node);
 			virtual ~Alert();
 
-			void activate(const Abstract::Agent &agent, const Abstract::State &state, std::shared_ptr<Alert> alert) const override;
+			std::shared_ptr<Udjat::Alert::Activation> ActivationFactory() const override;
 
 		};
-		*/
 
 	}
 
