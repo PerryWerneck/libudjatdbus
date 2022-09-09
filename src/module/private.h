@@ -34,6 +34,10 @@
 
 		class Alert : public Udjat::Abstract::Alert {
 		private:
+
+			/// @brief The bus type for alert.
+			DBusBusType bustype = DBUS_BUS_SESSION;
+
 			/// @brief The path to the object emitting the signal.
 			const char *path = nullptr;
 

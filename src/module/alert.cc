@@ -185,6 +185,23 @@
 		iface = getAttribute(node,group,"dbus-interface");
 		member = getAttribute(node,group,"dbus-member");
 
+		// Get bus type
+		{
+			static DBusBusType types[] = {
+				DBUS_BUS_SESSION,
+				DBUS_BUS_SYSTEM,
+				DBUS_BUS_STARTER
+			};
+
+			size_t type = String(node,"dbus-bus-type","starter").select("session","system","starter",NULL);
+
+			if(type >= (sizeof(types)/sizeof(types[0]))) {
+				throw runtime_error("Invalid bus type");
+			}
+
+			this->bustype = types[type];
+		}
+
 		for(auto argument = node.child("argument"); argument; argument = argument.next_sibling("argument")) {
 			arguments.emplace_back(parent,group,argument);
 		}
