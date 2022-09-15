@@ -33,11 +33,21 @@
 	bool call(const MainLoop::Event events) override;
 
  public:
+
 	Context(DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Event) e), connection(c), watch(w) {
+#ifdef DEBUG
+		cout << "handler\tCreating d-bus context " << hex << ((void *) this) << dec << endl;
+#endif // DEBUG
 	}
 
+#ifdef DEBUG
+	virtual ~Context() {
+		cout << "handler\tDestroying d-bus context " << hex << ((void *) this) << dec << endl;
+	}
+#endif // DEBUG
+
 	const void * id() const noexcept override {
-		return (const void *) watch;
+		return (const void *) this;
 	}
 
 	void set(int fd) {
@@ -72,7 +82,7 @@
 					);
 
 #ifdef DEBUG
-	cout << "d-bus\t*** Adding watch " << context->id() << " from connection " << connection << endl;
+	cout << "d-bus\t*** Adding watch " << hex << ((void *) context.get()) << dec << " from connection " << connection << endl;
 #endif // DEBUG
 
 	dbus_watch_set_data(watch, context.get(), NULL);
@@ -86,13 +96,14 @@
 
 	Context *context = (Context *) dbus_watch_get_data(watch);
 
+	if(context) {
+
 #ifdef DEBUG
-	cout << "d-bus\t*** Removing watch " << context->id() << endl;
+		cout << "d-bus\t*** Removing watch " << hex << ((void *) context) << dec << endl;
 #endif // DEBUG
 
-	if(context) {
 		dbus_watch_set_data(watch, NULL, NULL);
-		MainLoop::getInstance().remove(context);
+		MainLoop::getInstance().remove((void *) context);
 	}
 
  }

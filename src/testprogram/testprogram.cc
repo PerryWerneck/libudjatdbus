@@ -29,6 +29,7 @@
  #include <memory>
  #include <cstdlib>
  #include <unistd.h>
+ #include <udjat/tools/mainloop.h>
 
  using namespace std;
  using namespace Udjat;
@@ -240,6 +241,13 @@ int main(int argc, char **argv) {
 			}
 
 			cout << "---[ Message Test Finish ]--------------------------------------------" << endl;
+
+			// Schedule service quit
+			MainLoop::getInstance().insert(0,2000,[](){
+				MainLoop::getInstance().quit();
+				return false;
+			});
+
 		}
 
 		/// @brief Deinitialize service.
