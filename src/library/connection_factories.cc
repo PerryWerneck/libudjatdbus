@@ -186,15 +186,21 @@
 		return connection;
 	}
 
-	DBus::Connection & DBus::Connection::getSystemInstance() {
+	DBus::System::System() : DBus::Connection(Factory(DBUS_BUS_SYSTEM),"sysbus") {
+	}
+
+	DBus::Session::Session() : DBus::Connection(Factory(DBUS_BUS_SESSION),"sessionbus") {
+	}
+
+	DBus::System & DBus::Connection::getSystemInstance() {
 		lock_guard<recursive_mutex> lock(guard);
-		static DBus::Connection instance(Factory(DBUS_BUS_SYSTEM),"sysbus");
+		static DBus::System instance;
 		return instance;
 	}
 
-	DBus::Connection & DBus::Connection::getSessionInstance() {
+	DBus::Session & DBus::Connection::getSessionInstance() {
 		lock_guard<recursive_mutex> lock(guard);
-		static DBus::Connection instance(Factory(DBUS_BUS_SESSION),"userbus");
+		static DBus::Session instance;
 		return instance;
 	}
 

@@ -36,7 +36,7 @@
 
 //---[ Implement ]------------------------------------------------------------------------------------------
 
-int main(int argc, char **argv) {
+int run_as_service(int argc, char **argv) {
 
 	class Service : public SystemService {
 	private:
@@ -268,5 +268,13 @@ int main(int argc, char **argv) {
 
 	return Service().run(argc,argv);
 
+
+}
+
+int main(int argc, char **argv) {
+
+	// run_as_service(argc,argv);
+
+	Udjat::DBus::Connection::getSystemInstance();
 
 }

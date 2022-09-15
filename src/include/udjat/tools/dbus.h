@@ -35,6 +35,8 @@
 
 		class Connection;
 		class Message;
+		class System;
+		class Session;
 
 		/// @brief D-Bus Value
 		class UDJAT_API Value : public Udjat::Value {
@@ -231,6 +233,8 @@
 		/// @brief D-Bus connection.
 		class UDJAT_API Connection {
 		private:
+			friend class System;
+			friend class Session;
 
 			static DBusConnection * Factory(DBusBusType type);
 			static DBusConnection * Factory(uid_t uid, const char *sid);
@@ -310,10 +314,10 @@
 			static Connection & getInstance();
 
 			/// @brief Get singleton connection to the system bus.
-			static Connection & getSystemInstance();
+			static System & getSystemInstance();
 
 			/// @brief Get singleton connection to the session bus.
-			static Connection & getSessionInstance();
+			static Session & getSessionInstance();
 
 			inline operator bool() const {
 				return this->connection != nullptr;
@@ -388,6 +392,19 @@
 						std::function<void(Message & message)> call
 					);
 
+		};
+
+		/// @brief System Bus.
+		class UDJAT_API System : public Connection {
+		public:
+			System();
+		};
+
+
+		/// @brief Session Bus.
+		class UDJAT_API Session : public Connection {
+		public:
+			Session();
 		};
 
 		/// @brief D-Bus signal
