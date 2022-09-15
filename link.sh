@@ -18,7 +18,7 @@ if [ "$?" != "0" ]; then
 	exit -1
 fi
 
-ln -s libudjatdbus.so.1.0 ${LIBDIR}/libudjatdbus.so
+sudo ln -s libudjatdbus.so.1.0 ${LIBDIR}/libudjatdbus.so
 
 cat > .bin/sdk.pc << EOF
 prefix=/usr
