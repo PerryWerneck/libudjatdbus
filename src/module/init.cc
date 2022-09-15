@@ -18,27 +18,32 @@
  */
 
  #include <config.h>
+ #include <udjat/defs.h>
  #include "private.h"
  #include <udjat/module.h>
  #include <udjat/moduleinfo.h>
+ #include <udjat/factory.h>
+ #include <dbus/dbus-protocol.h>
 
  using namespace Udjat;
 
- static const Udjat::ModuleInfo moduleinfo { "UDJat D-Bus module" };
+ static const Udjat::ModuleInfo moduleinfo { "D-Bus" STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " module" };
 
  /// @brief Register udjat module.
  Udjat::Module * udjat_module_init() {
 
-	class Controller : public Udjat::Module {
-	private:
-
+	class Controller : public Udjat::Module, Udjat::Factory {
 	public:
 
-		Controller() : Udjat::Module("d-bus",moduleinfo) {
+		Controller() : Udjat::Module("d-bus",moduleinfo), Udjat::Factory("d-bus",moduleinfo) {
 		};
 
 		virtual ~Controller() {
 		};
+
+		std::shared_ptr<Abstract::Alert> AlertFactory(const Abstract::Object &parent, const pugi::xml_node &node) const override {
+			return make_shared<DBus::Alert>(parent,node);
+		}
 
 	};
 

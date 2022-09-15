@@ -17,13 +17,13 @@
 
 	<random name='alerter' update-timer='60' on-demand='false'>
 
-		<!-- dbus-signal>
+		<alert type='d-bus'>
 		
 			<argument type='int16' value='${agent.value}'/>
 			<argument type='string' value='${level}'/>
 			<argument type='string' value='${state.summary}'/>
 				
-		</dbus-signal -->
+		</alert>
 
 	</random>
 	
