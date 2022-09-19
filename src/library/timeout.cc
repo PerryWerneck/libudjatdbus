@@ -19,49 +19,39 @@
 
  #include "private.h"
  #include <udjat/tools/mainloop.h>
+ #include <udjat/tools/timer.h>
  #include <unistd.h>
 
 /*---[ Implement ]----------------------------------------------------------------------------------*/
 
- struct TimeoutContext {
+ class TimeoutContext : public Udjat::MainLoop::Timer {
+ public:
+
 	DBusConnection	* conn = nullptr;
 	DBusTimeout		* timeout = nullptr;
-	unsigned long	  ms = 0;
 
-	constexpr TimeoutContext() {
+	TimeoutContext() {
+	}
+
+ protected:
+	void on_timer() override {
+		dbus_timeout_handle(this->timeout);
 	}
 
  };
 
- static bool handle_timeout(TimeoutContext *ctx) {
-	dbus_timeout_handle(ctx->timeout);
-	return TRUE;
- }
-
  dbus_bool_t add_timeout(DBusTimeout *t, DBus::Connection *connection) {
-
-	if (!dbus_timeout_get_enabled(t))
-		return TRUE;
 
 	TimeoutContext *ctx = new TimeoutContext();
 
 	ctx->conn		= connection->getConnection();
 	ctx->timeout	= t;
-	ctx->ms			= dbus_timeout_get_interval(t);
+	ctx->reset(dbus_timeout_get_interval(t));
 
 	dbus_timeout_set_data(t, ctx, NULL);
 
 	if(dbus_timeout_get_enabled(ctx->timeout)) {
-
-		Udjat::MainLoop::getInstance().insert(
-			(void *) ctx,
-			ctx->ms,
-			[ctx]() {
-				handle_timeout(ctx);
-				return true;
-			}
-		);
-
+		ctx->enable();
 	}
 
 	return TRUE;
@@ -72,7 +62,6 @@
 	TimeoutContext *ctx = (TimeoutContext *) dbus_timeout_get_data(t);
 
 	if(ctx) {
-		MainLoop::getInstance().remove(ctx);
 		delete ctx;
 	}
  }
@@ -83,21 +72,12 @@
 
 	if(ctx) {
 
-		MainLoop::getInstance().remove(ctx);
-		delete ctx;
+		ctx->disable();
 
 		if (dbus_timeout_get_enabled(ctx->timeout)) {
 
-			ctx->ms	= dbus_timeout_get_interval(ctx->timeout);
-
-			Udjat::MainLoop::getInstance().insert(
-				(void *) ctx,
-				ctx->ms,
-				[ctx]() {
-					handle_timeout(ctx);
-					return true;
-				}
-			);
+			ctx->reset(dbus_timeout_get_interval(ctx->timeout));
+			ctx->enable();
 
 		}
 

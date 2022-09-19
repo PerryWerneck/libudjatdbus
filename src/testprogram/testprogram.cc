@@ -242,12 +242,6 @@ int run_as_service(int argc, char **argv) {
 
 			cout << "---[ Message Test Finish ]--------------------------------------------" << endl;
 
-			// Schedule service quit
-			MainLoop::getInstance().insert(0,2000,[](){
-				MainLoop::getInstance().quit();
-				return false;
-			});
-
 		}
 
 		/// @brief Deinitialize service.
@@ -273,8 +267,8 @@ int run_as_service(int argc, char **argv) {
 
 int main(int argc, char **argv) {
 
-	// run_as_service(argc,argv);
+	run_as_service(argc,argv);
 
-	Udjat::DBus::Connection::getSystemInstance();
+	//Udjat::DBus::Connection::getSystemInstance();
 
 }
