@@ -248,8 +248,6 @@
 			clog << name << "\tConnection was already disabled" << endl;
 		}
 
-		Udjat::MainLoop::getInstance().remove(this);
-
 	}
 
 	void DBus::Connection::flush() noexcept {

@@ -19,6 +19,7 @@
 
  #include "private.h"
  #include <udjat/tools/mainloop.h>
+ #include <udjat/tools/handler.h>
  #include <unistd.h>
 
 /*---[ Implement ]----------------------------------------------------------------------------------*/
@@ -30,11 +31,11 @@
 	DBusWatch			* watch			= nullptr;
 
  protected:
-	bool call(const MainLoop::Event events) override;
+	void handle_event(const Event events) override;
 
  public:
 
-	Context(DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Event) e), connection(c), watch(w) {
+	Context(DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Handler::Event) e), connection(c), watch(w) {
 #ifdef DEBUG
 		cout << "handler\tCreating d-bus context " << hex << ((void *) this) << dec << endl;
 #endif // DEBUG
@@ -45,10 +46,6 @@
 		cout << "handler\tDestroying d-bus context " << hex << ((void *) this) << dec << endl;
 	}
 #endif // DEBUG
-
-	const void * id() const noexcept override {
-		return (const void *) this;
-	}
 
 	void set(int fd) {
 		this->fd = fd;
@@ -87,7 +84,7 @@
 
 	dbus_watch_set_data(watch, context.get(), NULL);
 
-	MainLoop::getInstance().push_back(context);
+	context->enable();
 
 	return true;
  }
@@ -103,7 +100,7 @@
 #endif // DEBUG
 
 		dbus_watch_set_data(watch, NULL, NULL);
-		MainLoop::getInstance().remove((void *) context);
+		context->disable();
 	}
 
  }
@@ -115,7 +112,7 @@
 	if(context) {
 
 #ifdef DEBUG
-		cout << "d-bus\t*** Toggle watch " << context->id() << endl;
+		cout << "d-bus\t*** Toggle watch " << hex << ((void *) context) << dec << endl;
 #endif // DEBUG
 
 		context->set(dbus_watch_get_unix_fd(watch));
@@ -130,10 +127,10 @@
 
  }
 
- bool Context::call(const MainLoop::Event events) {
+ void Context::handle_event(const MainLoop::Handler::Event events) {
 
 #ifdef DEBUG
-	cout << "d-bus\t*** Activity on watch " << id() << " events=" << events;
+	cout << "d-bus\t*** Activity on watch " << hex << ((void *) this) << dec << " events=" << events;
 #endif // DEBUG
 
 	if(!dbus_watch_get_enabled(watch)) {
@@ -141,7 +138,7 @@
 		cout << " DISABLED" << endl;
 #endif // DEBUG
 		disable();
-		return true;
+		return;
 	}
 
 	unsigned int flags = 0;
@@ -180,7 +177,7 @@
 
 	if(dbus_watch_handle(watch, flags) == FALSE) {
 		cerr << "d-bus\tdbus_watch_handle() failed" << endl;
-		return false;
+		return;
 	}
 
 	/*
@@ -198,8 +195,6 @@
 	dbus_connection_unref(c);
 
 	//handle_dispatch_status(connection->getConnection(), DBUS_DISPATCH_DATA_REMAINS, ctx);
-
-	return true;
  }
 
 
