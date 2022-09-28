@@ -47,10 +47,6 @@
 	}
 #endif // DEBUG
 
-	void set(int fd) {
-		this->fd = fd;
-	}
-
  };
 
  dbus_bool_t add_watch(DBusWatch *watch, DBus::Connection *connection) {
@@ -71,18 +67,13 @@
 	if (flags & DBUS_WATCH_ERROR)
 		event |= POLLERR;
 
-	auto context = make_shared<Context>(
-						connection,
-						dbus_watch_get_unix_fd(watch),
-						watch,
-						event
-					);
+	Context *context = new Context(connection,dbus_watch_get_unix_fd(watch),watch,event);
 
 #ifdef DEBUG
-	cout << "d-bus\t*** Adding watch " << hex << ((void *) context.get()) << dec << " from connection " << connection << endl;
+	cout << "d-bus\t*** Adding watch " << hex << ((void *) context) << dec << " from connection " << connection << endl;
 #endif // DEBUG
 
-	dbus_watch_set_data(watch, context.get(), NULL);
+	dbus_watch_set_data(watch, context, NULL);
 
 	context->enable();
 
@@ -101,6 +92,7 @@
 
 		dbus_watch_set_data(watch, NULL, NULL);
 		context->disable();
+		delete context;
 	}
 
  }
