@@ -20,6 +20,7 @@
  #include "private.h"
  #include <udjat/tools/mainloop.h>
  #include <udjat/tools/handler.h>
+ #include <udjat/tools/logger.h>
  #include <unistd.h>
 
 /*---[ Implement ]----------------------------------------------------------------------------------*/
@@ -37,13 +38,13 @@
 
 	Context(DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Handler::Event) e), connection(c), watch(w) {
 #ifdef DEBUG
-		cout << "handler\tCreating d-bus context " << hex << ((void *) this) << dec << endl;
+		Logger::trace() << "handler\tCreating d-bus context " << hex << ((void *) this) << dec << endl;
 #endif // DEBUG
 	}
 
 #ifdef DEBUG
 	virtual ~Context() {
-		cout << "handler\tDestroying d-bus context " << hex << ((void *) this) << dec << endl;
+		Logger::trace() << "handler\tDestroying d-bus context " << hex << ((void *) this) << dec << endl;
 	}
 #endif // DEBUG
 
@@ -70,7 +71,7 @@
 	Context *context = new Context(connection,dbus_watch_get_unix_fd(watch),watch,event);
 
 #ifdef DEBUG
-	cout << "d-bus\t*** Adding watch " << hex << ((void *) context) << dec << " from connection " << connection << endl;
+	Logger::trace() << "d-bus\t*** Adding watch " << hex << ((void *) context) << dec << " from connection " << connection << endl;
 #endif // DEBUG
 
 	dbus_watch_set_data(watch, context, NULL);
@@ -87,7 +88,7 @@
 	if(context) {
 
 #ifdef DEBUG
-		cout << "d-bus\t*** Removing watch " << hex << ((void *) context) << dec << endl;
+		Logger::trace() << "d-bus\t*** Removing watch " << hex << ((void *) context) << dec << endl;
 #endif // DEBUG
 
 		dbus_watch_set_data(watch, NULL, NULL);
@@ -104,7 +105,7 @@
 	if(context) {
 
 #ifdef DEBUG
-		cout << "d-bus\t*** Toggle watch " << hex << ((void *) context) << dec << endl;
+		Logger::trace() << "d-bus\t*** Toggle watch " << hex << ((void *) context) << dec << endl;
 #endif // DEBUG
 
 		context->set(dbus_watch_get_unix_fd(watch));
@@ -122,12 +123,12 @@
  void Context::handle_event(const MainLoop::Handler::Event events) {
 
 #ifdef DEBUG
-	cout << "d-bus\t*** Activity on watch " << hex << ((void *) this) << dec << " events=" << events;
+	Logger::trace() << "d-bus\t*** Activity on watch " << hex << ((void *) this) << dec << " events=" << events;
 #endif // DEBUG
 
 	if(!dbus_watch_get_enabled(watch)) {
 #ifdef DEBUG
-		cout << " DISABLED" << endl;
+		Logger::trace() << " DISABLED" << endl;
 #endif // DEBUG
 		disable();
 		return;
@@ -138,33 +139,33 @@
 	if (events & POLLIN) {
 		flags |= DBUS_WATCH_READABLE;
 #ifdef DEBUG
-		cout << " DBUS_WATCH_READABLE";
+		Logger::trace() << " DBUS_WATCH_READABLE";
 #endif // DEBUG
 	}
 
 	if (events & POLLOUT) {
 		flags |= DBUS_WATCH_WRITABLE;
 #ifdef DEBUG
-		cout << " DBUS_WATCH_WRITABLE";
+		Logger::trace() << " DBUS_WATCH_WRITABLE";
 #endif // DEBUG
 	}
 
 	if (events & POLLHUP) {
 		flags |= DBUS_WATCH_HANGUP;
 #ifdef DEBUG
-		cout << " DBUS_WATCH_HANGUP";
+		Logger::trace() << " DBUS_WATCH_HANGUP";
 #endif // DEBUG
 	}
 
 	if (events & POLLERR) {
 		flags |= DBUS_WATCH_ERROR;
 #ifdef DEBUG
-		cout << " DBUS_WATCH_ERROR";
+		Logger::trace() << " DBUS_WATCH_ERROR";
 #endif // DEBUG
 	}
 
 #ifdef DEBUG
-	cout << endl;
+	Logger::trace() << endl;
 #endif // DEBUG
 
 	if(dbus_watch_handle(watch, flags) == FALSE) {

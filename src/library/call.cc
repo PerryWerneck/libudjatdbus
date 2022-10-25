@@ -18,6 +18,7 @@
  */
 
  #include <config.h>
+ #include <udjat/tools/logger.h>
  #include "private.h"
 
  using namespace std;
@@ -32,10 +33,12 @@
 		const std::function<void(DBus::Message &)> call;
 
 		CallParameters(DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c->getConnection()), call(f) {
+			Logger::trace() << "New call parameters " << hex << ((void *) this) << dec << endl;
 			dbus_connection_ref(connection);
 		}
 
 		~CallParameters() {
+			Logger::trace() << "Delete call parameters " << hex << ((void *) this) << dec << endl;
 			dbus_connection_unref(connection);
 		}
 
@@ -43,14 +46,34 @@
 
 	static void dbus_call_reply(DBusPendingCall *pending, CallParameters *parameters) {
 
+		debug("Got a reply from pending call");
+
 		DBusError error;
 		dbus_error_init(&error);
 
 		if(!dbus_pending_call_get_completed(pending)) {
 
+			// NO response
+
+			debug("No response from d-bus call");
+
 			dbus_set_error_const(&error, "Unexpected", "Failed to get pending reply");
 			DBus::Message message(error);
-			parameters->call(message);
+
+			try {
+
+				parameters->call(message);
+
+			} catch(std::exception &e) {
+
+				cerr << "dbus\tCan't process error message: " << e.what() << endl;
+
+			} catch(...) {
+
+				cerr << "dbus\tUnexpected error processing error message" << endl;
+
+			}
+
 			dbus_pending_call_cancel(pending);
 
 		} else {
@@ -60,18 +83,20 @@
 
 			if(message) {
 
+				debug("Got response from dbus call");
+
 				try {
 
-					DBus::Message msg(message);
+					DBus::Message msg{message};
 					parameters->call(msg);
 
-				} catch(const std::exception &e) {
+				} catch(std::exception &e) {
 
-					cerr << "dbus\tError '" << e.what() << "' processing response to d-bus method call" << endl;
+					cerr << "dbus\tCan't process error message: " << e.what() << endl;
 
 				} catch(...) {
 
-					cerr << "dbus\tUnexpected error processing response to d-bus method call" << endl;
+					cerr << "dbus\tUnexpected error processing error message" << endl;
 
 				}
 
@@ -79,6 +104,7 @@
 
 			} else {
 
+				debug("Empty response from dbus call");
 				dbus_set_error_const(&error, "empty", "No response");
 
 				try {
@@ -86,22 +112,22 @@
 					DBus::Message msg(error);
 					parameters->call(msg);
 
-				} catch(const std::exception &e) {
+				} catch(std::exception &e) {
 
-					cerr << "dbus\tError '" << e.what() << "' processing response to d-bus method call" << endl;
+					cerr << "dbus\tCan't process error message: " << e.what() << endl;
 
 				} catch(...) {
 
-					cerr << "dbus\tUnexpected error processing response to d-bus method call" << endl;
+					cerr << "dbus\tUnexpected error processing error message" << endl;
 
 				}
+
 			}
 
 		}
 
 		dbus_error_free(&error);
 
-		delete parameters;
 	}
 
 	void DBus::Connection::call(DBusMessage * message) {
@@ -188,11 +214,18 @@
 
 	}
 
+	void free_parameters(CallParameters *parameters) {
+		debug("Cleaning pending call");
+		delete parameters;
+	}
+
 	void DBus::Connection::call(DBusMessage * message, const std::function<void(Message & message)> &call) {
 
 		if(!connection) {
 			throw runtime_error("D-Bus connection is not available");
 		}
+
+		debug("----------------------------------- pending call");
 
 		DBusPendingCall *pending = NULL;
 
@@ -200,7 +233,21 @@
 			throw std::runtime_error("Can't send DBus method call");
 		}
 
+		if(!pending) {
+			throw std::runtime_error("Invalid 'pending call' handler");
+			return;
+		}
+
 		CallParameters *parameters = new CallParameters(this,call);
+
+		static dbus_int32_t slot = -1;
+		if(slot == -1) {
+			if(!dbus_pending_call_allocate_data_slot(&slot)) {
+				throw std::runtime_error("Cant allocate pending call data slot");
+			}
+		}
+
+		dbus_pending_call_set_data(pending,slot,parameters,(DBusFreeFunction) free_parameters);
 
 		if(!dbus_pending_call_set_notify(pending, (DBusPendingCallNotifyFunction) dbus_call_reply, (void *) parameters, NULL)) {
 			dbus_pending_call_unref(pending);
@@ -210,6 +257,8 @@
 		}
 
 		dbus_pending_call_unref(pending);
+
+		debug("------------------------------------ Pending call was set");
 
 	}
 

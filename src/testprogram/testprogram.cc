@@ -30,6 +30,7 @@
  #include <cstdlib>
  #include <unistd.h>
  #include <udjat/tools/mainloop.h>
+ #include <udjat/tools/logger.h>
 
  using namespace std;
  using namespace Udjat;
@@ -50,6 +51,9 @@ int run_as_service(int argc, char **argv) {
 			SystemService::init();
 
 			if(Module::find("httpd")) {
+
+				cout << "http://localhost:8989/" << endl;
+
 				if(Module::find("information")) {
 					cout << "http://localhost:8989/api/1.0/info/modules.xml" << endl;
 					cout << "http://localhost:8989/api/1.0/info/workers.xml" << endl;
@@ -79,30 +83,52 @@ int run_as_service(int argc, char **argv) {
 						<< "delay";
 
 				// Get system bus
+				cerr << "------------------- calling system bus" << endl;
 				DBus::Connection::getSystemInstance().call(message,[](DBus::Message &response){
 
 					if(response) {
 
-						cout << "SUCCESS" << endl;
+						debug("SUCCESS");
 						int fd = DBus::Value(response).getFD();
 
-						cout << "FD=" << fd << endl;
+						debug("FD=",fd);
 
 						::close(fd);
 
 					} else {
 
-						cout << "FAILED" << endl;
+						debug("FAILED");
+
 					}
 
 				});
 
 			}
 
-			//DBus::Connection &session = DBus::Connection::getSessionInstance();
-			bus = new DBus::Connection(getenv("DBUS_SESSION_BUS_ADDRESS"),"session-bus");
+			DBus::Connection &bus = DBus::Connection::getSessionInstance();
 
-			bus->call(
+			cout << "----------------------------- Invalid message" << endl;
+			bus.call(
+				"br.eti.werneck.invalid",
+				"/service/none",
+				"br.eti.werneck.invalid",
+				"invalid",
+				[](DBus::Message & message) {
+
+					if(message) {
+
+						cout << "*************** Got response, why?!?!" << endl;
+
+					} else {
+
+						cerr << "*************** Error '" << message.error_message() << endl;
+					}
+				}
+			);
+
+			/*
+			cout << "----------------------------- org.gnome.ScreenSaver" << endl;
+			bus.call(
 				"org.gnome.ScreenSaver",
 				"/org/gnome/ScreenSaver",
 				"org.gnome.ScreenSaver",
@@ -122,8 +148,9 @@ int run_as_service(int argc, char **argv) {
 					}
 				}
 			);
+			*/
 
-			bus->subscribe(
+			bus.subscribe(
 				this,
 				"org.gnome.ScreenSaver",
 				"ActiveChanged",
@@ -134,7 +161,7 @@ int run_as_service(int argc, char **argv) {
 				}
 			);
 
-			bus->subscribe(
+			bus.subscribe(
 				this,
 				"com.example.signal",
 				"hello",
