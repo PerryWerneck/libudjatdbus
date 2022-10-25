@@ -114,15 +114,7 @@ int run_as_service(int argc, char **argv) {
 				"br.eti.werneck.invalid",
 				"invalid",
 				[](DBus::Message & message) {
-
-					if(message) {
-
-						cout << "*************** Got response, why?!?!" << endl;
-
-					} else {
-
-						cerr << "*************** Error '" << message.error_message() << endl;
-					}
+					debug(message.error_message());
 				}
 			);
 
