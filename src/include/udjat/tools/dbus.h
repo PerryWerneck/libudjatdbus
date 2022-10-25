@@ -21,6 +21,7 @@
 
  #include <udjat/defs.h>
  #include <udjat/tools/value.h>
+ #include <ostream>
  #include <dbus/dbus.h>
  #include <mutex>
  #include <functional>
@@ -133,13 +134,15 @@
 				DBusMessageIter iter;
 			} message;
 
+			const char *name = "dbus";
+
 		private:
 
 			struct {
 				bool valid = false;		/// @brief True if this is an error message.
 				std::string name;		/// @brief Error name.
 				std::string message;	/// @brief Error Message.
-			} error;
+			} err;
 
 			inline Message & add() {
 				return *this;
@@ -178,7 +181,7 @@
 			}
 
 			inline operator bool() const {
-				return !error.valid;
+				return !err.valid;
 			}
 
 			Message & pop(Value &value);
@@ -186,7 +189,7 @@
 			DBusMessageIter * getIter();
 
 			inline bool failed() const {
-				return error.valid;
+				return err.valid;
 			}
 
 			bool next();
@@ -200,11 +203,11 @@
 			}
 
 			inline const char * error_name() const {
-				return this->error.name.c_str();
+				return this->err.name.c_str();
 			}
 
 			inline const char * error_message() const {
-				return error.message.c_str();
+				return err.message.c_str();
 			}
 
 			Message & push_back(const DBus::Value &value);
@@ -227,6 +230,11 @@
 			Message & push_back(const uint64_t value);
 
 			Message & push_back(const std::vector<std::string> &elements);
+
+			std::ostream & info() const;
+			std::ostream & warning() const;
+			std::ostream & error() const;
+			std::ostream & trace() const;
 
 		};
 
@@ -391,6 +399,11 @@
 			void call(	const Message &message,
 						std::function<void(Message & message)> call
 					);
+
+			std::ostream & info() const;
+			std::ostream & warning() const;
+			std::ostream & error() const;
+			std::ostream & trace() const;
 
 		};
 

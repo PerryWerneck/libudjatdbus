@@ -21,6 +21,7 @@
  #include "private.h"
  #include <udjat/tools/dbus.h>
  #include <udjat/tools/mainloop.h>
+ #include <udjat/tools/logger.h>
  #include <udjat/worker.h>
  #include <iostream>
  #include <unistd.h>
@@ -254,6 +255,22 @@
 		if(connection) {
 			dbus_connection_flush(connection);
 		}
+	}
+
+	std::ostream & DBus::Connection::info() const {
+		return std::cout << name << "\t";
+	}
+
+	std::ostream & DBus::Connection::warning() const {
+		return std::clog << name << "\t";
+	}
+
+	std::ostream & DBus::Connection::error() const {
+		return std::cerr << name << "\t";
+	}
+
+	std::ostream & DBus::Connection::trace() const {
+		return Logger::trace() << name << "\t";
 	}
 
  }

@@ -19,6 +19,7 @@
 
  #include <config.h>
  #include <udjat/tools/dbus.h>
+ #include <udjat/tools/logger.h>
  #include <iostream>
 
  using namespace std;
@@ -138,6 +139,22 @@
 		}
 
 		return *this;
+	}
+
+	std::ostream & DBus::Message::info() const {
+		return std::cout << name << "\t";
+	}
+
+	std::ostream & DBus::Message::warning() const {
+		return std::clog << name << "\t";
+	}
+
+	std::ostream & DBus::Message::error() const {
+		return std::cerr << name << "\t";
+	}
+
+	std::ostream & DBus::Message::trace() const {
+		return Logger::trace() << name << "\t";
 	}
 
  }
