@@ -20,6 +20,7 @@
  #include <config.h>
  #include <udjat/tools/dbus.h>
  #include <udjat/tools/value.h>
+ #include <udjat/tools/logger.h>
  #include <cstring>
  #include <string>
  #include <iostream>

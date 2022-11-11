@@ -19,6 +19,7 @@
 
  #include <config.h>
  #include <udjat/tools/dbus.h>
+ #include <udjat/tools/logger.h>
  #include <iostream>
 
  using namespace std;
@@ -32,34 +33,30 @@
 
 	DBus::Message::Message(const DBusError &error) {
 		this->message.value = nullptr;
-		this->error.valid = true;
-		this->error.name = error.name;
-		this->error.message = error.message;
+		this->err.valid = true;
+		this->err.name = error.name;
+		this->err.message = error.message;
 	}
 
 	DBus::Message::Message(DBusMessage *message) {
 
 		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_ERROR) {
 
-			error.valid = true;
-			error.name = dbus_message_get_error_name(message);
+			err.valid = true;
+			err.name = dbus_message_get_error_name(message);
 
-#ifdef DEBUG
-			cout << "Error name=" << error.name << endl;
-#endif // DEBUG
+			debug("Error name=",err.name);
 
 			// Get error message.
 			DBusMessageIter iter;
 			dbus_message_iter_init(message, &iter);
 
-			error.message.clear();
+			err.message.clear();
 			if(dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING) {
 				DBusBasicValue value;
 				dbus_message_iter_get_basic(&iter,&value);
-				error.message = value.str;
-#ifdef DEBUG
-				cout << "Error message=" << error.message << endl;
-#endif // DEBUG
+				err.message = value.str;
+				debug("Error message=",err.message);
 			}
 
 
@@ -80,24 +77,24 @@
 	}
 
 	DBusMessageIter * DBus::Message::getIter() {
-		if(error.valid) {
-			throw runtime_error(error.message);
+		if(err.valid) {
+			throw runtime_error(err.message);
 		}
 		return & this->message.iter;
 	}
 
 
 	bool DBus::Message::next() {
-		if(error.valid) {
-			throw runtime_error(error.message);
+		if(err.valid) {
+			throw runtime_error(err.message);
 		}
 		return dbus_message_iter_next(&message.iter);
 	}
 
 	DBus::Message & DBus::Message::pop(Value &value) {
 
-		if(error.valid) {
-			throw runtime_error(error.message);
+		if(err.valid) {
+			throw runtime_error(err.message);
 		}
 
 		if(value.set(&message.iter))

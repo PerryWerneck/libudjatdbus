@@ -21,6 +21,7 @@
  #include "private.h"
  #include <udjat/tools/dbus.h>
  #include <udjat/tools/mainloop.h>
+ #include <udjat/tools/logger.h>
  #include <udjat/worker.h>
  #include <iostream>
  #include <unistd.h>
@@ -84,16 +85,16 @@
 
 					pthread_setname_np(pthread_self(),name.c_str());
 
-					cout << name << "\tService thread begin" << endl;
+					trace() << "Service thread begin" << endl;
 					auto connct = connection;
 					dbus_connection_ref(connct);
 					while(connection && dbus_connection_read_write(connct,100)) {
 						dispatch(connct);
 					}
-					cout << name << "\tFlushing connection" << endl;
+					trace() << "Flushing connection" << endl;
 					dbus_connection_flush(connct);
 					dbus_connection_unref(connct);
-					cout << name << "\tService thread end" << endl;
+					trace() << "Service thread end" << endl;
 
 				});
 
@@ -171,7 +172,7 @@
 		DBusError err;
 		dbus_error_init(&err);
 
-		cout << "d-bus\tOpening '" << busname << "'" << endl;
+		Logger::trace() << "Opening '" << busname << "'" << endl;
 		DBusConnection * connection = dbus_connection_open(busname, &err);
 		if(dbus_error_is_set(&err)) {
 			std::string message(err.message);
@@ -188,7 +189,7 @@
 
 	DBus::Connection::~Connection() {
 
-		cout << name << "\tConnection destroyed" << endl;
+		trace() << "Connection destroyed" << endl;
 
 		flush();
 
@@ -206,7 +207,7 @@
 			// Stop D-Bus connection
 			if(thread) {
 
-				cout << name << "\tWaiting for service thread " << thread << endl;
+				trace() << "Waiting for service thread " << thread << endl;
 				thread->join();
 				delete thread;
 
@@ -215,7 +216,7 @@
 
 			} else if(!use_thread) {
 
-				cout << name << "\tRestoring d-bus watchers" << endl;
+				trace() << "Restoring d-bus watchers" << endl;
 
 				if(!dbus_connection_set_watch_functions(
 					connection,
@@ -225,7 +226,7 @@
 					this,
 					nullptr)
 				) {
-					cerr << name << "\tdbus_connection_set_watch_functions has failed" << endl;
+					error() << "dbus_connection_set_watch_functions has failed" << endl;
 				}
 
 				if(!dbus_connection_set_timeout_functions(
@@ -236,7 +237,7 @@
 					NULL,
 					nullptr)
 				) {
-					cerr << name << "\tdbus_connection_set_timeout_functions has failed" << endl;
+					error() << "dbus_connection_set_timeout_functions has failed" << endl;
 				}
 
 				dbus_connection_unref(connection);
@@ -245,10 +246,8 @@
 
 		} else {
 
-			clog << name << "\tConnection was already disabled" << endl;
+			warning() << "Connection was already disabled" << endl;
 		}
-
-		Udjat::MainLoop::getInstance().remove(this);
 
 	}
 
@@ -256,6 +255,22 @@
 		if(connection) {
 			dbus_connection_flush(connection);
 		}
+	}
+
+	std::ostream & DBus::Connection::info() const {
+		return std::cout << name << "\t";
+	}
+
+	std::ostream & DBus::Connection::warning() const {
+		return std::clog << name << "\t";
+	}
+
+	std::ostream & DBus::Connection::error() const {
+		return std::cerr << name << "\t";
+	}
+
+	std::ostream & DBus::Connection::trace() const {
+		return Logger::trace() << name << "\t";
 	}
 
  }

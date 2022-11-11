@@ -19,6 +19,8 @@
 
  #include "private.h"
  #include <udjat/tools/mainloop.h>
+ #include <udjat/tools/handler.h>
+ #include <udjat/tools/logger.h>
  #include <unistd.h>
 
 /*---[ Implement ]----------------------------------------------------------------------------------*/
@@ -30,19 +32,21 @@
 	DBusWatch			* watch			= nullptr;
 
  protected:
-	bool call(const MainLoop::Event events) override;
+	void handle_event(const Event events) override;
 
  public:
-	Context(DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Event) e), connection(c), watch(w) {
+
+	Context(DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Handler::Event) e), connection(c), watch(w) {
+#ifdef DEBUG
+		Logger::trace() << "handler\tCreating d-bus context " << hex << ((void *) this) << dec << endl;
+#endif // DEBUG
 	}
 
-	const void * id() const noexcept override {
-		return (const void *) watch;
+#ifdef DEBUG
+	virtual ~Context() {
+		Logger::trace() << "handler\tDestroying d-bus context " << hex << ((void *) this) << dec << endl;
 	}
-
-	void set(int fd) {
-		this->fd = fd;
-	}
+#endif // DEBUG
 
  };
 
@@ -64,20 +68,15 @@
 	if (flags & DBUS_WATCH_ERROR)
 		event |= POLLERR;
 
-	auto context = make_shared<Context>(
-						connection,
-						dbus_watch_get_unix_fd(watch),
-						watch,
-						event
-					);
+	Context *context = new Context(connection,dbus_watch_get_unix_fd(watch),watch,event);
 
 #ifdef DEBUG
-	cout << "d-bus\t*** Adding watch " << context->id() << " from connection " << connection << endl;
+	Logger::trace() << "d-bus\t*** Adding watch " << hex << ((void *) context) << dec << " from connection " << connection << endl;
 #endif // DEBUG
 
-	dbus_watch_set_data(watch, context.get(), NULL);
+	dbus_watch_set_data(watch, context, NULL);
 
-	MainLoop::getInstance().push_back(context);
+	context->enable();
 
 	return true;
  }
@@ -86,13 +85,15 @@
 
 	Context *context = (Context *) dbus_watch_get_data(watch);
 
+	if(context) {
+
 #ifdef DEBUG
-	cout << "d-bus\t*** Removing watch " << context->id() << endl;
+		Logger::trace() << "d-bus\t*** Removing watch " << hex << ((void *) context) << dec << endl;
 #endif // DEBUG
 
-	if(context) {
 		dbus_watch_set_data(watch, NULL, NULL);
-		MainLoop::getInstance().remove(context);
+		context->disable();
+		delete context;
 	}
 
  }
@@ -104,7 +105,7 @@
 	if(context) {
 
 #ifdef DEBUG
-		cout << "d-bus\t*** Toggle watch " << context->id() << endl;
+		Logger::trace() << "d-bus\t*** Toggle watch " << hex << ((void *) context) << dec << endl;
 #endif // DEBUG
 
 		context->set(dbus_watch_get_unix_fd(watch));
@@ -119,18 +120,18 @@
 
  }
 
- bool Context::call(const MainLoop::Event events) {
+ void Context::handle_event(const MainLoop::Handler::Event events) {
 
 #ifdef DEBUG
-	cout << "d-bus\t*** Activity on watch " << id() << " events=" << events;
+	Logger::trace() << "d-bus\t*** Activity on watch " << hex << ((void *) this) << dec << " events=" << events;
 #endif // DEBUG
 
 	if(!dbus_watch_get_enabled(watch)) {
 #ifdef DEBUG
-		cout << " DISABLED" << endl;
+		Logger::trace() << " DISABLED" << endl;
 #endif // DEBUG
 		disable();
-		return true;
+		return;
 	}
 
 	unsigned int flags = 0;
@@ -138,38 +139,38 @@
 	if (events & POLLIN) {
 		flags |= DBUS_WATCH_READABLE;
 #ifdef DEBUG
-		cout << " DBUS_WATCH_READABLE";
+		Logger::trace() << " DBUS_WATCH_READABLE";
 #endif // DEBUG
 	}
 
 	if (events & POLLOUT) {
 		flags |= DBUS_WATCH_WRITABLE;
 #ifdef DEBUG
-		cout << " DBUS_WATCH_WRITABLE";
+		Logger::trace() << " DBUS_WATCH_WRITABLE";
 #endif // DEBUG
 	}
 
 	if (events & POLLHUP) {
 		flags |= DBUS_WATCH_HANGUP;
 #ifdef DEBUG
-		cout << " DBUS_WATCH_HANGUP";
+		Logger::trace() << " DBUS_WATCH_HANGUP";
 #endif // DEBUG
 	}
 
 	if (events & POLLERR) {
 		flags |= DBUS_WATCH_ERROR;
 #ifdef DEBUG
-		cout << " DBUS_WATCH_ERROR";
+		Logger::trace() << " DBUS_WATCH_ERROR";
 #endif // DEBUG
 	}
 
 #ifdef DEBUG
-	cout << endl;
+	Logger::trace() << endl;
 #endif // DEBUG
 
 	if(dbus_watch_handle(watch, flags) == FALSE) {
 		cerr << "d-bus\tdbus_watch_handle() failed" << endl;
-		return false;
+		return;
 	}
 
 	/*
@@ -187,8 +188,6 @@
 	dbus_connection_unref(c);
 
 	//handle_dispatch_status(connection->getConnection(), DBUS_DISPATCH_DATA_REMAINS, ctx);
-
-	return true;
  }
 
 

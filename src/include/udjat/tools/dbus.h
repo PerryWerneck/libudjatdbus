@@ -21,6 +21,7 @@
 
  #include <udjat/defs.h>
  #include <udjat/tools/value.h>
+ #include <ostream>
  #include <dbus/dbus.h>
  #include <mutex>
  #include <functional>
@@ -35,6 +36,8 @@
 
 		class Connection;
 		class Message;
+		class System;
+		class Session;
 
 		/// @brief D-Bus Value
 		class UDJAT_API Value : public Udjat::Value {
@@ -131,13 +134,15 @@
 				DBusMessageIter iter;
 			} message;
 
+			const char *name = "dbus";
+
 		private:
 
 			struct {
 				bool valid = false;		/// @brief True if this is an error message.
 				std::string name;		/// @brief Error name.
 				std::string message;	/// @brief Error Message.
-			} error;
+			} err;
 
 			inline Message & add() {
 				return *this;
@@ -176,7 +181,7 @@
 			}
 
 			inline operator bool() const {
-				return !error.valid;
+				return !err.valid;
 			}
 
 			Message & pop(Value &value);
@@ -184,7 +189,7 @@
 			DBusMessageIter * getIter();
 
 			inline bool failed() const {
-				return error.valid;
+				return err.valid;
 			}
 
 			bool next();
@@ -198,11 +203,11 @@
 			}
 
 			inline const char * error_name() const {
-				return this->error.name.c_str();
+				return this->err.name.c_str();
 			}
 
 			inline const char * error_message() const {
-				return error.message.c_str();
+				return err.message.c_str();
 			}
 
 			Message & push_back(const DBus::Value &value);
@@ -226,11 +231,18 @@
 
 			Message & push_back(const std::vector<std::string> &elements);
 
+			std::ostream & info() const;
+			std::ostream & warning() const;
+			std::ostream & error() const;
+			std::ostream & trace() const;
+
 		};
 
 		/// @brief D-Bus connection.
 		class UDJAT_API Connection {
 		private:
+			friend class System;
+			friend class Session;
 
 			static DBusConnection * Factory(DBusBusType type);
 			static DBusConnection * Factory(uid_t uid, const char *sid);
@@ -310,10 +322,10 @@
 			static Connection & getInstance();
 
 			/// @brief Get singleton connection to the system bus.
-			static Connection & getSystemInstance();
+			static System & getSystemInstance();
 
 			/// @brief Get singleton connection to the session bus.
-			static Connection & getSessionInstance();
+			static Session & getSessionInstance();
 
 			inline operator bool() const {
 				return this->connection != nullptr;
@@ -388,6 +400,24 @@
 						std::function<void(Message & message)> call
 					);
 
+			std::ostream & info() const;
+			std::ostream & warning() const;
+			std::ostream & error() const;
+			std::ostream & trace() const;
+
+		};
+
+		/// @brief System Bus.
+		class UDJAT_API System : public Connection {
+		public:
+			System();
+		};
+
+
+		/// @brief Session Bus.
+		class UDJAT_API Session : public Connection {
+		public:
+			Session();
 		};
 
 		/// @brief D-Bus signal

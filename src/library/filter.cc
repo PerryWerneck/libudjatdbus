@@ -20,6 +20,7 @@
  #include <config.h>
  #include <udjat/tools/dbus.h>
  #include <udjat/tools/threadpool.h>
+ #include <udjat/tools/logger.h>
  #include <udjat/worker.h>
  #include <iostream>
 
@@ -33,7 +34,7 @@
 		const char *interface	= dbus_message_get_interface(message);
 
 #ifdef DEBUG
-		cout << name << "\tsignal(" << interface << " " << member << ")" << endl;
+		Logger::trace() << name << "\tsignal(" << interface << " " << member << ")" << endl;
 #endif // DEBUG
 
 		lock_guard<recursive_mutex> lock(guard);
