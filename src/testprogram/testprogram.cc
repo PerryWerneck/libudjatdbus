@@ -39,36 +39,61 @@
 
 int run_as_service(int argc, char **argv) {
 
+	static const Udjat::ModuleInfo moduleinfo { "Test program" };
+
+	class RandomFactory : public Udjat::Factory {
+	public:
+		RandomFactory() : Udjat::Factory("random",moduleinfo) {
+			cout << "random agent factory was created" << endl;
+			srand(time(NULL));
+		}
+
+		std::shared_ptr<Abstract::Agent> AgentFactory(const Abstract::Object UDJAT_UNUSED(&parent), const pugi::xml_node &node) const override {
+
+			class RandomAgent : public Agent<unsigned int> {
+			private:
+				unsigned int limit = 5;
+
+			public:
+				RandomAgent(const pugi::xml_node &node) : Agent<unsigned int>(node) {
+				}
+
+				bool refresh() override {
+
+					unsigned int value = ((unsigned int) rand()) % limit;
+					debug("Updating agent '",name(),"' to ",value);
+
+					return set(value);
+
+				}
+
+				void start() override {
+					Agent<unsigned int>::start( ((unsigned int) rand()) % limit );
+				}
+
+			};
+
+			return make_shared<RandomAgent>(node);
+
+		}
+
+	};
+
 	class Service : public SystemService {
 	private:
 		DBus::Connection *bus = nullptr;
+		RandomFactory rfactory;
 
 	protected:
 		/// @brief Initialize service.
 		void init() override {
 			cout << Application::Name() << "\tInitializing" << endl;
 
+			udjat_module_init();
+
 			SystemService::init();
 
-			if(Module::find("httpd")) {
-
-				cout << "http://localhost:8989/" << endl;
-
-				if(Module::find("information")) {
-					cout << "http://localhost:8989/api/1.0/info/modules.xml" << endl;
-					cout << "http://localhost:8989/api/1.0/info/workers.xml" << endl;
-					cout << "http://localhost:8989/api/1.0/info/factories.xml" << endl;
-				}
-				cout << "http://localhost:8989/api/1.0/agent.xml" << endl;
-				cout << "http://localhost:8989/api/1.0/alerts.xml" << endl;
-			}
-
 			/*
-			for(auto agent : *root) {
-				cout << "http://localhost:8989/api/1.0/agent/" << agent->getName() << ".xml" << endl;
-			}
-			*/
-
 			{
 				DBus::Message message{
 					"org.freedesktop.login1",			// Destination
@@ -104,9 +129,11 @@ int run_as_service(int argc, char **argv) {
 				});
 
 			}
+			*/
 
 			DBus::Connection &bus = DBus::Connection::getSessionInstance();
 
+			/*
 			cout << "----------------------------- Invalid message" << endl;
 			bus.call(
 				"br.eti.werneck.invalid",
@@ -117,6 +144,7 @@ int run_as_service(int argc, char **argv) {
 					debug(message.error_message());
 				}
 			);
+			*/
 
 			/*
 			cout << "----------------------------- org.gnome.ScreenSaver" << endl;

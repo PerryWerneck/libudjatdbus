@@ -293,6 +293,7 @@ Debug: \
 
 $(BINDBG)/udjat@EXEEXT@: \
 	$(BINDBG)/$(SONAME) \
+	$(BINDBG)/$(PACKAGE_NAME)@LIBEXT@ \
 	$(foreach SRC, $(basename $(TEST_SOURCES)), $(OBJDBG)/$(SRC).o)
 
 	@$(MKDIR) $(@D)
@@ -303,8 +304,8 @@ $(BINDBG)/udjat@EXEEXT@: \
 		-L$(BINDBG) \
 		-Wl,-rpath,$(BINDBG) \
 		$(LDFLAGS) \
-		$(LIBS)
-
+		$(LIBS) \
+		@PUGIXML_LIBS@
 
 $(BINDBG)/$(SONAME): \
 	$(foreach SRC, $(basename $(LIBRARY_SOURCES)), $(OBJDBG)/$(SRC).o)
