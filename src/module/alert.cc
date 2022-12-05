@@ -24,6 +24,7 @@
  #include <dbus/dbus-protocol.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/dbus.h>
+ #include <udjat/tools/string.h>
  #include <string>
  #include "private.h"
 
@@ -188,9 +189,9 @@
 			void emit() override {
 
 				DBus::Signal signal{
-					iface.c_str(),
-					member.c_str(),
-					path.c_str()
+					iface.expand(true,true).c_str(),
+					member.expand(true,true).c_str(),
+					path.expand(true,true).c_str()
 				};
 
 				for(Alert::Argument &argument : arguments) {
@@ -272,6 +273,7 @@
 			}
 
 			Udjat::Alert::Activation & set(const Abstract::Object &object) override {
+
 				path.expand(object);
 				iface.expand(object);
 				member.expand(object);
