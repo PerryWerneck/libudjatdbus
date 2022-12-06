@@ -31,6 +31,18 @@
 		debug("member=",member);
 		debug("path=",path);
 
+		if(!*iface) {
+			throw system_error(EINVAL,system_category(),"Empty D-Bus interface name");
+		}
+
+		if(!*member) {
+			throw system_error(EINVAL,system_category(),"Empty D-Bus member name");
+		}
+
+		if(!*path) {
+			throw system_error(EINVAL,system_category(),"Empty D-Bus path");
+		}
+
 		message = dbus_message_new_signal(path,iface,member);
 		dbus_message_iter_init_append(message, &iter);
 

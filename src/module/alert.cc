@@ -194,6 +194,8 @@
 					path.expand(true,true).c_str()
 				};
 
+				debug("---> Emitting D-Bus alert ",iface.c_str()," ",member.c_str(),"/",path.c_str());
+
 				for(Alert::Argument &argument : arguments) {
 					switch(argument.type) {
 						case DBUS_TYPE_BOOLEAN:
