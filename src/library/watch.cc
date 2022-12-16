@@ -173,21 +173,12 @@
 		return;
 	}
 
-	/*
-	// http://lists.freedesktop.org/archives/dbus/2007-October/008859.html
-	while(!dbus_watch_handle(watch, flags)) {
-		clog << "d-bus\tdbus_watch_handle needs more memory" << endl;
-		sleep(1);
-	}
-	*/
-
 	DBusConnection *c = connection->getConnection();
 	dbus_connection_ref(c);
 	while (dbus_connection_get_dispatch_status(c) == DBUS_DISPATCH_DATA_REMAINS)
         dbus_connection_dispatch(c);
 	dbus_connection_unref(c);
 
-	//handle_dispatch_status(connection->getConnection(), DBUS_DISPATCH_DATA_REMAINS, ctx);
  }
 
 
