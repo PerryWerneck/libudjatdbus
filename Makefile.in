@@ -161,8 +161,8 @@ $(BINRLS)/libudjatdbus.a: \
 	@$(AR) rcs $@ $^
 
 $(BINRLS)/$(PACKAGE_NAME)@LIBEXT@: \
-	$(BINRLS)/$(SONAME) \
-	$(foreach SRC, $(basename $(MODULE_SOURCES)), $(OBJRLS)/$(SRC).o)
+	$(foreach SRC, $(basename $(MODULE_SOURCES)), $(OBJRLS)/$(SRC).o) \
+	$(BINRLS)/$(SONAME)
 
 	@$(MKDIR) $(@D)
 	@echo $< ...
@@ -292,6 +292,7 @@ Debug: \
 	$(BINDBG)/udjat@EXEEXT@
 
 $(BINDBG)/udjat@EXEEXT@: \
+	$(BINDBG)/$(PACKAGE_NAME)@LIBEXT@ \
 	$(BINDBG)/$(SONAME) \
 	$(foreach SRC, $(basename $(TEST_SOURCES)), $(OBJDBG)/$(SRC).o)
 
@@ -303,8 +304,8 @@ $(BINDBG)/udjat@EXEEXT@: \
 		-L$(BINDBG) \
 		-Wl,-rpath,$(BINDBG) \
 		$(LDFLAGS) \
-		$(LIBS)
-
+		$(LIBS) \
+		@PUGIXML_LIBS@
 
 $(BINDBG)/$(SONAME): \
 	$(foreach SRC, $(basename $(LIBRARY_SOURCES)), $(OBJDBG)/$(SRC).o)
@@ -320,8 +321,8 @@ $(BINDBG)/$(SONAME): \
 		$(LIBS)
 
 $(BINDBG)/$(PACKAGE_NAME)@LIBEXT@: \
-	$(BINDBG)/$(SONAME) \
-	$(foreach SRC, $(basename $(MODULE_SOURCES)), $(OBJDBG)/$(SRC).o)
+	$(foreach SRC, $(basename $(MODULE_SOURCES)), $(OBJDBG)/$(SRC).o) \
+	$(BINDBG)/$(SONAME)
 
 	@$(MKDIR) $(@D)
 	@echo $< ...

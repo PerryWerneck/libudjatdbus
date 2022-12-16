@@ -193,6 +193,15 @@ AC_SUBST(DBUS_LIBS)
 AC_SUBST(DBUS_CFLAGS)
 
 dnl ---------------------------------------------------------------------------
+dnl test for pugixml
+dnl ---------------------------------------------------------------------------
+
+PKG_CHECK_MODULES(PUGIXML, pugixml, AC_DEFINE(HAVE_PUGIXML,[],[Do we have PUGIXML?]),AC_MSG_ERROR(pugixml is required))
+
+AC_SUBST(PUGIXML_LIBS)
+AC_SUBST(PUGIXML_CFLAGS)
+
+dnl ---------------------------------------------------------------------------
 dnl Output config
 dnl ---------------------------------------------------------------------------
 

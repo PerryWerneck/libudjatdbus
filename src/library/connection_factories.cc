@@ -192,6 +192,9 @@
 	DBus::Session::Session() : DBus::Connection(Factory(DBUS_BUS_SESSION),"sessionbus") {
 	}
 
+	DBus::Starter::Starter() : DBus::Connection(Factory(DBUS_BUS_STARTER),"starterbus") {
+	}
+
 	DBus::System & DBus::Connection::getSystemInstance() {
 		lock_guard<recursive_mutex> lock(guard);
 		static DBus::System instance;
@@ -203,5 +206,13 @@
 		static DBus::Session instance;
 		return instance;
 	}
+
+	DBus::Starter & DBus::Connection::getStarterInstance() {
+		lock_guard<recursive_mutex> lock(guard);
+		static DBus::Starter instance;
+		return instance;
+	}
+
+
 
  }

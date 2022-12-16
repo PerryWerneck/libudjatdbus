@@ -16,7 +16,10 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
-Summary:		DBus client/server module for udjat
+%define product_name %(pkg-config --variable=product_name libudjat)
+%define module_path %(pkg-config --variable=module_path libudjat)
+
+Summary:		DBus client/server module for %{product_name}
 Name:			udjat-module-dbus
 Version:		1.0
 Release:		0
@@ -42,10 +45,8 @@ BuildRequires:	pkgconfig(dbus-1)
 %define MINOR_VERSION %(echo %{version} | cut -d. -f2 | cut -d+ -f1)
 %define _libvrs %{MAJOR_VERSION}_%{MINOR_VERSION}
 
-Requires:		libudjatdbus%{_libvrs} = %{version}
-
 %description
-D-Bus client/server module for udjat
+D-Bus client/server module for %{product_name}
 
 #---[ Library ]-------------------------------------------------------------------------------------------------------
 
@@ -55,7 +56,7 @@ Summary:	UDJat core library
 %description -n libudjatdbus%{_libvrs}
 D-Bus client/server library for udjat
 
-Simple D-Bus abstraction library for udjat
+Simple D-Bus abstraction library for %{product_name}
 
 #---[ Development ]---------------------------------------------------------------------------------------------------
 
@@ -67,7 +68,7 @@ Requires:	libudjatdbus%{_libvrs} = %{version}
 
 %description -n udjat-dbus-devel
 
-Development files for Udjat's simple abstraction D-Bus library.
+Development files for %{product_name}'s simple abstraction D-Bus library.
 
 #---[ Build & Install ]-----------------------------------------------------------------------------------------------
 
@@ -86,7 +87,7 @@ make all
 %makeinstall
 
 %files
-%{_libdir}/udjat-modules/*/*.so
+%{module_path}/*.so
 
 %files -n libudjatdbus%{_libvrs}
 %defattr(-,root,root)

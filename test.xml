@@ -2,9 +2,9 @@
 
 <config>
 
-	<module name='http' required='no'>
+	<module name='civetweb' required='no'>
 		<!-- https://github.com/civetweb/civetweb/blob/master/docs/api/mg_start.md -->
-		<option name='listening_ports' value='8989' />
+		<option name='listening_ports' value='8990' />
 		<option name='request_timeout_ms' value='10000' />
 		<option name='enable_auth_domain_check' value='no' />
 	</module>
@@ -15,12 +15,12 @@
 
 	</agent>
 
-	<random name='alerter' update-timer='60' on-demand='false'>
+	<random name='alerter' update-timer='10' on-demand='false'>
 
-		<alert type='d-bus'>
+		<alert name='on-value' type='d-bus' trigger-event='value-change' dbus-path='${agent.path}' dbus-interface='br.eti.werneck.udjat' dbus-member='changed'>
 		
 			<argument type='int16' value='${agent.value}'/>
-			<argument type='string' value='${level}'/>
+			<argument type='string' value='${state.level}'/>
 			<argument type='string' value='${state.summary}'/>
 				
 		</alert>

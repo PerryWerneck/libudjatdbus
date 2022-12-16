@@ -23,148 +23,97 @@
  #include <udjat/alert/activation.h>
  #include <dbus/dbus-protocol.h>
  #include <udjat/tools/logger.h>
+ #include <udjat/tools/dbus.h>
+ #include <udjat/tools/string.h>
+ #include <string>
  #include "private.h"
 
  using namespace std;
 
  namespace Udjat {
 
-	DBus::Alert::Argument::Argument(const Abstract::Object UDJAT_UNUSED(&parent), const char UDJAT_UNUSED(*group), const pugi::xml_node &node) {
+	DBus::Alert::Argument::Argument(const Abstract::Object UDJAT_UNUSED(&parent), const char UDJAT_UNUSED(*group), const pugi::xml_node &node) : value{node,"value"} {
 
 		static const struct {
 			int type;
 			const char *name;
-			const std::function<void(DBusBasicValue &value, String &str)> call;
 		} types[] = {
 			{
 				DBUS_TYPE_BYTE,
 				"byte",
-				[](DBusBasicValue &value, String &str) {
-					value.byt = str[0];
-				}
 			},
 			{
 				DBUS_TYPE_BOOLEAN,
 				"boolean",
-				[](DBusBasicValue &value, String &str) {
-					value.bool_val = str.as_bool();
-				}
 			},
 			{
 				DBUS_TYPE_INT16,
 				"int16",
-				[](DBusBasicValue &value, String &str) {
-					value.i16 = (dbus_int16_t) atoi(str.c_str());
-				}
 			},
 			{
 				DBUS_TYPE_UINT16,
 				"uint16",
-				[](DBusBasicValue &value, String &str) {
-					value.u16 = (dbus_uint16_t) atoi(str.c_str());
-				}
 			},
 			{
 				DBUS_TYPE_INT32,
 				"int32",
-				[](DBusBasicValue &value, String &str) {
-					value.u32 = (dbus_int32_t) atoi(str.c_str());
-				}
 			},
 			{
 				DBUS_TYPE_UINT32,
 				"uint32",
-				[](DBusBasicValue &value, String &str) {
-					value.u32 = (dbus_uint32_t) atoi(str.c_str());
-				}
 			},
 			{
 				DBUS_TYPE_INT64,
 				"int64",
-				[](DBusBasicValue &value, String &str) {
-					value.i64 = (dbus_int64_t) atoll(str.c_str());
-				}
 			},
 			{
 				DBUS_TYPE_UINT64,
 				"uint64",
-				[](DBusBasicValue &value, String &str) {
-					value.u64 = (dbus_uint64_t) atoll(str.c_str());
-				}
 			},
 			{
 				DBUS_TYPE_DOUBLE,
 				"double",
-				[](DBusBasicValue &value, String &str) {
-					value.dbl = (double) atof(str.c_str());
-				}
 			},
 			{
 				DBUS_TYPE_STRING,
 				"string",
-				[](DBusBasicValue &value, String &str) {
-					value.str = (char *) Quark(str).c_str();
-				}
 			},
 			{
 				DBUS_TYPE_OBJECT_PATH,
 				"object-path",
-				[](DBusBasicValue UDJAT_UNUSED(&value), String UDJAT_UNUSED(&str)) {
-					throw system_error(ENOTSUP,system_category(), "Unsupported argument type");
-				}
 			},
 			{
 				DBUS_TYPE_SIGNATURE,
 				"signature",
-				[](DBusBasicValue UDJAT_UNUSED(&value), String UDJAT_UNUSED(&str)) {
-					throw system_error(ENOTSUP,system_category(), "Unsupported argument type");
-				}
 			},
 			{
 				DBUS_TYPE_UNIX_FD,
 				"unix-fd",
-				[](DBusBasicValue UDJAT_UNUSED(&value), String UDJAT_UNUSED(&str)) {
-					throw system_error(ENOTSUP,system_category(), "Unsupported argument type");
-				}
 			},
 			{
 				DBUS_TYPE_ARRAY,
 				"array",
-				[](DBusBasicValue UDJAT_UNUSED(&value), String UDJAT_UNUSED(&str)) {
-					throw system_error(ENOTSUP,system_category(), "Unsupported argument type");
-				}
 			},
 			{
 				DBUS_TYPE_VARIANT,
 				"variant",
-				[](DBusBasicValue UDJAT_UNUSED(&value), String UDJAT_UNUSED(&str)) {
-					throw system_error(ENOTSUP,system_category(), "Unsupported argument type");
-				}
 			},
 			{
 				DBUS_TYPE_STRUCT,
 				"struct",
-				[](DBusBasicValue UDJAT_UNUSED(&value), String UDJAT_UNUSED(&str)) {
-					throw system_error(ENOTSUP,system_category(), "Unsupported argument type");
-				}
 			},
 			{
 				DBUS_TYPE_DICT_ENTRY,
 				"dict-entry",
-				[](DBusBasicValue UDJAT_UNUSED(&value), String UDJAT_UNUSED(&str)) {
-					throw system_error(ENOTSUP,system_category(), "Unsupported argument type");
-				}
 			},
 		};
 
 		const char *type = node.attribute("type").as_string("string");
-		String str{node,"value"};
 
 		for(size_t ix = 0; ix < (sizeof(types)/sizeof(types[0]));ix++) {
 
 			if(!strcasecmp(type,types[ix].name)) {
 				this->type = types[ix].type;
-				types[ix].call(this->value,str);
 				break;
 			}
 
@@ -181,9 +130,22 @@
 
 		const char *group = node.attribute("settings-from").as_string("alert-defaults");
 
-		path = getAttribute(node,group,"dbus-path");
-		iface = getAttribute(node,group,"dbus-interface");
-		member = getAttribute(node,group,"dbus-member");
+		debug("Creating d-bus alert '",name(),"'");
+
+		path = getAttribute(node,group,"dbus-path","${agent.path}");
+		if(!*path) {
+			throw system_error(EINVAL,system_category(),"Required attribute <dbus-path> is missing or empty");
+		}
+
+		iface = getAttribute(node,group,"dbus-interface","");
+		if(!*iface) {
+			throw system_error(EINVAL,system_category(),"Required attribute <dbus-interface> is missing or empty");
+		}
+
+		member = getAttribute(node,group,"dbus-member","");
+		if(!*member) {
+			throw system_error(EINVAL,system_category(),"Required attribute <dbus-member> is missing or empty");
+		}
 
 		// Get bus type
 		{
@@ -218,26 +180,110 @@
 			String path;
 			String iface;
 			String member;
+			DBusBusType bustype;
 
-			std::vector<String> strings;
+			std::vector<Alert::Argument> arguments;
 
 		protected:
 
 			void emit() override {
-				throw system_error(ENOTSUP,system_category(), "D-Bus alert support is incomplete");
+
+				DBus::Signal signal{
+					iface.expand(true,true).c_str(),
+					member.expand(true,true).c_str(),
+					path.expand(true,true).c_str()
+				};
+
+				debug("---> Emitting D-Bus alert ",iface.c_str()," ",member.c_str(),"/",path.c_str());
+
+				for(Alert::Argument &argument : arguments) {
+					switch(argument.type) {
+						case DBUS_TYPE_BOOLEAN:
+							signal.push_back((bool) (stoi(argument.value) != 0));
+							break;
+
+						case DBUS_TYPE_INT16:
+							signal.push_back((int16_t) stoi(argument.value));
+							break;
+
+						case DBUS_TYPE_UINT16:
+							signal.push_back((uint16_t) stoul(argument.value));
+							break;
+
+						case DBUS_TYPE_INT32:
+							signal.push_back((int32_t) stoi(argument.value));
+							break;
+
+						case DBUS_TYPE_UINT32:
+							signal.push_back((uint32_t) stoul(argument.value));
+							break;
+
+						case DBUS_TYPE_INT64:
+							signal.push_back((int64_t) stoll(argument.value));
+							break;
+
+						case DBUS_TYPE_UINT64:
+							signal.push_back((uint64_t) stoull(argument.value));
+							break;
+
+						case DBUS_TYPE_STRING:
+							signal.push_back(argument.value);
+							break;
+
+						// case DBUS_TYPE_DOUBLE:
+						// case DBUS_TYPE_BYTE:
+						// case DBUS_TYPE_OBJECT_PATH:
+						// case DBUS_TYPE_SIGNATURE:
+						// case DBUS_TYPE_UNIX_FD:
+						// case DBUS_TYPE_ARRAY:
+						// case DBUS_TYPE_VARIANT:
+						// case DBUS_TYPE_STRUCT:
+						// case DBUS_TYPE_DICT_ENTRY:
+						default:
+							throw system_error(EINVAL,system_category(), "Unsupported value type");
+
+					}
+					debug("Argument: ",argument.value);
+				}
+
+				switch(bustype) {
+				case DBUS_BUS_SESSION:
+					signal.session();
+					break;
+
+				case DBUS_BUS_SYSTEM:
+					signal.system();
+					break;
+
+				case DBUS_BUS_STARTER:
+					signal.starter();
+					break;
+
+				default:
+					throw system_error(EINVAL,system_category(), "Invalid bus type");
+				}
+
 			}
 
 		public:
-			Activation(const DBus::Alert *alert) : Udjat::Alert::Activation(alert), path(alert->path), iface(alert->iface), member(alert->member) {
+			Activation(const DBus::Alert *alert) : Udjat::Alert::Activation(alert), path(alert->path), iface(alert->iface), member(alert->member), bustype(alert->bus()) {
 
-				// TODO: Parse arguments.
+				for(const Alert::Argument &argument : alert->args()) {
+					arguments.push_back(argument);
+				}
 
 			}
 
 			Udjat::Alert::Activation & set(const Abstract::Object &object) override {
+
 				path.expand(object);
 				iface.expand(object);
 				member.expand(object);
+
+				for(Alert::Argument &argument : arguments) {
+					argument.value.expand(object);
+				}
+
 				return *this;
 			}
 
@@ -245,13 +291,18 @@
 				path.expand(expander);
 				iface.expand(expander);
 				member.expand(expander);
+
+				for(Alert::Argument &argument : arguments) {
+					argument.value.expand(expander);
+				}
+
 				return *this;
 			}
 
 		};
 
-
 		return make_shared<Activation>(this);
+
 	}
 
  }

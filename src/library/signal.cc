@@ -19,12 +19,29 @@
 
  #include <config.h>
  #include "private.h"
+ #include <udjat/tools/logger.h>
 
  using namespace std;
 
  namespace Udjat {
 
 	DBus::Signal::Signal(const char *iface, const char *member, const char *path) {
+
+		debug("iface=",iface);
+		debug("member=",member);
+		debug("path=",path);
+
+		if(!*iface) {
+			throw system_error(EINVAL,system_category(),"Empty D-Bus interface name");
+		}
+
+		if(!*member) {
+			throw system_error(EINVAL,system_category(),"Empty D-Bus member name");
+		}
+
+		if(!*path) {
+			throw system_error(EINVAL,system_category(),"Empty D-Bus path");
+		}
 
 		message = dbus_message_new_signal(path,iface,member);
 		dbus_message_iter_init_append(message, &iter);
@@ -43,6 +60,10 @@
 
 	void DBus::Signal::session() {
 		send(Connection::getSessionInstance());
+	}
+
+	void DBus::Signal::starter() {
+		send(Connection::getStarterInstance());
 	}
 
 	void DBus::Signal::send() {
