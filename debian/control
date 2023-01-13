@@ -8,7 +8,7 @@ Package: libudjatdbus
 Architecture: any
 Section: libs
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Provides: libudjatdbus (= ${binary:Version}), libudjatdbus (= 1.0)
+Provides: libudjatdbus (= ${binary:Version}), libudjatdbus (= 1.1)
 Description: Udjat core library.
  D-Bus library for Udjat.
 
