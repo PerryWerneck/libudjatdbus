@@ -530,6 +530,21 @@
 		throw runtime_error( string{"Unable to convert dbus value "} + ((char) type) + " to unsigned int");
 	}
 
+	const Udjat::Value & DBus::Value::get(unsigned short &value) const {
+		value = convert<unsigned short>(type,this->value);
+		return *this;
+	}
+
+	const Udjat::Value & DBus::Value::get(short &value) const {
+		value = convert<short>(type,this->value);
+		return *this;
+	}
+
+	const Udjat::Value & DBus::Value::get(int &value) const {
+		value = convert<int>(type,this->value);
+		return *this;
+	}
+
 	const Udjat::Value & DBus::Value::get(unsigned int &value) const {
 		value = convert<unsigned int>(type,this->value);
 		return *this;

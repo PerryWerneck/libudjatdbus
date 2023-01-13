@@ -287,7 +287,7 @@
 				return *this;
 			}
 
-			Udjat::Alert::Activation & expand(const std::function<bool(const char *key, std::string &value)> &expander) override {
+			Udjat::Alert::Activation & set(const std::function<bool(const char *key, std::string &value)> &expander) override {
 				path.expand(expander);
 				iface.expand(expander);
 				member.expand(expander);
