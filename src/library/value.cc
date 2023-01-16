@@ -488,54 +488,90 @@
 		return value.fd;
 	}
 
-	const Udjat::Value & DBus::Value::get(unsigned int &value) const {
+	template<typename T>
+	inline T convert(const int type, const DBusBasicValue &value){
 
-		switch(this->type) {
+		switch(type) {
 		EXCEPTION_ON_UNSUPPORTED_OR_INVALID
 
 		case DBUS_TYPE_STRING:
-			value = (unsigned int) stoi(this->value.str);
-			break;
+			return (T) stoi(value.str);
 
 		case DBUS_TYPE_BOOLEAN:
-			value = (this->value.bool_val ? 1 : 0);
-			break;
+			return value.bool_val ? 1 : 0;
 
 		case DBUS_TYPE_INT16:
-			value = (unsigned int) this->value.i16;
-			break;
+			return (T) value.i16;
 
 		case DBUS_TYPE_INT32:
-			value = (unsigned int) this->value.i32;
-			break;
+			return (T) value.i32;
 
 		case DBUS_TYPE_INT64:
-			value = (unsigned int) this->value.i64;
-			break;
+			return (T) value.i64;
 
 		case DBUS_TYPE_UINT16:
-			value = this->value.u16;
+			return (T) value.u16;
 			break;
 
 		case DBUS_TYPE_UINT32:
-			value = this->value.u32;
+			return (T) value.u32;
 			break;
 
 		case DBUS_TYPE_UINT64:
-			value = this->value.u64;
+			return (T) value.u64;
 			break;
 
 		case DBUS_TYPE_DOUBLE:
-			value = (unsigned int) this->value.dbl;
+			return (T) value.dbl;
 			break;
-
-		default:
-			throw runtime_error( string{"Unable to convert dbus value "} + ((char) type) + " to unsigned int");
 
 		}
 
-		return *this;
+		throw runtime_error( string{"Unable to convert dbus value "} + ((char) type) + " to unsigned int");
+	}
 
+	const Udjat::Value & DBus::Value::get(unsigned short &value) const {
+		value = convert<unsigned short>(type,this->value);
+		return *this;
+	}
+
+	const Udjat::Value & DBus::Value::get(short &value) const {
+		value = convert<short>(type,this->value);
+		return *this;
+	}
+
+	const Udjat::Value & DBus::Value::get(int &value) const {
+		value = convert<int>(type,this->value);
+		return *this;
+	}
+
+	const Udjat::Value & DBus::Value::get(unsigned int &value) const {
+		value = convert<unsigned int>(type,this->value);
+		return *this;
+	}
+
+	const Udjat::Value & DBus::Value::get(long &value) const {
+		value = convert<long>(type,this->value);
+		return *this;
+	}
+
+	const Udjat::Value & DBus::Value::get(unsigned long &value) const {
+		value = convert<unsigned long>(type,this->value);
+		return *this;
+	}
+
+	const Udjat::Value & DBus::Value::get(TimeStamp &value) const {
+		throw system_error(ENOTSUP,system_category(),"Timestamp conversion is not available");
+	}
+
+	const Udjat::Value & DBus::Value::get(float &value) const {
+		value = convert<float>(type,this->value);
+		return *this;
+	}
+
+	const Udjat::Value & DBus::Value::get(double &value) const {
+		value = convert<double>(type,this->value);
+		return *this;
 	}
 
  }

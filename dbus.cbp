@@ -53,18 +53,14 @@
 		<Unit filename="src/library/message/message.cc" />
 		<Unit filename="src/library/message/push_back.cc" />
 		<Unit filename="src/library/private.h" />
-		<Unit filename="src/library/request.cc" />
-		<Unit filename="src/library/response.cc" />
 		<Unit filename="src/library/signal.cc" />
 		<Unit filename="src/library/signals.cc" />
 		<Unit filename="src/library/timeout.cc" />
 		<Unit filename="src/library/value.cc" />
 		<Unit filename="src/library/watch.cc" />
-		<Unit filename="src/library/worker.cc" />
 		<Unit filename="src/module/alert.cc" />
 		<Unit filename="src/module/init.cc" />
 		<Unit filename="src/module/private.h" />
-		<Unit filename="src/module/udjatworker.cc" />
 		<Unit filename="src/testprogram/testprogram.cc" />
 		<Extensions />
 	</Project>
