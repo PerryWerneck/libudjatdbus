@@ -8,5 +8,5 @@ Description: UDJAT D-Bus library
 Version: @PACKAGE_VERSION@
 Libs: -ludjatdbus.static @DBUS_LIBS@
 Libs.private: @LIBS@ @UDJAT_LIBS@
-Cflags: -I@includedir@
+Cflags: @DBUS_CFLAGS@
 
