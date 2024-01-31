@@ -26,6 +26,7 @@
  #include <unistd.h>
  #include <sys/stat.h>
  #include <fcntl.h>
+ #include <udjat/tools/logger.h>
 
  #ifdef HAVE_SYSTEMD
 	#include <systemd/sd-login.h>
@@ -51,6 +52,9 @@
 	DBusConnection * DBus::Connection::Factory(uid_t uid, const char *sid) {
 
 		/// @brief File on /proc/[PID]/environ
+
+		Logger::String{"Opening connection to user '",uid,"'"}.trace("d-bus");
+
 		class Environ {
 		private:
 			int descriptor = -1;
@@ -183,16 +187,28 @@
 			throw system_error(ENOENT,system_category(),"Unable to find D-Bus session for requested user");
         }
 
+        if(Logger::enabled(Logger::Trace)) {
+			int fd = -1;
+			if(dbus_connection_get_socket(connection,&fd)) {
+				Logger::String("Got connection '",((unsigned long) connection),"' to user '",uid,"' on socket '",fd,"'").trace("d-bus");
+			} else {
+				Logger::String("Unable to got socket for connection '",((unsigned long) connection),"' to user '",uid,"'").trace("d-bus");
+			}
+        }
+
 		return connection;
 	}
 
-	DBus::System::System() : DBus::Connection(Factory(DBUS_BUS_SYSTEM),"sysbus") {
+	DBus::System::System() : DBus::Connection{Factory(DBUS_BUS_SYSTEM),"sysbus"} {
+		Logger::String{"System bus created"}.trace("d-bus");
 	}
 
-	DBus::Session::Session() : DBus::Connection(Factory(DBUS_BUS_SESSION),"sessionbus") {
+	DBus::Session::Session() : DBus::Connection{Factory(DBUS_BUS_SESSION),"sessionbus"} {
+		Logger::String{"Session bus created"}.trace("d-bus");
 	}
 
-	DBus::Starter::Starter() : DBus::Connection(Factory(DBUS_BUS_STARTER),"starterbus") {
+	DBus::Starter::Starter() : DBus::Connection{Factory(DBUS_BUS_STARTER),"starterbus"} {
+		Logger::String{"Starter bus created"}.trace("d-bus");
 	}
 
 	DBus::System & DBus::Connection::getSystemInstance() {

@@ -211,8 +211,6 @@
 				thread->join();
 				delete thread;
 
-				dbus_connection_unref(connection);
-				connection = nullptr;
 
 			} else if(!use_thread) {
 
@@ -240,9 +238,19 @@
 					error() << "dbus_connection_set_timeout_functions has failed" << endl;
 				}
 
-				dbus_connection_unref(connection);
-				connection = nullptr;
 			}
+
+			if(Logger::enabled(Logger::Trace)) {
+				int fd = -1;
+				if(dbus_connection_get_socket(connection,&fd)) {
+					Logger::String("Releasing connection '",((unsigned long) connection),"' on socket '",fd,"'").trace("d-bus");
+				} else {
+					Logger::String("Unable to got socket for connection '",((unsigned long) connection),"'").trace("d-bus");
+				}
+			}
+
+			dbus_connection_unref(connection);
+			connection = nullptr;
 
 		} else {
 

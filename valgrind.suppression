@@ -1,8 +1,7 @@
 {
-   civetweb-init
-   Memcheck:Cond
-   obj:/usr/lib64/libcivetweb.*
-   fun:start_thread
-   fun:clone
+   SystemBUS
+   Memcheck:Leak
+   ...
+   fun:sd_bus_new
 }
 

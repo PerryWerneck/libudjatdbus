@@ -15,7 +15,7 @@
 
 	</agent>
 
-	<random name='alerter' update-timer='10' on-demand='false'>
+	<agent type='random' name='alerter' update-timer='10' on-demand='false'>
 
 		<alert name='on-value' type='d-bus' trigger-event='value-change' dbus-path='${agent.path}' dbus-interface='br.eti.werneck.udjat' dbus-member='changed'>
 		
@@ -25,7 +25,7 @@
 				
 		</alert>
 
-	</random>
+	</agent>
 	
 </config>
 
