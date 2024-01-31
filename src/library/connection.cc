@@ -32,6 +32,27 @@
 
  namespace Udjat {
 
+	class DataSlot {
+	private:
+		dbus_int32_t slot = 0;
+		DataSlot() {
+			dbus_connection_allocate_data_slot(&slot);
+			Logger::String{"Got slot '",slot,"' for watching connections"}.trace("d-bus");
+		}
+
+	public:
+
+		static DataSlot & getInstance() {
+			static DataSlot instance;
+			return instance;
+		}
+
+		inline dbus_int32_t value() const noexcept {
+			return slot;
+		}
+
+	};
+
 	std::recursive_mutex DBus::Connection::guard;
 
 	DBus::Connection & DBus::Connection::getInstance() {
@@ -172,13 +193,21 @@
 		DBusError err;
 		dbus_error_init(&err);
 
-		Logger::trace() << "Opening '" << busname << "'" << endl;
 		DBusConnection * connection = dbus_connection_open(busname, &err);
 		if(dbus_error_is_set(&err)) {
 			std::string message(err.message);
 			dbus_error_free(&err);
 			throw std::runtime_error(message);
 		}
+
+        if(Logger::enabled(Logger::Trace)) {
+			int fd = -1;
+			if(dbus_connection_get_socket(connection,&fd)) {
+				Logger::String("Got connection '",((unsigned long) connection),"' to '",busname,"' on socket '",fd,"'").trace("d-bus");
+			} else {
+				Logger::String("Unable to got socket for connection '",((unsigned long) connection),"' to '",busname,"'").trace("d-bus");
+			}
+        }
 
 		return connection;
 

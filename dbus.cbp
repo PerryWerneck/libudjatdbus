@@ -43,7 +43,9 @@
 			<Add option="-pthread" />
 		</Linker>
 		<Unit filename="src/include/config.h" />
+		<Unit filename="src/include/udjat/alert/d-bus.h" />
 		<Unit filename="src/include/udjat/tools/dbus.h" />
+		<Unit filename="src/library/alert.cc" />
 		<Unit filename="src/library/call.cc" />
 		<Unit filename="src/library/connection.cc" />
 		<Unit filename="src/library/connection_factories.cc" />
@@ -58,7 +60,6 @@
 		<Unit filename="src/library/timeout.cc" />
 		<Unit filename="src/library/value.cc" />
 		<Unit filename="src/library/watch.cc" />
-		<Unit filename="src/module/alert.cc" />
 		<Unit filename="src/module/init.cc" />
 		<Unit filename="src/module/private.h" />
 		<Unit filename="src/testprogram/testprogram.cc" />

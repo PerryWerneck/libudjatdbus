@@ -24,6 +24,7 @@
  #include <udjat/moduleinfo.h>
  #include <udjat/factory.h>
  #include <dbus/dbus-protocol.h>
+ #include <udjat/alert/d-bus.h>
 
  using namespace Udjat;
 
@@ -42,6 +43,7 @@
 		};
 
 		std::shared_ptr<Abstract::Alert> AlertFactory(const Abstract::Object &parent, const pugi::xml_node &node) const override {
+			debug("-------------------------------------------> CREATING ALERT");
 			return make_shared<DBus::Alert>(parent,node);
 		}
 

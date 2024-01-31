@@ -25,7 +25,6 @@
  #include <udjat/defs.h>
  #include <udjat/tools/dbus.h>
  #include <udjat/tools/string.h>
- #include <udjat/alert/abstract.h>
  #include <iostream>
  #include <system_error>
 
@@ -35,53 +34,6 @@
 
 	namespace DBus {
 
-		class Alert : public Udjat::Abstract::Alert {
-		public:
-
-			/// @brief D-Bus message argument.
-			struct Argument {
-				int type;			///< @brief D-Bus data type.
-				String value;		///< @brief Argument value.
-
-				/// @brief Construct D-Bus argument from XML node.
-				/// @param parent Parent object.
-				/// @param group Group name.
-				/// @param node XML node for argument properties.
-				Argument(const Abstract::Object &parent, const char *group, const pugi::xml_node &node);
-			};
-
-		private:
-
-			/// @brief The bus type for alert.
-			DBusBusType bustype = DBUS_BUS_SESSION;
-
-			/// @brief The path to the object emitting the signal.
-			const char *path = nullptr;
-
-			/// @brief The interface the signal is emitted from.
-			const char *iface = nullptr;
-
-			/// @brief Name of the signal.
-			const char *member = nullptr;
-
-			/// @brief D-Bus message arguments.
-			std::vector<Argument> arguments;
-
-		public:
-			Alert(const Abstract::Object &parent, const pugi::xml_node &node);
-			virtual ~Alert();
-
-			std::shared_ptr<Udjat::Alert::Activation> ActivationFactory() const override;
-
-			inline const std::vector<Argument> args() const noexcept {
-				return arguments;
-			}
-
-			inline DBusBusType bus() const noexcept {
-				return bustype;
-			}
-
-		};
 
 	}
 
