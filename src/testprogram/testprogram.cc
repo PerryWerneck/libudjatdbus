@@ -29,7 +29,6 @@
  using namespace Udjat;
  using namespace Udjat::DBus;
 
- /*
  static const Udjat::ModuleInfo moduleinfo { "Test program" };
 
  class RandomFactory : public Udjat::Factory {
@@ -66,7 +65,6 @@
 	}
 
  };
- */
 
  int main(int argc, char **argv) {
 
@@ -74,10 +72,10 @@
 	Logger::redirect();
 	Logger::console(true);
 
-	UserBus bus{1000};
+	SessionBus bus;
+	bus.push_back("com.example.signal");
 
-	/*
-	udjat_module_init();
+	// udjat_module_init();
 	RandomFactory rfactory;
 
 	auto rc = Application{}.run(argc,argv,"./test.xml");
@@ -85,7 +83,4 @@
 	debug("Application exits with rc=",rc);
 
 	return rc;
-	*/
-
-	return 0;
 }

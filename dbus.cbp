@@ -48,6 +48,7 @@
 		<Unit filename="src/include/udjat/tools/dbus.h" />
 		<Unit filename="src/include/udjat/tools/dbus/connection.h" />
 		<Unit filename="src/include/udjat/tools/dbus/defs.h" />
+		<Unit filename="src/include/udjat/tools/dbus/interface.h" />
 		<Unit filename="src/include/udjat/tools/dbus/message.h" />
 		<Unit filename="src/include/udjat/tools/dbus/value.h" />
 		<Unit filename="src/library/alert.cc" />

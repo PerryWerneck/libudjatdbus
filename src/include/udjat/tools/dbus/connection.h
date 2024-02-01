@@ -25,9 +25,12 @@
 
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
+ #include <udjat/tools/dbus/interface.h>
  #include <string>
  #include <mutex>
  #include <thread>
+ #include <list>
+ #include <udjat/tools/xml.h>
 
  namespace Udjat {
 
@@ -54,6 +57,12 @@
 				/// @brief Message filter method.
 				static DBusHandlerResult filter(DBusConnection *, DBusMessage *, Abstract::DBus::Connection *) noexcept;
 
+				/// @brief Interfaces in this connection.
+				std::list<Udjat::DBus::Interface> interfaces;
+
+				void insert(const Udjat::DBus::Interface &interface);
+				void remove(const Udjat::DBus::Interface &interface);
+
 			protected:
 
 				/// @brief Connection to D-Bus.
@@ -79,6 +88,18 @@
 				virtual ~Connection();
 
 				void flush() noexcept;
+
+				void push_back(Udjat::DBus::Interface &interface);
+				Udjat::DBus::Interface & push_back(const char *interface);
+				Udjat::DBus::Interface & push_back(const XML::Node &node);
+
+				inline auto begin() const {
+					return interfaces.begin();
+				}
+
+				inline auto end() const {
+					return interfaces.end();
+				}
 
 			};
 

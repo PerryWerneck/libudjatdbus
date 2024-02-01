@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2021 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,8 +17,31 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /*
  #include <config.h>
+ #include <udjat/defs.h>
+ #include <udjat/tools/dbus/interface.h>
+ #include <udjat/tools/string.h>
+
+ namespace Udjat {
+
+	DBus::Interface::Interface(const char *n) : std::string{n}, type{"signal"} {
+	}
+
+	DBus::Interface::~Interface() {
+	}
+
+	const std::string DBus::Interface::rule() const {
+		return String{"type='",type,"',interface='",c_str(),"'"};
+	}
+
+	bool DBus::Interface::operator==(const char *intf) const noexcept {
+		return false;
+	}
+
+ }
+
+
+ /*
  #include <udjat/tools/dbus.h>
  #include <udjat/worker.h>
  #include <iostream>

@@ -61,7 +61,7 @@ DEPENDS= \
 	Makefile
 
 CFLAGS= \
-	@CXXFLAGS@ \
+	@CPPFLAGS@ \
 	-Isrc/include \
 	-DBUILD_DATE=`date +%Y%m%d` \
 	@UDJAT_CFLAGS@ \
@@ -372,7 +372,7 @@ clean: \
 	cleanRelease
 
 
--include $(foreach SRC, $(basename $(LIBRARY_SOURCES)), $(OBJDBG)/$(SRC).d)
--include $(foreach SRC, $(basename $(LIBRARY_SOURCES)), $(OBJRLS)/$(SRC).d)
+-include $(foreach SRC, $(basename $(LIBRARY_SOURCES) $(MODULE_SOURCES) $(TEST_SOURCES)), $(OBJDBG)/$(SRC).d)
+-include $(foreach SRC, $(basename $(LIBRARY_SOURCES) $(MODULE_SOURCES) $(TEST_SOURCES)), $(OBJRLS)/$(SRC).d)
 
 

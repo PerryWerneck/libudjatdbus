@@ -27,9 +27,11 @@
  #include <string>
  #include <mutex>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/mainloop.h>
  #include <private/mainloop.h>
+ #include <udjat/tools/string.h>
 
  using namespace std;
 
@@ -37,7 +39,7 @@
 
 	class DataSlot {
 	private:
-		dbus_int32_t slot = -1;
+		dbus_int32_t slot = -1; // The passed-in slot must be initialized to -1, and is filled in with the slot ID
 		DataSlot() {
 			dbus_connection_allocate_data_slot(&slot);
 			Logger::String{"Got slot '",slot,"' for connection watchdog"}.trace("d-bus");
@@ -170,13 +172,11 @@
 
 		flush();
 
-		// Remove listeners.
-		/*
-		interfaces.remove_if([this](Interface &intf) {
-			intf.remove_from(this);
+		// Remove interfaces.
+		interfaces.remove_if([this](Udjat::DBus::Interface &intf) {
+			remove(intf);
 			return true;
 		});
-		*/
 
 		// Remove filter
 		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) filter, this);
@@ -210,6 +210,8 @@
 	}
 
 	DBusHandlerResult Abstract::DBus::Connection::filter(DBusConnection *, DBusMessage *message, Abstract::DBus::Connection *connection) noexcept {
+
+		debug(__FUNCTION__);
 
 		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_SIGNAL) {
 			return connection->on_signal(message);
@@ -279,5 +281,71 @@
 	void Abstract::DBus::Connection::flush() noexcept {
 		dbus_connection_flush(conn);
 	}
+
+	void Abstract::DBus::Connection::insert(const Udjat::DBus::Interface &interface) {
+
+		Logger::String{"Connecting to '",interface.rule().c_str(),"'"}.trace(name());
+
+		DBusError error;
+		dbus_error_init(&error);
+
+		dbus_bus_add_match(conn,interface.rule().c_str(), &error);
+		dbus_connection_flush(conn);
+
+		if (dbus_error_is_set(&error)) {
+			Logger::String message{"Error '",error.message,"' adding interface"};
+			dbus_error_free(&error);
+			throw std::runtime_error(message);
+		}
+
+	}
+
+	void Abstract::DBus::Connection::remove(const Udjat::DBus::Interface &interface) {
+
+		Logger::String{"Disconnecting from '",interface.rule().c_str(),"'"}.trace(name());
+
+		DBusError error;
+		dbus_error_init(&error);
+
+		dbus_bus_remove_match(conn,interface.rule().c_str(), &error);
+
+		if(dbus_error_is_set(&error)) {
+			Logger::String{"Error '",error.message,"' removing interface '",interface.c_str(),"'"}.error(name());
+			dbus_error_free(&error);
+		}
+
+	}
+
+	void Abstract::DBus::Connection::push_back(Udjat::DBus::Interface &intf) {
+		lock_guard<mutex> lock(guard);
+		insert(intf);
+		interfaces.push_back(intf);
+	}
+
+	Udjat::DBus::Interface & Abstract::DBus::Connection::push_back(const char *intf) {
+
+		if(!(intf && *intf)) {
+			throw system_error(EINVAL,system_category(),"A dbus interface name is required");
+		}
+
+		lock_guard<mutex> lock(guard);
+
+		for(auto &inserted : interfaces) {
+			if(!strcasecmp(inserted.c_str(),intf)) {
+				Logger::String{"Already watching '",intf,"'"}.trace(name());
+				return inserted;
+			}
+		}
+
+		Udjat::DBus::Interface & interface = interfaces.emplace_back(intf);
+		insert(interface);
+
+		return interface;
+	}
+
+	Udjat::DBus::Interface & Abstract::DBus::Connection::push_back(const XML::Node &node) {
+		return push_back(String{node,"dbus-interface"}.c_str());
+	}
+
 
  }
