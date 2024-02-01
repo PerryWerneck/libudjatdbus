@@ -219,6 +219,10 @@ install-dev: \
 		$(DESTDIR)$(includedir)/udjat/tools/dbus
 
 	@$(INSTALL_DATA) \
+		src/include/udjat/tools/*.h \
+		$(DESTDIR)$(includedir)/udjat/tools
+
+	@$(INSTALL_DATA) \
 		src/include/udjat/tools/dbus/*.h \
 		$(DESTDIR)$(includedir)/udjat/tools/dbus
 

@@ -93,7 +93,9 @@ make all
 
 %files -n udjat-dbus-devel
 %defattr(-,root,root)
+%dir %{_includedir}/udjat/tools/dbus
 %{_includedir}/udjat/tools/dbus/*.h
+%{_includedir}/udjat/alert/*.h
 %{_libdir}/*.so
 %exclude %{_libdir}/*.a
 %{_libdir}/pkgconfig/*.pc
