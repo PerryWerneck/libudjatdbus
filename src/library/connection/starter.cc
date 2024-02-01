@@ -28,7 +28,7 @@
 
  namespace Udjat {
 
-	DBus::StarterBus::StarterBus() : Abstract::DBus::Connection{"SysBUS",SharedConnectionFactory(DBUS_BUS_STARTER)} {
+	DBus::StarterBus::StarterBus() : Abstract::DBus::Connection{"StarterBUS",SharedConnectionFactory(DBUS_BUS_STARTER)} {
 		open();
 	}
 

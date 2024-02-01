@@ -27,6 +27,7 @@
 
  using namespace std;
  using namespace Udjat;
+ using namespace Udjat::DBus;
 
  /*
  static const Udjat::ModuleInfo moduleinfo { "Test program" };
@@ -73,7 +74,7 @@
 	Logger::redirect();
 	Logger::console(true);
 
-	Udjat::DBus::SessionBus bus;
+	UserBus bus{1000};
 
 	/*
 	udjat_module_init();

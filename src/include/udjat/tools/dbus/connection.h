@@ -113,6 +113,14 @@
 
 		};
 
+		/// @brief Private session to an user session.
+		class UDJAT_API UserBus : public Abstract::DBus::Connection {
+		public:
+			UserBus(uid_t uid, const char *sid = "");
+			virtual ~UserBus();
+
+		};
+
  	}
 
  }

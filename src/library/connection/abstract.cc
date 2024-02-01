@@ -37,7 +37,7 @@
 
 	class DataSlot {
 	private:
-		dbus_int32_t slot = 0;
+		dbus_int32_t slot = -1;
 		DataSlot() {
 			dbus_connection_allocate_data_slot(&slot);
 			Logger::String{"Got slot '",slot,"' for connection watchdog"}.trace("d-bus");
