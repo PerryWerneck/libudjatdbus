@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+ /*
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/object.h>
@@ -131,6 +132,10 @@
 		const char *group = node.attribute("settings-from").as_string("alert-defaults");
 
 		debug("Creating d-bus alert '",name(),"'");
+
+		debug("------------------------------------------");
+		DBus::Connection session_bus{1000};
+		debug("------------------------------------------");
 
 		path = getAttribute(node,group,"dbus-path","${agent.path}");
 		if(!*path) {
@@ -308,4 +313,5 @@
 	}
 
  }
+ */
 

@@ -33,23 +33,18 @@
  /// @brief Register udjat module.
  Udjat::Module * udjat_module_init() {
 
-	class Controller : public Udjat::Module, Udjat::Factory {
+	class Module : public Udjat::Module, Udjat::Factory {
 	public:
 
-		Controller() : Udjat::Module("d-bus",moduleinfo), Udjat::Factory("d-bus",moduleinfo) {
+		Module() : Udjat::Module("d-bus",moduleinfo), Udjat::Factory("d-bus",moduleinfo) {
 		};
 
-		virtual ~Controller() {
+		virtual ~Module() {
 		};
-
-		std::shared_ptr<Abstract::Alert> AlertFactory(const Abstract::Object &parent, const pugi::xml_node &node) const override {
-			debug("-------------------------------------------> CREATING ALERT");
-			return make_shared<DBus::Alert>(parent,node);
-		}
 
 	};
 
-	return new Controller();
+	return new Module();
  }
 
 

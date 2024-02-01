@@ -19,6 +19,7 @@
 
  #pragma once
 
+ /*
  #include <udjat/defs.h>
  #include <udjat/tools/value.h>
  #include <ostream>
@@ -29,215 +30,12 @@
  #include <map>
  #include <thread>
  #include <vector>
+ #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/dbus/value.h>
 
  namespace Udjat {
 
 	namespace DBus {
-
-		class Connection;
-		class Message;
-		class System;
-		class Session;
-		class Starter;
-
-		/// @brief D-Bus Value
-		class UDJAT_API Value : public Udjat::Value {
-		private:
-
-			/// @brief D-Bus data type.
-			int type;
-
-			/// @brief D-Bus value.
-			DBusBasicValue value;
-
-			/// @brief Value children.
-			std::map<std::string,Value *> children;
-
-			/// @brief Check if the value dont have a signature.
-			/// @return true if the value can be added on signature.
-			inline bool noSignature() const noexcept {
-				return (type == DBUS_TYPE_INVALID || type == DBUS_TYPE_ARRAY || type == DBUS_TYPE_DICT_ENTRY);
-			}
-
-			/// @brief Get signature for array export.
-			std::string getArraySignature() const noexcept;
-
-		public:
-
-			// String values have an strdup; the copy can invalidate the pointer.
-			Value(const Value *src);
-			Value(const Value &src);
-			Value(Message &message);
-
-			Value();
-			Value(int type, const char *value = nullptr);
-			virtual ~Value();
-
-			/// @brief Add value on iter.
-			void get(DBusMessageIter *iter) const;
-
-			/// @brief Set value from iter.
-			/// @return true if the value is valid.
-			bool set(DBusMessageIter *iter);
-
-			/// @brief The value has children?
-			inline bool empty() const noexcept {
-				return children.empty();
-			}
-
-			inline bool operator==(int type) const noexcept {
-				return this->type == type;
-			}
-
-			Udjat::Value & reset(const Udjat::Value::Type type = Udjat::Value::Undefined) override;
-
-			bool isNull() const override;
-
-			Udjat::Value & operator[](const char *name) override;
-
-			Udjat::Value & append(const Type type) override;
-			Udjat::Value & set(const Udjat::Value &value) override;
-
-			Udjat::Value & set(const char *value, const Type type) override;
-			Udjat::Value & set(const short value) override;
-			Udjat::Value & set(const unsigned short value) override;
-			Udjat::Value & set(const int value) override;
-			Udjat::Value & set(const unsigned int value) override;
-			Udjat::Value & set(const long value) override;
-			Udjat::Value & set(const unsigned long value) override;
-			Udjat::Value & set(const TimeStamp value) override;
-			Udjat::Value & set(const bool value) override;
-			Udjat::Value & set(const float value) override;
-			Udjat::Value & set(const double value) override;
-
-			const Udjat::Value & get(std::string &value) const override;
-			const Udjat::Value & get(short &value) const override;
-			const Udjat::Value & get(unsigned short &value) const override;
-			const Udjat::Value & get(int &value) const override;
-			const Udjat::Value & get(unsigned int &value) const override;
-			const Udjat::Value & get(long &value) const override;
-			const Udjat::Value & get(unsigned long &value) const override;
-			const Udjat::Value & get(TimeStamp &value) const override;
-			const Udjat::Value & get(bool &value) const override;
-			const Udjat::Value & get(float &value) const override;
-			const Udjat::Value & get(double &value) const override;
-
-			int getFD() const;
-
-		};
-
-		/// @brief D-Bus message
-		class UDJAT_API Message {
-		protected:
-
-			struct {
-				DBusMessage *value = nullptr;
-				DBusMessageIter iter;
-			} message;
-
-			const char *name = "dbus";
-
-		private:
-
-			struct {
-				bool valid = false;		/// @brief True if this is an error message.
-				std::string name;		/// @brief Error name.
-				std::string message;	/// @brief Error Message.
-			} err;
-
-			inline Message & add() {
-				return *this;
-			}
-
-			template<typename T, typename... Targs>
-			Message & add(const T &value, Targs... Fargs) {
-				push_back(value);
-				return add(Fargs...);
-			}
-
-		public:
-			Message(const Message &message) = delete;
-			Message(const Message *message) = delete;
-
-			Message(const char *destination, const char *path, const char *iface, const char *method);
-
-			template<typename T, typename... Targs>
-			Message(const char *destination, const char *path, const char *iface, const char *method, const T &value, Targs... Fargs)
-				: Message(destination,path,iface,method) {
-				push_back(value);
-				add(Fargs...);
-			}
-
-			Message(const DBusError &error);
-			Message(DBusMessage *m);
-
-			~Message();
-
-			inline operator DBusMessage *() const noexcept {
-				return message.value;
-			}
-
-			inline operator DBusMessageIter *() noexcept {
-				return &message.iter;
-			}
-
-			inline operator bool() const {
-				return !err.valid;
-			}
-
-			Message & pop(Value &value);
-
-			DBusMessageIter * getIter();
-
-			inline bool failed() const {
-				return err.valid;
-			}
-
-			bool next();
-
-			template <typename T>
-			Message & pop(T &value) {
-				Value v;
-				pop(v);
-				v.get(value);
-				return *this;
-			}
-
-			inline const char * error_name() const {
-				return this->err.name.c_str();
-			}
-
-			inline const char * error_message() const {
-				return err.message.c_str();
-			}
-
-			Message & push_back(const DBus::Value &value);
-
-			Message & push_back(const char *value);
-
-			inline Message & push_back(const std::string &value) {
-				return push_back(value.c_str());
-			}
-
-			Message & push_back(const bool value);
-
-			Message & push_back(const int16_t value);
-			Message & push_back(const uint16_t value);
-
-			Message & push_back(const int32_t value);
-			Message & push_back(const uint32_t value);
-
-			Message & push_back(const int64_t value);
-			Message & push_back(const uint64_t value);
-
-			Message & push_back(const std::vector<std::string> &elements);
-
-			std::ostream & info() const;
-			std::ostream & warning() const;
-			std::ostream & error() const;
-			std::ostream & trace() const;
-
-		};
 
 		/// @brief D-Bus connection.
 		class UDJAT_API Connection {
@@ -307,8 +105,6 @@
 
 			/// @brief Subscribed interfaces.
 			std::list<Interface> interfaces;
-
-			// void removeMatch(DBus::Connection::Interface &interface);
 
 			/// @brief Obtém interface pelo nome, inclui se for preciso.
 			Interface & getInterface(const char *name);
@@ -510,4 +306,4 @@
  inline Udjat::DBus::Message & operator<<(Udjat::DBus::Message &message, const T value) {
 	return message.push_back(value);
  }
-
+ */

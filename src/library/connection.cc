@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+ /*
  #include <config.h>
  #include "private.h"
  #include <udjat/tools/dbus.h>
@@ -42,6 +43,10 @@
 
 	public:
 
+		~DataSlot() {
+			dbus_connection_free_data_slot(&slot);
+		}
+
 		static DataSlot & getInstance() {
 			static DataSlot instance;
 			return instance;
@@ -60,6 +65,11 @@
 			return getSystemInstance();
 		}
 		return getSessionInstance();
+	}
+
+	static void trace_connection_free(const DBus::Connection *connection) {
+		debug("-------------------------------------------------");
+		Logger::String("Connection '",((unsigned long) connection),"' was released").trace("d-bus");
 	}
 
 	DBus::Connection::Connection(DBusConnection * c, const char *n, bool reg) : name(n), connection(c) {
@@ -160,6 +170,11 @@
 
 		}
 
+		if(Logger::enabled(Logger::Trace)) {
+			dbus_connection_set_data(connection,DataSlot::getInstance().value(),this,(DBusFreeFunction) trace_connection_free);
+			Logger::String("Connection '",((unsigned long) this),"' was allocated").trace("d-bus");
+		}
+
 	}
 
 	DBus::Connection::Connection(uid_t uid, const char *sid) : Connection(Factory(uid,sid), "user") {
@@ -193,7 +208,7 @@
 		DBusError err;
 		dbus_error_init(&err);
 
-		DBusConnection * connection = dbus_connection_open(busname, &err);
+		DBusConnection * connection = dbus_connection_open_private(busname, &err);
 		if(dbus_error_is_set(&err)) {
 			std::string message(err.message);
 			dbus_error_free(&err);
@@ -218,7 +233,9 @@
 
 	DBus::Connection::~Connection() {
 
-		trace() << "Connection destroyed" << endl;
+		debug("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa DEALLOCATE");
+
+		Logger::String("Deallocating connection '",((unsigned long) this),"'").trace("d-bus");
 
 		flush();
 
@@ -278,7 +295,10 @@
 				}
 			}
 
+			debug("--------------------------> Will unref");
+			dbus_connection_close(connection);
 			dbus_connection_unref(connection);
+
 			connection = nullptr;
 
 		} else {
@@ -311,4 +331,4 @@
 	}
 
  }
-
+ */

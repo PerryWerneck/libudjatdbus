@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2015 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,23 +17,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /*
+ /**
+  * @brief Implements system bus connection.
+  */
+
  #include <config.h>
- #include "private.h"
- #include <udjat/tools/threadpool.h>
+ #include <udjat/defs.h>
+ #include <dbus/dbus.h>
+ #include <udjat/tools/dbus/connection.h>
 
- using namespace Udjat;
+ namespace Udjat {
 
-
- void handle_dispatch_status(DBusConnection *c, DBusDispatchStatus UDJAT_UNUSED(status), DBus::Connection UDJAT_UNUSED(*connection)) {
-	DBus::Connection::dispatch(c);
- }
-
- void DBus::Connection::dispatch(DBusConnection * connection) noexcept {
-	lock_guard<recursive_mutex> lock(guard);
-	while(connection && dbus_connection_get_dispatch_status(connection) == DBUS_DISPATCH_DATA_REMAINS) {
-		dbus_connection_dispatch(connection);
+	DBus::StarterBus::StarterBus() : Abstract::DBus::Connection{"SysBUS",SharedConnectionFactory(DBUS_BUS_STARTER)} {
+		open();
 	}
+
+	DBus::StarterBus::~StarterBus() {
+		close();
+	}
+
  }
- */
 

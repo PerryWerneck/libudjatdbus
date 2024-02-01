@@ -7,7 +7,7 @@ SONAME=@SONAME@
 LIBRARY_SOURCES= \
 	$(wildcard src/library/*.cc) \
 	$(wildcard src/library/message/*.cc) \
-	$(wildcard src/library/os/@OSNAME@/*.cc)
+	$(wildcard src/library/connection/*.cc)
 
 MODULE_SOURCES= \
 	$(wildcard src/module/*.cc)

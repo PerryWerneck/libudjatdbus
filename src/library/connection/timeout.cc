@@ -17,12 +17,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #include "private.h"
+ #include <config.h>
+ #include <udjat/defs.h>
  #include <udjat/tools/mainloop.h>
  #include <udjat/tools/timer.h>
+ #include <private/mainloop.h>
  #include <unistd.h>
-
-/*---[ Implement ]----------------------------------------------------------------------------------*/
 
  class TimeoutContext : public Udjat::MainLoop::Timer {
  public:
@@ -40,11 +40,11 @@
 
  };
 
- dbus_bool_t add_timeout(DBusTimeout *t, DBus::Connection *connection) {
+ dbus_bool_t add_timeout(DBusTimeout *t, Abstract::DBus::Connection *connection) {
 
 	TimeoutContext *ctx = new TimeoutContext();
 
-	ctx->conn		= connection->getConnection();
+	ctx->conn		= connection->connection();
 	ctx->timeout	= t;
 	ctx->reset(dbus_timeout_get_interval(t));
 
@@ -57,7 +57,7 @@
 	return TRUE;
  }
 
- void remove_timeout(DBusTimeout *t, DBus::Connection UDJAT_UNUSED(*connection)) {
+ void remove_timeout(DBusTimeout *t, Abstract::DBus::Connection *) {
 
 	TimeoutContext *ctx = (TimeoutContext *) dbus_timeout_get_data(t);
 
@@ -66,7 +66,7 @@
 	}
  }
 
- void toggle_timeout(DBusTimeout *t, DBus::Connection UDJAT_UNUSED(*connection)) {
+ void toggle_timeout(DBusTimeout *t, Abstract::DBus::Connection *) {
 
 	TimeoutContext *ctx = (TimeoutContext *) dbus_timeout_get_data(t);
 
@@ -84,6 +84,5 @@
 	}
 
  }
-
 
 

@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+ /*
  #include <config.h>
  #include "private.h"
  #include <udjat/tools/logger.h>
@@ -161,3 +162,4 @@
 	}
 
  }
+ */

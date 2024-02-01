@@ -23,10 +23,12 @@
  #include <unistd.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/factory.h>
+ #include <udjat/tools/dbus/connection.h>
 
  using namespace std;
  using namespace Udjat;
 
+ /*
  static const Udjat::ModuleInfo moduleinfo { "Test program" };
 
  class RandomFactory : public Udjat::Factory {
@@ -63,12 +65,17 @@
 	}
 
  };
+ */
 
  int main(int argc, char **argv) {
 
 	Logger::verbosity(9);
 	Logger::redirect();
+	Logger::console(true);
 
+	Udjat::DBus::SessionBus bus;
+
+	/*
 	udjat_module_init();
 	RandomFactory rfactory;
 
@@ -77,4 +84,7 @@
 	debug("Application exits with rc=",rc);
 
 	return rc;
+	*/
+
+	return 0;
 }
