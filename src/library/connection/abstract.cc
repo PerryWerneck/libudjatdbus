@@ -256,7 +256,7 @@
 
 						try {
 
-							Logger::String{"Processing ",interface,".",member}.trace(name());
+							debug("Processing ",interface,".",member);
 							Udjat::DBus::Message msg(message);
 							imemb.call(msg);
 
