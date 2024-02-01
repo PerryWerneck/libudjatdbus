@@ -47,8 +47,14 @@
 
 			bool operator==(const char *intf) const noexcept;
 
+			inline bool empty() const noexcept {
+				return members.empty();
+			}
+
 			Udjat::DBus::Member & push_back(const XML::Node &node,const std::function<void(Message & message)> &callback);
 			Udjat::DBus::Member & emplace_back(const char *member, const std::function<void(Message & message)> &callback);
+
+			void remove(const Udjat::DBus::Member &member);
 
 			/// @brief Get textual form of match rule for this interface.
 			const std::string rule() const;

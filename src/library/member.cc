@@ -25,23 +25,27 @@
  #include <udjat/defs.h>
  #include <udjat/tools/dbus/member.h>
  #include <udjat/tools/string.h>
+ #include <udjat/tools/logger.h>
 
  using namespace std;
 
  namespace Udjat {
 
 	DBus::Member::Member(const char *name,const std::function<void(Message & message)> &c) : string{name}, callback{c} {
+		debug("Member '",c_str(),"' was constructed");
 	}
 
-	DBus::Member::Member(const XML::Node &node,const std::function<void(Message & message)> &callback) : Member(String{node,"dbus-member"}.c_str(),callback) {
+	DBus::Member::Member(const XML::Node &node,const std::function<void(Message & message)> &callback) : Member{String{node,"dbus-member"}.c_str(),callback} {
 	}
 
 	DBus::Member::~Member() {
+		debug("Member '",c_str(),"' was deleted");
 	}
 
 	bool DBus::Member::operator==(const char *name) const noexcept {
 		return strcasecmp(name,c_str()) == 0;
 	}
+
 
  }
 

@@ -49,6 +49,12 @@
 		return members.emplace_back(member,callback);
 	}
 
+	void DBus::Interface::remove(const Udjat::DBus::Member &member) {
+		members.remove_if([&member](Udjat::DBus::Member &m){
+			return &m == &member;
+		});
+	}
+
  }
 
 

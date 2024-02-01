@@ -24,6 +24,8 @@
  #include <udjat/tools/logger.h>
  #include <udjat/tools/factory.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/threadpool.h>
 
  using namespace std;
  using namespace Udjat;
@@ -74,7 +76,17 @@
 
 	UserBus bus{1000};
 	//SessionBus bus;
-	bus.emplace_back("com.example.signal");
+
+	Udjat::DBus::Member *member = &bus.subscribe("com.example.signal","hello",[&member,&bus](DBus::Message &message){
+
+		cout << "Got signal hello" << endl;
+
+		// Cant remove member while running, then, enqueue cleanup.
+		ThreadPool::getInstance().push([&member,&bus](){
+			bus.remove(*member);
+		});
+
+	});
 
 	// udjat_module_init();
 	RandomFactory rfactory;

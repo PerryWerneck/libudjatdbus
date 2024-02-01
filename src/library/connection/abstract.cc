@@ -263,16 +263,13 @@
 						} catch(const std::exception &e) {
 
 							Logger::String{interface,".",member,": ",e.what()}.error(name());
-							// TODO: Send error response.
 
 						} catch(...) {
 
 							Logger::String{interface,".",member,": Unexpecter error"}.error(name());
-							// TODO: Send error response.
 
 						}
 
-						return DBUS_HANDLER_RESULT_HANDLED;
 					}
 
 				}
@@ -280,47 +277,6 @@
 			}
 
 		}
-
-		/*
-		try {
-
-			for(auto intf : interfaces) {
-				if(!intf.name.compare(interface)) {
-					for(auto memb : intf.members) {
-						if(!memb.name.compare(member)) {
-
-							try {
-
-								Message msg(message);
-								memb.call(msg);
-
-							} catch(const exception &e) {
-
-								cerr << name << "\tError '" << e.what() << "' processing signal " << interface << "." << member << endl;
-
-							} catch(...) {
-
-								cerr << name << "\tUnexpected error processing signal " << interface << "." << member << endl;
-
-							}
-
-						}
-
-					}
-					break;
-				}
-			}
-
-		} catch(const exception &e) {
-
-			cerr << name << "\t" << interface << " " << member << ": " << e.what() << endl;
-
-		} catch(...) {
-
-			cerr << name << "\t" << interface << " " << member << ": Unexpected error" << endl;
-
-		}
-		*/
 
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
@@ -394,6 +350,28 @@
 	void Abstract::DBus::Connection::push_back(const XML::Node &node) {
 		Udjat::DBus::Interface intf{node};
 		return push_back(intf);
+	}
+
+	Udjat::DBus::Member & Abstract::DBus::Connection::subscribe(const char *interface, const char *member, const std::function<void(Udjat::DBus::Message &message)> &callback) {
+		return emplace_back(interface).emplace_back(member,callback);
+	}
+
+	void Abstract::DBus::Connection::remove(const Udjat::DBus::Member &member) {
+
+		lock_guard<mutex> lock(guard);
+		interfaces.remove_if([this,&member](Udjat::DBus::Interface &interface){
+
+			interface.remove(member);
+
+			if(interface.empty()) {
+				remove(interface);
+				return true;
+			}
+
+			return false;
+
+		});
+
 	}
 
  }
