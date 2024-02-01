@@ -158,6 +158,20 @@
 
 	}
 
+	void Abstract::DBus::Connection::bus_register() {
+
+		DBusError err;
+		dbus_error_init(&err);
+
+		dbus_bus_register(conn,&err);
+		if(dbus_error_is_set(&err)) {
+			std::string message(err.message);
+			dbus_error_free(&err);
+			throw std::runtime_error(message);
+		}
+
+	}
+
 	void Abstract::DBus::Connection::close() {
 
 		lock_guard<mutex> lock(guard);
@@ -205,8 +219,6 @@
 		) {
 			Logger::String{"dbus_connection_set_timeout_functions failed"}.error(name());
 		}
-
-		dbus_connection_unref(conn);
 
 	}
 

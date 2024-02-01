@@ -72,7 +72,8 @@
 	Logger::redirect();
 	Logger::console(true);
 
-	SessionBus bus;
+	UserBus bus{1000};
+	//SessionBus bus;
 	bus.emplace_back("com.example.signal");
 
 	// udjat_module_init();

@@ -33,6 +33,7 @@
  #include <sys/types.h>
  #include <sys/stat.h>
  #include <udjat/tools/file.h>
+ #include <pwd.h>
 
  #ifdef HAVE_SYSTEMD
 	#include <systemd/sd-login.h>
@@ -149,11 +150,11 @@
 									dbus_error_free(&err);
 									connection = nullptr;
 								}
-	#ifdef DEBUG
+#ifdef DEBUG
 								else {
 									cout << "dbus\tGot user connection on " << ptr << endl;
 								}
-	#endif // DEBUG
+#endif // DEBUG
 
 								// Restore to saved UID.
 								seteuid(saved_uid);
@@ -183,13 +184,38 @@
 
 	}
 
-	DBus::UserBus::UserBus(uid_t uid, const char *sid) : Abstract::DBus::Connection{"UserBUS",UserConnectionFactory(uid,sid)} {
+	static std::string get_username(uid_t uid) {
+
+		int bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+		if (bufsize < 0)
+			bufsize = 16384;
+
+		string rc;
+		char * buf = new char[bufsize];
+
+		struct passwd pwd;
+		struct passwd * result;
+		if(getpwuid_r(uid, &pwd, buf, bufsize, &result)) {
+			rc = "@";
+			rc += std::to_string(uid);
+		} else {
+			rc = buf;
+		}
+		delete[] buf;
+
+		return rc;
+
+	}
+
+	DBus::UserBus::UserBus(uid_t uid, const char *sid) : Abstract::DBus::Connection{get_username(uid).c_str(),UserConnectionFactory(uid,sid)}, userid{uid} {
 		open();
+		bus_register();
 	}
 
 	DBus::UserBus::~UserBus() {
-		dbus_connection_close(conn);
 		close();
+		dbus_connection_close(conn);
+		dbus_connection_unref(conn);
 	}
 
  }

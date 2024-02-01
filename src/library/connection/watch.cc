@@ -105,15 +105,17 @@
 
 	if(context) {
 
-#ifdef DEBUG
-		Logger::trace() << "d-bus\t*** Toggle watch " << hex << ((void *) context) << dec << endl;
-#endif // DEBUG
-
 		context->set(dbus_watch_get_unix_fd(watch));
 
 		if (dbus_watch_get_enabled(watch)) {
+#ifdef DEBUG
+			Logger::trace() << "d-bus\t*** " << __FUNCTION__<< ".enable " << hex << ((void *) context) << dec << endl;
+#endif // DEBUG
 			context->enable();
 		} else {
+#ifdef DEBUG
+			Logger::trace() << "d-bus\t*** " << __FUNCTION__<< ".enable " << hex << ((void *) context) << dec << endl;
+#endif // DEBUG
 			context->disable();
 		}
 

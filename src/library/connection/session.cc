@@ -34,6 +34,7 @@
 
 	DBus::SessionBus::~SessionBus() {
 		close();
+		dbus_connection_unref(conn);
 	}
 
  }

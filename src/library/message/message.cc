@@ -17,10 +17,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /*
  #include <config.h>
- #include <udjat/tools/dbus.h>
+ #include <udjat/defs.h>
  #include <udjat/tools/logger.h>
+ #include <udjat/tools/dbus/message.h>
  #include <iostream>
 
  using namespace std;
@@ -105,4 +105,3 @@
 	}
 
  }
- */

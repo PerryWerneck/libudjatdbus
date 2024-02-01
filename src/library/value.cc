@@ -17,11 +17,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /*
  #include <config.h>
- #include <udjat/tools/dbus.h>
  #include <udjat/tools/value.h>
  #include <udjat/tools/logger.h>
+ #include <udjat/tools/dbus/value.h>
+ #include <udjat/tools/dbus/message.h>
  #include <cstring>
  #include <string>
  #include <iostream>
@@ -576,5 +576,4 @@
 	}
 
  }
- */
 

@@ -75,6 +75,9 @@
 
 				static DBusConnection * SharedConnectionFactory(DBusBusType type);
 
+				/// @brief Registers a connection with the bus.
+				void bus_register();
+
 			public:
 
 				inline const char *name() const noexcept {
@@ -137,6 +140,9 @@
 
 		/// @brief Private session to an user session.
 		class UDJAT_API UserBus : public Abstract::DBus::Connection {
+		protected:
+			uid_t userid;
+
 		public:
 			UserBus(uid_t uid, const char *sid = "");
 			virtual ~UserBus();

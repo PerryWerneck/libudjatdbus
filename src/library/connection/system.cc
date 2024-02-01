@@ -34,6 +34,7 @@
 
 	DBus::SystemBus::~SystemBus() {
 		close();
+		dbus_connection_unref(conn);
 	}
 
  }

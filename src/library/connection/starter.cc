@@ -34,6 +34,7 @@
 
 	DBus::StarterBus::~StarterBus() {
 		close();
+		dbus_connection_unref(conn);
 	}
 
  }
