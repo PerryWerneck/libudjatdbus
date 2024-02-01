@@ -18,48 +18,33 @@
  */
 
  /**
-  * @brief Declare an interface inside the d-bus connection.
+  * @brief Declare dbus-member.
   */
 
  #pragma once
+
+ #pragma once
  #include <udjat/defs.h>
+ #include <udjat/tools/dbus/message.h>
  #include <string>
- #include <udjat/tools/xml.h>
- #include <udjat/tools/dbus/member.h>
- #include <list>
  #include <functional>
+ #include <udjat/tools/xml.h>
 
  namespace Udjat {
 
 	namespace DBus {
 
-		class UDJAT_API Interface : public std::string {
+		class UDJAT_API Member : public std::string {
 		private:
-
-			const char *type;
-			std::list<Udjat::DBus::Member> members;
+			const std::function<void(Message & message)> &callback;
 
 		public:
-			Interface(const char *name);
-			Interface(const XML::Node &node);
+			Member(const char *name,const std::function<void(Message & message)> &callback);
+			Member(const XML::Node &node,const std::function<void(Message & message)> &callback);
+			~Member();
 
-			~Interface();
+			bool operator==(const char *name) const noexcept;
 
-			bool operator==(const char *intf) const noexcept;
-
-			Udjat::DBus::Member & push_back(const XML::Node &node,const std::function<void(Message & message)> &callback);
-			Udjat::DBus::Member & emplace_back(const char *member, const std::function<void(Message & message)> &callback);
-
-			/// @brief Get textual form of match rule for this interface.
-			const std::string rule() const;
-
-			inline auto begin() const noexcept {
-				return members.begin();
-			}
-
-			inline auto end() const noexcept {
-				return members.end();
-			}
 
 		};
 

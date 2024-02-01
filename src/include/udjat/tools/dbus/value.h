@@ -26,6 +26,7 @@
  #include <dbus/dbus.h>
  #include <udjat/tools/value.h>
  #include <udjat/tools/dbus/defs.h>
+ #include <map>
 
  namespace Udjat {
 

@@ -73,7 +73,7 @@
 	Logger::console(true);
 
 	SessionBus bus;
-	bus.push_back("com.example.signal");
+	bus.emplace_back("com.example.signal");
 
 	// udjat_module_init();
 	RandomFactory rfactory;

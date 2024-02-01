@@ -52,7 +52,7 @@
 				std::thread * thread = nullptr;
 
 				/// @brief Handle signal
-				DBusHandlerResult on_signal(DBusMessage *message);
+				DBusHandlerResult on_signal(DBusMessage *message) noexcept;
 
 				/// @brief Message filter method.
 				static DBusHandlerResult filter(DBusConnection *, DBusMessage *, Abstract::DBus::Connection *) noexcept;
@@ -90,8 +90,9 @@
 				void flush() noexcept;
 
 				void push_back(Udjat::DBus::Interface &interface);
-				Udjat::DBus::Interface & push_back(const char *interface);
-				Udjat::DBus::Interface & push_back(const XML::Node &node);
+				void push_back(const XML::Node &node);
+
+				Udjat::DBus::Interface & emplace_back(const char *interface);
 
 				inline auto begin() const {
 					return interfaces.begin();

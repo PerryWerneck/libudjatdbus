@@ -27,6 +27,9 @@
 	DBus::Interface::Interface(const char *n) : std::string{n}, type{"signal"} {
 	}
 
+	DBus::Interface::Interface(const XML::Node &node) : std::string{String{node,"dbus-interface"}}, type{"signal"} {
+	}
+
 	DBus::Interface::~Interface() {
 	}
 
@@ -35,7 +38,15 @@
 	}
 
 	bool DBus::Interface::operator==(const char *intf) const noexcept {
-		return false;
+		return strcasecmp(intf,c_str()) == 0;
+	}
+
+	Udjat::DBus::Member & DBus::Interface::push_back(const XML::Node &node,const std::function<void(Udjat::DBus::Message & message)> &callback) {
+		return members.emplace_back(node,callback);
+	}
+
+	Udjat::DBus::Member & DBus::Interface::emplace_back(const char *member, const std::function<void(Udjat::DBus::Message & message)> &callback) {
+		return members.emplace_back(member,callback);
 	}
 
  }

@@ -222,15 +222,50 @@
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	}
 
-	DBusHandlerResult Abstract::DBus::Connection::on_signal(DBusMessage *message) {
+	DBusHandlerResult Abstract::DBus::Connection::on_signal(DBusMessage *message) noexcept {
 
 		lock_guard<mutex> lock(guard);
 
-		const char *member = dbus_message_get_member(message);
 		const char *interface = dbus_message_get_interface(message);
+		const char *member = dbus_message_get_member(message);
 
 		if(Logger::enabled(Logger::Trace)) {
 			Logger::String{"Signal ", interface," ",member}.trace(name());
+		}
+
+		for(const auto &intf : interfaces) {
+
+			if(intf == interface) {
+
+				for(const auto &imemb : intf) {
+
+					if(imemb == member) {
+
+						try {
+
+							Logger::String{"Processing ",interface,".",member}.trace(name());
+							// Message msg{message};
+
+
+						} catch(const std::exception &e) {
+
+							Logger::String{interface,".",member,": ",e.what()}.error(name());
+							// TODO: Send error response.
+
+						} catch(...) {
+
+							Logger::String{interface,".",member,": Unexpecter error"}.error(name());
+							// TODO: Send error response.
+
+						}
+
+						return DBUS_HANDLER_RESULT_HANDLED;
+					}
+
+				}
+
+			}
+
 		}
 
 		/*
@@ -322,7 +357,7 @@
 		interfaces.push_back(intf);
 	}
 
-	Udjat::DBus::Interface & Abstract::DBus::Connection::push_back(const char *intf) {
+	Udjat::DBus::Interface & Abstract::DBus::Connection::emplace_back(const char *intf) {
 
 		if(!(intf && *intf)) {
 			throw system_error(EINVAL,system_category(),"A dbus interface name is required");
@@ -343,9 +378,9 @@
 		return interface;
 	}
 
-	Udjat::DBus::Interface & Abstract::DBus::Connection::push_back(const XML::Node &node) {
-		return push_back(String{node,"dbus-interface"}.c_str());
+	void Abstract::DBus::Connection::push_back(const XML::Node &node) {
+		Udjat::DBus::Interface intf{node};
+		return push_back(intf);
 	}
-
 
  }
