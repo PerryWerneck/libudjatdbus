@@ -88,7 +88,7 @@
 
 	});
 
-	// udjat_module_init();
+	udjat_module_init();
 	RandomFactory rfactory;
 
 	auto rc = Application{}.run(argc,argv,"./test.xml");

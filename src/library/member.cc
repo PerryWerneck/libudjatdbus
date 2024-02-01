@@ -32,20 +32,20 @@
  namespace Udjat {
 
 	DBus::Member::Member(const char *name,const std::function<void(Message & message)> &c) : string{name}, callback{c} {
-		debug("Member '",c_str(),"' was constructed");
+		Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
 	}
 
 	DBus::Member::Member(const XML::Node &node,const std::function<void(Message & message)> &callback) : Member{String{node,"dbus-member"}.c_str(),callback} {
+		Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
 	}
 
 	DBus::Member::~Member() {
-		debug("Member '",c_str(),"' was deleted");
+		Logger::String{"Unwatching '",c_str(),"'"}.trace("d-bus");
 	}
 
 	bool DBus::Member::operator==(const char *name) const noexcept {
 		return strcasecmp(name,c_str()) == 0;
 	}
-
 
  }
 
