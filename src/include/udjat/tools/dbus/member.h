@@ -45,6 +45,9 @@
 
 			bool operator==(const char *name) const noexcept;
 
+			inline void call(Message &message) const {
+				callback(message);
+			}
 
 		};
 

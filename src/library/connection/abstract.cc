@@ -28,6 +28,7 @@
  #include <mutex>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/interface.h>
+ #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/mainloop.h>
  #include <private/mainloop.h>
@@ -244,8 +245,8 @@
 						try {
 
 							Logger::String{"Processing ",interface,".",member}.trace(name());
-							// Message msg{message};
-
+							Udjat::DBus::Message msg(message);
+							imemb.call(msg);
 
 						} catch(const std::exception &e) {
 
