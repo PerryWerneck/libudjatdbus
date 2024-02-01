@@ -216,11 +216,18 @@ install-dev: \
 	install-@OSNAME@-static 
 	
 	@$(MKDIR) \
-		$(DESTDIR)$(includedir)/udjat/tools
+		$(DESTDIR)$(includedir)/udjat/tools/dbus
 
 	@$(INSTALL_DATA) \
-		src/include/udjat/tools/*.h \
-		$(DESTDIR)$(includedir)/udjat/tools
+		src/include/udjat/tools/dbus/*.h \
+		$(DESTDIR)$(includedir)/udjat/tools/dbus
+
+	@$(MKDIR) \
+		$(DESTDIR)$(includedir)/udjat/alert
+
+	@$(INSTALL_DATA) \
+		src/include/udjat/alert/*.h \
+		$(DESTDIR)$(includedir)/udjat/alert
 
 	# Install PKG-CONFIG files
 	@$(MKDIR) \

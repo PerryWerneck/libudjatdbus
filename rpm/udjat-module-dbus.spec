@@ -21,7 +21,7 @@
 
 Summary:		DBus client/server module for %{product_name}
 Name:			udjat-module-dbus
-Version:		1.0
+Version:		2.0
 Release:		0
 License:		LGPL-3.0
 Source:			%{name}-%{version}.tar.xz
@@ -54,9 +54,7 @@ D-Bus client/server module for %{product_name}
 Summary:	UDJat core library
 
 %description -n libudjatdbus%{_libvrs}
-D-Bus client/server library for udjat
-
-Simple D-Bus abstraction library for %{product_name}
+D-Bus client/server abstraction library for %{product_name}
 
 #---[ Development ]---------------------------------------------------------------------------------------------------
 
@@ -68,7 +66,7 @@ Requires:	libudjatdbus%{_libvrs} = %{version}
 
 %description -n udjat-dbus-devel
 
-Development files for %{product_name}'s simple abstraction D-Bus library.
+Development files for %{product_name}'s abstraction D-Bus library.
 
 #---[ Build & Install ]-----------------------------------------------------------------------------------------------
 
@@ -95,9 +93,9 @@ make all
 
 %files -n udjat-dbus-devel
 %defattr(-,root,root)
-%{_includedir}/udjat/tools/*.h
+%{_includedir}/udjat/tools/dbus/*.h
 %{_libdir}/*.so
-%{_libdir}/*.a
+%exclude %{_libdir}/*.a
 %{_libdir}/pkgconfig/*.pc
 
 %pre -n libudjatdbus%{_libvrs} -p /sbin/ldconfig
