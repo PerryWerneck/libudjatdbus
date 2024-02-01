@@ -21,10 +21,9 @@
   * @brief Declare d-bus alerts.
   */
 
-  /*
  #include <udjat/defs.h>
  #include <udjat/alert/abstract.h>
- #include <dbus/dbus-protocol.h>
+ #include <dbus/dbus-shared.h>
 
  namespace Udjat {
 
@@ -81,4 +80,3 @@
 	}
 
  }
- */

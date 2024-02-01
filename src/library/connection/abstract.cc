@@ -29,6 +29,7 @@
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/dbus/signal.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/mainloop.h>
  #include <private/mainloop.h>
@@ -371,6 +372,19 @@
 			return false;
 
 		});
+
+	}
+
+	void Abstract::DBus::Connection::signal(const Udjat::DBus::Signal &sig) {
+
+		lock_guard<mutex> lock(guard);
+
+		dbus_bool_t rc = dbus_connection_send(conn, sig.dbus_message(), NULL);
+		dbus_connection_flush(conn);
+
+		if(!rc) {
+			throw runtime_error("Can't send D-Bus signal");
+		}
 
 	}
 

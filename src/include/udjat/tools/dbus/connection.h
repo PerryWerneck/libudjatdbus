@@ -25,6 +25,7 @@
 
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
+ #include <udjat/tools/dbus/defs.h>
  #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/dbus/member.h>
  #include <string>
@@ -105,6 +106,9 @@
 				inline auto end() const {
 					return interfaces.end();
 				}
+
+				/// @brief Emit signal.
+				void signal(const Udjat::DBus::Signal &sig);
 
 				/// @brief Subscribe to d-bus signal.
 				/// @return Member handling the signal.

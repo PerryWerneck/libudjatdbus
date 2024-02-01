@@ -33,6 +33,7 @@
 
 		class Message;
 		class Value;
+		class Signal;
 
  	}
 

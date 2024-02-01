@@ -17,15 +17,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /*
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/object.h>
  #include <udjat/alert/activation.h>
  #include <dbus/dbus-protocol.h>
  #include <udjat/tools/logger.h>
- #include <udjat/tools/dbus.h>
  #include <udjat/tools/string.h>
+ #include <udjat/tools/dbus/signal.h>
  #include <string>
  #include <udjat/alert/d-bus.h>
 
@@ -132,10 +131,6 @@
 		const char *group = node.attribute("settings-from").as_string("alert-defaults");
 
 		debug("Creating d-bus alert '",name(),"'");
-
-		debug("------------------------------------------");
-		DBus::Connection session_bus{1000};
-		debug("------------------------------------------");
 
 		path = getAttribute(node,group,"dbus-path","${agent.path}");
 		if(!*path) {
@@ -313,5 +308,4 @@
 	}
 
  }
- */
 

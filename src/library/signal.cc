@@ -17,10 +17,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /*
  #include <config.h>
  #include "private.h"
  #include <udjat/tools/logger.h>
+ #include <udjat/tools/xml.h>
+ #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/signal.h>
 
  using namespace std;
 
@@ -56,25 +58,23 @@
 	}
 
 	void DBus::Signal::system() {
-		send(Connection::getSystemInstance());
+		SystemBus{}.signal(*this);
 	}
 
 	void DBus::Signal::session() {
-		send(Connection::getSessionInstance());
+		SessionBus{}.signal(*this);
 	}
 
 	void DBus::Signal::starter() {
-		send(Connection::getStarterInstance());
+		StarterBus{}.signal(*this);
 	}
 
-	void DBus::Signal::send() {
-		send(Connection::getInstance());
+	void DBus::Signal::user(uid_t uid, const char *sid) {
+		UserBus{uid,sid}.signal(*this);
 	}
 
-	void DBus::Signal::send(Connection &connection) {
-		if(!connection.send(message)) {
-			throw runtime_error("Cant send d-bus signal");
-		}
+	void DBus::Signal::emit(Abstract::DBus::Connection &connection) {
+		connection.signal(*this);
 	}
 
 	DBus::Signal & DBus::Signal::push_back(const char *value) {
@@ -162,4 +162,3 @@
 	}
 
  }
- */

@@ -19,13 +19,14 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include "private.h"
  #include <udjat/module.h>
  #include <udjat/moduleinfo.h>
  #include <udjat/factory.h>
  #include <dbus/dbus-protocol.h>
  #include <udjat/alert/d-bus.h>
+ #include <memory>
 
+ using namespace std;
  using namespace Udjat;
 
  static const Udjat::ModuleInfo moduleinfo { "D-Bus" STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " module" };
@@ -41,6 +42,10 @@
 
 		virtual ~Module() {
 		};
+
+		std::shared_ptr<Abstract::Alert> AlertFactory(const Abstract::Object &parent, const pugi::xml_node &node) const override {
+			return make_shared<Udjat::DBus::Alert>(parent,node);
+		}
 
 	};
 
