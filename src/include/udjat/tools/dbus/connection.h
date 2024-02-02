@@ -150,7 +150,7 @@
 
 		};
 
-		/// @brief Private session to an user session.
+		/// @brief Private connection to an user's bus.
 		class UDJAT_API UserBus : public Abstract::DBus::Connection {
 		protected:
 			uid_t userid;
@@ -158,6 +158,14 @@
 		public:
 			UserBus(uid_t uid, const char *sid = "");
 			virtual ~UserBus();
+
+		};
+
+		/// @brief Private connection to a named bus.
+		class UDJAT_API NamedBus : public Abstract::DBus::Connection {
+		public:
+			NamedBus(const char *connection_name, const char *bus_name);
+			virtual ~NamedBus();
 
 		};
 

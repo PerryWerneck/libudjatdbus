@@ -21,11 +21,17 @@
  #include <udjat/tools/application.h>
  #include <udjat/module.h>
  #include <unistd.h>
+ #include <udjat/version.h>
  #include <udjat/tools/logger.h>
- #include <udjat/tools/factory.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/threadpool.h>
+
+ #if UDJAT_CHECK_VERSION(1,2,0)
+	#include <udjat/tools/factory.h>
+ #else
+	#include <udjat/factory.h>
+ #endif // UDJAT_CHECK_VERSION
 
  using namespace std;
  using namespace Udjat;

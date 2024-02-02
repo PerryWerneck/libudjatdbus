@@ -57,6 +57,7 @@
 		<Unit filename="src/library/call.cc" />
 		<Unit filename="src/library/connection.cc" />
 		<Unit filename="src/library/connection/abstract.cc" />
+		<Unit filename="src/library/connection/named.cc" />
 		<Unit filename="src/library/connection/session.cc" />
 		<Unit filename="src/library/connection/starter.cc" />
 		<Unit filename="src/library/connection/system.cc" />
