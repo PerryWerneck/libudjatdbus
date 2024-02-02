@@ -94,6 +94,28 @@
 
 	});
 
+	bus.call(
+		"org.gnome.ScreenSaver",
+		"/org/gnome/ScreenSaver",
+		"org.gnome.ScreenSaver",
+		"GetActiveTime",
+		[](DBus::Message & message) {
+
+			if(message) {
+
+				unsigned int active;
+				message.pop(active);
+
+				debug("-------------------------> Got response active=",active);
+
+			} else {
+
+				debug("-------------------------> Error calling gnome");
+
+			}
+
+		});
+
 	udjat_module_init();
 	RandomFactory rfactory;
 

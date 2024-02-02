@@ -117,6 +117,23 @@
 				/// @brief Unsubscribe from d-bus signal.
 				void remove(const Udjat::DBus::Member &member);
 
+				/// @brief Call method
+				void call(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call);
+
+				/// @brief Call method (syncronous);
+				void call(DBusMessage * message);
+
+				/// @brief Call method (syncronous);
+				void call_and_wait(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call);
+
+				/// @brief Call method
+				void call(	const char *destination,
+							const char *path,
+							const char *interface,
+							const char *member,
+							const std::function<void(Udjat::DBus::Message & message)> &call
+						);
+
 			};
 
 
