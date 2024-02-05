@@ -17,7 +17,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #include "private.h"
+ #include <udjat/defs.h>
+ #include <private/mainloop.h>
  #include <udjat/tools/mainloop.h>
  #include <udjat/tools/handler.h>
  #include <udjat/tools/logger.h>
@@ -28,15 +29,15 @@
  class Context : public MainLoop::Handler {
  private:
 
-	DBus::Connection	* connection	= nullptr;
-	DBusWatch			* watch			= nullptr;
+	Abstract::DBus::Connection	* connection	= nullptr;
+	DBusWatch					* watch			= nullptr;
 
  protected:
 	void handle_event(const Event events) override;
 
  public:
 
-	Context(DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Handler::Event) e), connection(c), watch(w) {
+	Context(Abstract::DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Handler::Event) e), connection(c), watch(w) {
 #ifdef DEBUG
 		Logger::trace() << "handler\tCreating d-bus context " << hex << ((void *) this) << dec << endl;
 #endif // DEBUG
@@ -50,7 +51,7 @@
 
  };
 
- dbus_bool_t add_watch(DBusWatch *watch, DBus::Connection *connection) {
+ dbus_bool_t add_watch(DBusWatch *watch, Abstract::DBus::Connection *connection) {
 
 	// Get event
 	short event = 0;
@@ -81,7 +82,7 @@
 	return true;
  }
 
- void remove_watch(DBusWatch *watch, DBus::Connection UDJAT_UNUSED(*obj)) {
+ void remove_watch(DBusWatch *watch, Abstract::DBus::Connection *) {
 
 	Context *context = (Context *) dbus_watch_get_data(watch);
 
@@ -98,21 +99,23 @@
 
  }
 
- void toggle_watch(DBusWatch *watch, DBus::Connection UDJAT_UNUSED(*obj)) {
+ void toggle_watch(DBusWatch *watch, Abstract::DBus::Connection *) {
 
 	Context *context = (Context *) dbus_watch_get_data(watch);
 
 	if(context) {
 
-#ifdef DEBUG
-		Logger::trace() << "d-bus\t*** Toggle watch " << hex << ((void *) context) << dec << endl;
-#endif // DEBUG
-
 		context->set(dbus_watch_get_unix_fd(watch));
 
 		if (dbus_watch_get_enabled(watch)) {
+#ifdef DEBUG
+			Logger::trace() << "d-bus\t*** " << __FUNCTION__<< ".enable " << hex << ((void *) context) << dec << endl;
+#endif // DEBUG
 			context->enable();
 		} else {
+#ifdef DEBUG
+			Logger::trace() << "d-bus\t*** " << __FUNCTION__<< ".enable " << hex << ((void *) context) << dec << endl;
+#endif // DEBUG
 			context->disable();
 		}
 
@@ -173,7 +176,7 @@
 		return;
 	}
 
-	DBusConnection *c = connection->getConnection();
+	DBusConnection *c = connection->connection();
 	dbus_connection_ref(c);
 	while (dbus_connection_get_dispatch_status(c) == DBUS_DISPATCH_DATA_REMAINS)
         dbus_connection_dispatch(c);

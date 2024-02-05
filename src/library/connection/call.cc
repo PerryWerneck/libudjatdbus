@@ -19,7 +19,9 @@
 
  #include <config.h>
  #include <udjat/tools/logger.h>
- #include "private.h"
+ #include <dbus/dbus.h>
+ #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/message.h>
 
  using namespace std;
 
@@ -32,7 +34,7 @@
 		DBusConnection * connection;
 		const std::function<void(DBus::Message &)> call;
 
-		CallParameters(DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c->getConnection()), call(f) {
+		CallParameters(Abstract::DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c->connection()), call(f) {
 			Logger::trace() << "New call parameters " << hex << ((void *) this) << dec << endl;
 			dbus_connection_ref(connection);
 		}
@@ -130,18 +132,14 @@
 
 	}
 
-	void DBus::Connection::call(DBusMessage * message) {
-
-		if(!connection) {
-			throw runtime_error("D-Bus connection is not available");
-		}
+	void Abstract::DBus::Connection::call(DBusMessage * message) {
 
 		DBusError error;
 		dbus_error_init(&error);
 
 		DBusMessage * response =
 			dbus_connection_send_with_reply_and_block(
-				connection,
+				conn,
 				message,
 				DBUS_TIMEOUT_USE_DEFAULT,
 				&error
@@ -161,18 +159,14 @@
 
 	}
 
-	void DBus::Connection::call_and_wait(DBusMessage * message, const std::function<void(Message & message)> &call) {
-
-		if(!connection) {
-			throw runtime_error("D-Bus connection is not available");
-		}
+	void Abstract::DBus::Connection::call_and_wait(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
 		DBusError error;
 		dbus_error_init(&error);
 
 		DBusMessage * response =
 			dbus_connection_send_with_reply_and_block(
-				connection,
+				conn,
 				message,
 				DBUS_TIMEOUT_USE_DEFAULT,
 				&error
@@ -180,7 +174,7 @@
 
 		if(dbus_error_is_set(&error)) {
 
-			DBus::Message message{error};
+			Udjat::DBus::Message message{error};
 
 			try {
 
@@ -196,7 +190,7 @@
 
 		} else if(response) {
 
-			DBus::Message message{response};
+			Udjat::DBus::Message message{response};
 
 			try {
 
@@ -219,17 +213,13 @@
 		delete parameters;
 	}
 
-	void DBus::Connection::call(DBusMessage * message, const std::function<void(Message & message)> &call) {
-
-		if(!connection) {
-			throw runtime_error("D-Bus connection is not available");
-		}
+	void Abstract::DBus::Connection::call(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
 		debug("----------------------------------- pending call");
 
 		DBusPendingCall *pending = NULL;
 
-		if(!dbus_connection_send_with_reply(connection,message,&pending,DBUS_TIMEOUT_USE_DEFAULT)) {
+		if(!dbus_connection_send_with_reply(conn,message,&pending,DBUS_TIMEOUT_USE_DEFAULT)) {
 			throw std::runtime_error("Can't send DBus method call");
 		}
 
@@ -262,15 +252,17 @@
 
 	}
 
-	void DBus::Connection::call(const Message &message, std::function<void(Message & message)> call) {
+	/*
+	void Abstract::DBus::Connection::call(const Udjat::DBus::Message &message, const std::function<void(Udjat::DBus::Message & message)> &call) {
 		DBusMessage *msg = (DBusMessage *) message;
 		if(!msg) {
 			throw runtime_error("Empty D-Bus message");
 		}
 		this->call(msg,call);
 	}
+	*/
 
-	void DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, std::function<void(DBus::Message & message)> call) {
+	void Abstract::DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
 		DBusMessage * message = dbus_message_new_method_call(destination,path,interface,member);
 		if(message == NULL) {
@@ -284,5 +276,4 @@
 	}
 
  }
-
 

@@ -7,7 +7,7 @@ SONAME=@SONAME@
 LIBRARY_SOURCES= \
 	$(wildcard src/library/*.cc) \
 	$(wildcard src/library/message/*.cc) \
-	$(wildcard src/library/os/@OSNAME@/*.cc)
+	$(wildcard src/library/connection/*.cc)
 
 MODULE_SOURCES= \
 	$(wildcard src/module/*.cc)
@@ -61,7 +61,7 @@ DEPENDS= \
 	Makefile
 
 CFLAGS= \
-	@CXXFLAGS@ \
+	@CPPFLAGS@ \
 	-Isrc/include \
 	-DBUILD_DATE=`date +%Y%m%d` \
 	@UDJAT_CFLAGS@ \
@@ -216,11 +216,22 @@ install-dev: \
 	install-@OSNAME@-static 
 	
 	@$(MKDIR) \
-		$(DESTDIR)$(includedir)/udjat/tools
+		$(DESTDIR)$(includedir)/udjat/tools/dbus
 
 	@$(INSTALL_DATA) \
 		src/include/udjat/tools/*.h \
 		$(DESTDIR)$(includedir)/udjat/tools
+
+	@$(INSTALL_DATA) \
+		src/include/udjat/tools/dbus/*.h \
+		$(DESTDIR)$(includedir)/udjat/tools/dbus
+
+	@$(MKDIR) \
+		$(DESTDIR)$(includedir)/udjat/alert
+
+	@$(INSTALL_DATA) \
+		src/include/udjat/alert/*.h \
+		$(DESTDIR)$(includedir)/udjat/alert
 
 	# Install PKG-CONFIG files
 	@$(MKDIR) \
@@ -372,7 +383,7 @@ clean: \
 	cleanRelease
 
 
--include $(foreach SRC, $(basename $(LIBRARY_SOURCES)), $(OBJDBG)/$(SRC).d)
--include $(foreach SRC, $(basename $(LIBRARY_SOURCES)), $(OBJRLS)/$(SRC).d)
+-include $(foreach SRC, $(basename $(LIBRARY_SOURCES) $(MODULE_SOURCES) $(TEST_SOURCES)), $(OBJDBG)/$(SRC).d)
+-include $(foreach SRC, $(basename $(LIBRARY_SOURCES) $(MODULE_SOURCES) $(TEST_SOURCES)), $(OBJRLS)/$(SRC).d)
 
 

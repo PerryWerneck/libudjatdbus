@@ -17,10 +17,40 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+ /**
+  * @brief Declare dbus-member.
+  */
+
  #pragma once
 
+ #pragma once
  #include <udjat/defs.h>
- #include <udjat/tools/dbus/defs.h>
- #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/message.h>
+ #include <string>
+ #include <functional>
+ #include <udjat/tools/xml.h>
 
+ namespace Udjat {
 
+	namespace DBus {
+
+		class UDJAT_API Member : public std::string {
+		private:
+			const std::function<void(Message & message)> &callback;
+
+		public:
+			Member(const char *name,const std::function<void(Message & message)> &callback);
+			Member(const XML::Node &node,const std::function<void(Message & message)> &callback);
+			~Member();
+
+			bool operator==(const char *name) const noexcept;
+
+			inline void call(Message &message) const {
+				callback(message);
+			}
+
+		};
+
+	}
+
+ }

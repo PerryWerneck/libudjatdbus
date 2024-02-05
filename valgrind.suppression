@@ -1,8 +1,0 @@
-{
-   civetweb-init
-   Memcheck:Cond
-   obj:/usr/lib64/libcivetweb.*
-   fun:start_thread
-   fun:clone
-}
-

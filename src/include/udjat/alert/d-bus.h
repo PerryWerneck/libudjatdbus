@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2021 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,25 +17,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #pragma once
+ /**
+  * @brief Declare d-bus alerts.
+  */
 
- // https://stackoverflow.com/questions/9378593/dbuswatch-and-dbustimeout-examples
-
- #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/tools/dbus.h>
- #include <udjat/tools/string.h>
  #include <udjat/alert/abstract.h>
- #include <iostream>
- #include <system_error>
-
- using namespace std;
+ #include <dbus/dbus-shared.h>
 
  namespace Udjat {
 
 	namespace DBus {
 
-		class Alert : public Udjat::Abstract::Alert {
+		class UDJAT_API Alert : public Udjat::Abstract::Alert {
 		public:
 
 			/// @brief D-Bus message argument.

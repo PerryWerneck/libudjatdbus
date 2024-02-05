@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2021 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,40 +17,33 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /*
+ /**
+  * @brief Implements system bus connection.
+  */
+
  #include <config.h>
- #include "private.h"
- #include <udjat/tools/dbus.h>
- #include <udjat/tools/file.h>
- #include <sys/types.h>
- #include <dirent.h>
- #include <unistd.h>
- #include <sys/stat.h>
- #include <fcntl.h>
+ #include <udjat/defs.h>
+ #include <dbus/dbus.h>
+ #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/logger.h>
+ #include <dirent.h>
+ #include <string>
+ #include <fcntl.h>
+ #include <unistd.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <udjat/tools/file.h>
+ #include <pwd.h>
 
  #ifdef HAVE_SYSTEMD
 	#include <systemd/sd-login.h>
  #endif // HAVE_SYSTEMD
 
+ using namespace std;
+
  namespace Udjat {
 
-	DBusConnection * DBus::Connection::Factory(DBusBusType type) {
-
-		DBusError err;
-		dbus_error_init(&err);
-
-		DBusConnection * connct = dbus_bus_get(type, &err);
-		if(dbus_error_is_set(&err)) {
-			std::string message(err.message);
-			dbus_error_free(&err);
-			throw std::runtime_error(message);
-		}
-
-		return connct;
-	}
-
-	DBusConnection * DBus::Connection::Factory(uid_t uid, const char *sid) {
+	static DBusConnection * UserConnectionFactory(uid_t uid, const char *sid) {
 
 		/// @brief File on /proc/[PID]/environ
 
@@ -93,7 +86,7 @@
 		// https://stackoverflow.com/questions/6496847/access-another-users-d-bus-session
 		DIR * dir = opendir("/proc");
         if(!dir) {
-                throw std::system_error(errno, std::system_category());
+			throw std::system_error(errno, std::system_category());
         }
 
         try {
@@ -109,7 +102,7 @@
 
 				// Check session id.
 #ifdef HAVE_SYSTEMD
-				{
+				if(sid && *sid) {
 					char *sname = nullptr;
 
 					// Reject pids without session.
@@ -117,13 +110,12 @@
 						continue;
 
 					// Test if it's the required session.
-					if(sid && *sid && strcmp(sid,sname)) {
+					if(strcmp(sid,sname)) {
 						free(sname);
 						continue;
 					}
 
 					free(sname);
-
 				}
 #endif // HAVE_SYSTEMD
 
@@ -152,17 +144,17 @@
 
 								ptr += 25;
 
-								connection = dbus_connection_open(ptr, &err);
+								connection = dbus_connection_open_private(ptr, &err);
 								if(dbus_error_is_set(&err)) {
 									clog << "dbus\tError '" << err.message << "' opening BUS " << ptr << endl;
 									dbus_error_free(&err);
 									connection = nullptr;
 								}
-	#ifdef DEBUG
+#ifdef DEBUG
 								else {
 									cout << "dbus\tGot user connection on " << ptr << endl;
 								}
-	#endif // DEBUG
+#endif // DEBUG
 
 								// Restore to saved UID.
 								seteuid(saved_uid);
@@ -188,49 +180,43 @@
 			throw system_error(ENOENT,system_category(),"Unable to find D-Bus session for requested user");
         }
 
-        if(Logger::enabled(Logger::Trace)) {
-			int fd = -1;
-			if(dbus_connection_get_socket(connection,&fd)) {
-				Logger::String("Got connection '",((unsigned long) connection),"' to user '",uid,"' on socket '",fd,"'").trace("d-bus");
-			} else {
-				Logger::String("Unable to got socket for connection '",((unsigned long) connection),"' to user '",uid,"'").trace("d-bus");
-			}
-        }
-
 		return connection;
+
 	}
 
-	DBus::System::System() : DBus::Connection{Factory(DBUS_BUS_SYSTEM),"sysbus"} {
-		Logger::String{"System bus created"}.trace("d-bus");
+	static std::string get_username(uid_t uid) {
+
+		int bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+		if (bufsize < 0)
+			bufsize = 16384;
+
+		string rc;
+		char * buf = new char[bufsize];
+
+		struct passwd pwd;
+		struct passwd * result;
+		if(getpwuid_r(uid, &pwd, buf, bufsize, &result)) {
+			rc = "@";
+			rc += std::to_string(uid);
+		} else {
+			rc = buf;
+		}
+		delete[] buf;
+
+		return rc;
+
 	}
 
-	DBus::Session::Session() : DBus::Connection{Factory(DBUS_BUS_SESSION),"sessionbus"} {
-		Logger::String{"Session bus created"}.trace("d-bus");
+	DBus::UserBus::UserBus(uid_t uid, const char *sid) : Abstract::DBus::Connection{get_username(uid).c_str(),UserConnectionFactory(uid,sid)}, userid{uid} {
+		open();
+		bus_register();
 	}
 
-	DBus::Starter::Starter() : DBus::Connection{Factory(DBUS_BUS_STARTER),"starterbus"} {
-		Logger::String{"Starter bus created"}.trace("d-bus");
+	DBus::UserBus::~UserBus() {
+		close();
+		dbus_connection_close(conn);
+		dbus_connection_unref(conn);
 	}
-
-	DBus::System & DBus::Connection::getSystemInstance() {
-		lock_guard<recursive_mutex> lock(guard);
-		static DBus::System instance;
-		return instance;
-	}
-
-	DBus::Session & DBus::Connection::getSessionInstance() {
-		lock_guard<recursive_mutex> lock(guard);
-		static DBus::Session instance;
-		return instance;
-	}
-
-	DBus::Starter & DBus::Connection::getStarterInstance() {
-		lock_guard<recursive_mutex> lock(guard);
-		static DBus::Starter instance;
-		return instance;
-	}
-
-
 
  }
- */
+

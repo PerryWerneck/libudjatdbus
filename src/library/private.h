@@ -17,8 +17,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+
  #pragma once
 
+ /*
  #include <config.h>
  #include <udjat/tools/dbus.h>
  #include <iostream>
@@ -39,5 +41,6 @@
 	UDJAT_PRIVATE void toggle_timeout(DBusTimeout *t, DBus::Connection *connection);
 
  }
+ */
 
 

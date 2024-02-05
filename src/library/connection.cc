@@ -17,6 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+ /*
  #include <config.h>
  #include "private.h"
  #include <udjat/tools/dbus.h>
@@ -32,6 +33,31 @@
 
  namespace Udjat {
 
+	class DataSlot {
+	private:
+		dbus_int32_t slot = 0;
+		DataSlot() {
+			dbus_connection_allocate_data_slot(&slot);
+			Logger::String{"Got slot '",slot,"' for watching connections"}.trace("d-bus");
+		}
+
+	public:
+
+		~DataSlot() {
+			dbus_connection_free_data_slot(&slot);
+		}
+
+		static DataSlot & getInstance() {
+			static DataSlot instance;
+			return instance;
+		}
+
+		inline dbus_int32_t value() const noexcept {
+			return slot;
+		}
+
+	};
+
 	std::recursive_mutex DBus::Connection::guard;
 
 	DBus::Connection & DBus::Connection::getInstance() {
@@ -39,6 +65,11 @@
 			return getSystemInstance();
 		}
 		return getSessionInstance();
+	}
+
+	static void trace_connection_free(const DBus::Connection *connection) {
+		debug("-------------------------------------------------");
+		Logger::String("Connection '",((unsigned long) connection),"' was released").trace("d-bus");
 	}
 
 	DBus::Connection::Connection(DBusConnection * c, const char *n, bool reg) : name(n), connection(c) {
@@ -139,6 +170,11 @@
 
 		}
 
+		if(Logger::enabled(Logger::Trace)) {
+			dbus_connection_set_data(connection,DataSlot::getInstance().value(),this,(DBusFreeFunction) trace_connection_free);
+			Logger::String("Connection '",((unsigned long) this),"' was allocated").trace("d-bus");
+		}
+
 	}
 
 	DBus::Connection::Connection(uid_t uid, const char *sid) : Connection(Factory(uid,sid), "user") {
@@ -172,13 +208,21 @@
 		DBusError err;
 		dbus_error_init(&err);
 
-		Logger::trace() << "Opening '" << busname << "'" << endl;
-		DBusConnection * connection = dbus_connection_open(busname, &err);
+		DBusConnection * connection = dbus_connection_open_private(busname, &err);
 		if(dbus_error_is_set(&err)) {
 			std::string message(err.message);
 			dbus_error_free(&err);
 			throw std::runtime_error(message);
 		}
+
+        if(Logger::enabled(Logger::Trace)) {
+			int fd = -1;
+			if(dbus_connection_get_socket(connection,&fd)) {
+				Logger::String("Got connection '",((unsigned long) connection),"' to '",busname,"' on socket '",fd,"'").trace("d-bus");
+			} else {
+				Logger::String("Unable to got socket for connection '",((unsigned long) connection),"' to '",busname,"'").trace("d-bus");
+			}
+        }
 
 		return connection;
 
@@ -189,7 +233,9 @@
 
 	DBus::Connection::~Connection() {
 
-		trace() << "Connection destroyed" << endl;
+		debug("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa DEALLOCATE");
+
+		Logger::String("Deallocating connection '",((unsigned long) this),"'").trace("d-bus");
 
 		flush();
 
@@ -211,8 +257,6 @@
 				thread->join();
 				delete thread;
 
-				dbus_connection_unref(connection);
-				connection = nullptr;
 
 			} else if(!use_thread) {
 
@@ -240,9 +284,22 @@
 					error() << "dbus_connection_set_timeout_functions has failed" << endl;
 				}
 
-				dbus_connection_unref(connection);
-				connection = nullptr;
 			}
+
+			if(Logger::enabled(Logger::Trace)) {
+				int fd = -1;
+				if(dbus_connection_get_socket(connection,&fd)) {
+					Logger::String("Releasing connection '",((unsigned long) connection),"' on socket '",fd,"'").trace("d-bus");
+				} else {
+					Logger::String("Unable to got socket for connection '",((unsigned long) connection),"'").trace("d-bus");
+				}
+			}
+
+			debug("--------------------------> Will unref");
+			dbus_connection_close(connection);
+			dbus_connection_unref(connection);
+
+			connection = nullptr;
 
 		} else {
 
@@ -274,4 +331,4 @@
 	}
 
  }
-
+ */

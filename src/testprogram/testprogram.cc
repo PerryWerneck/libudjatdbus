@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2021 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2023 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -18,304 +18,110 @@
  */
 
  #include <config.h>
-
- #include <udjat/tools/systemservice.h>
  #include <udjat/tools/application.h>
- #include <udjat/tools/dbus.h>
- #include <udjat/agent.h>
- #include <udjat/factory.h>
  #include <udjat/module.h>
- #include <iostream>
- #include <memory>
- #include <cstdlib>
  #include <unistd.h>
- #include <udjat/tools/mainloop.h>
+ #include <udjat/version.h>
  #include <udjat/tools/logger.h>
+ #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/threadpool.h>
+
+ #if UDJAT_CHECK_VERSION(1,2,0)
+	#include <udjat/tools/factory.h>
+ #else
+	#include <udjat/factory.h>
+ #endif // UDJAT_CHECK_VERSION
 
  using namespace std;
  using namespace Udjat;
+ using namespace Udjat::DBus;
 
-//---[ Implement ]------------------------------------------------------------------------------------------
+ static const Udjat::ModuleInfo moduleinfo { "Test program" };
 
-int run_as_service(int argc, char **argv) {
+ class RandomFactory : public Udjat::Factory {
+ public:
+	RandomFactory() : Udjat::Factory("random",moduleinfo) {
+		cout << "random agent factory was created" << endl;
+		srand(time(NULL));
+	}
 
-	static const Udjat::ModuleInfo moduleinfo { "Test program" };
+	std::shared_ptr<Abstract::Agent> AgentFactory(const Abstract::Object UDJAT_UNUSED(&parent), const XML::Node &node) const override {
 
-	class RandomFactory : public Udjat::Factory {
-	public:
-		RandomFactory() : Udjat::Factory("random",moduleinfo) {
-			cout << "random agent factory was created" << endl;
-			srand(time(NULL));
-		}
+		class RandomAgent : public Agent<unsigned int> {
+		private:
+			unsigned int limit = 5;
 
-		std::shared_ptr<Abstract::Agent> AgentFactory(const Abstract::Object UDJAT_UNUSED(&parent), const pugi::xml_node &node) const override {
-
-			class RandomAgent : public Agent<unsigned int> {
-			private:
-				unsigned int limit = 5;
-
-			public:
-				RandomAgent(const pugi::xml_node &node) : Agent<unsigned int>(node) {
-				}
-
-				bool refresh() override {
-
-					unsigned int value = ((unsigned int) rand()) % limit;
-					debug("Updating agent '",name(),"' to ",value);
-
-					return set(value);
-
-				}
-
-				void start() override {
-					Agent<unsigned int>::start( ((unsigned int) rand()) % limit );
-				}
-
-			};
-
-			return make_shared<RandomAgent>(node);
-
-		}
-
-	};
-
-	class Service : public SystemService {
-	private:
-		DBus::Connection *bus = nullptr;
-		RandomFactory rfactory;
-
-	protected:
-		/// @brief Initialize service.
-		void init() override {
-			cout << Application::Name() << "\tInitializing" << endl;
-
-			udjat_module_init();
-
-			SystemService::init();
-
-			/*
-			{
-				DBus::Message message{
-					"org.freedesktop.login1",			// Destination
-					"/org/freedesktop/login1",			// Path
-					"org.freedesktop.login1.Manager",	// Interface
-					"Inhibit"							// Method
-				};
-
-				message	<< "sleep"
-						<< "who"
-						<< "why"
-						<< "delay";
-
-				// Get system bus
-				cerr << "------------------- calling system bus" << endl;
-				DBus::Connection::getSystemInstance().call(message,[](DBus::Message &response){
-
-					if(response) {
-
-						debug("SUCCESS");
-						int fd = DBus::Value(response).getFD();
-
-						debug("FD=",fd);
-
-						::close(fd);
-
-					} else {
-
-						debug("FAILED");
-
-					}
-
-				});
-
-			}
-			*/
-
-			DBus::Connection &bus = DBus::Connection::getSessionInstance();
-
-			/*
-			cout << "----------------------------- Invalid message" << endl;
-			bus.call(
-				"br.eti.werneck.invalid",
-				"/service/none",
-				"br.eti.werneck.invalid",
-				"invalid",
-				[](DBus::Message & message) {
-					debug(message.error_message());
-				}
-			);
-			*/
-
-			/*
-			cout << "----------------------------- org.gnome.ScreenSaver" << endl;
-			bus.call(
-				"org.gnome.ScreenSaver",
-				"/org/gnome/ScreenSaver",
-				"org.gnome.ScreenSaver",
-				"GetActiveTime",
-				[](DBus::Message & message) {
-
-					if(message) {
-
-						unsigned int active;
-						message.pop(active);
-
-						cout << "org.gnome.ScreenSaver.ActiveTime=" << active << endl;
-
-					} else {
-
-						cerr << "Error '" << message.error_message() << "' getting screensaver active time" << endl;
-					}
-				}
-			);
-			*/
-
-			bus.subscribe(
-				this,
-				"org.gnome.ScreenSaver",
-				"ActiveChanged",
-				[](DBus::Message &message) {
-
-					cout << "org.gnome.ScreenSaver.ActiveChanged " << DBus::Value(message).to_string() << endl;
-
-				}
-			);
-
-			bus.subscribe(
-				this,
-				"com.example.signal",
-				"hello",
-				[](DBus::Message &message) {
-
-					cout << "com.example.signal.hello " << DBus::Value(message).to_string() << endl;
-
-				}
-			);
-
-			/*
-			DBus::Signal(
-				"com.example.signal.welcome",
-				"test",
-				"/agent/simple"
-			)
-				.push_back("Simple D-Bus signal")
-				.push_back((uint16_t) 10)
-				.send();
-			*/
-
-			DBus::Signal(
-				"com.example.signal.welcome",
-				"test",
-				"/agent/simple",
-				"Simple D-Bus signal",
-				(uint16_t) 10
-			).send();
-
-			// Test user bus
-			{
-				cout << "------------------------------------------------" << endl;
-				DBus::Connection usercon((uid_t) 1000);
+		public:
+			RandomAgent(const XML::Node &node) : Agent<unsigned int>(node) {
 			}
 
-			// Test notification
-			cout << "---[ Message Test Begin ]--------------------------------------------" << endl;
-			try {
-
-				DBus::Message message{
-					"org.freedesktop.Notifications",		// Destination
-					"/org/freedesktop/Notifications",		// Path
-					"org.freedesktop.Notifications",		// Interface
-					"Notify",								// Method
-					PACKAGE_NAME,
-					((unsigned int) 0),
-					"gtk-dialog-info",
-					"Remote instalation service",
-					"This machine is acting as an installation server, keep it active",
-					std::vector<std::string>()
-				};
-
-				DBus::Connection::getSessionInstance().call_and_wait(message,[](DBus::Message &response){
-
-					if(response.failed()) {
-
-						error() << "Error '" << response.error_name() << "' sending notification"
-								<< endl << response.error_message() << endl;
-
-					} else {
-
-						info() << "Success??" << endl;
-					}
-
-
-				});
-			} catch(const std::exception &e) {
-
-				cout << "-----------------------------" << endl << e.what() << endl << "------------------------------" << endl;
+			bool refresh() override {
+				debug("Updating agent '",name(),"'");
+				set( ((unsigned int) rand()) % limit );
+				return true;
 			}
 
-			try {
-
-				DBus::Message message{
-					"org.freedesktop.Notifications",		// Destination
-					"/org/freedesktop/Notifications",		// Path
-					"org.freedesktop.Notifications",		// Interface
-					"Notify"								// Method
-				};
-
-				message	<< PACKAGE_NAME
-						<< ((unsigned int) 0)
-						<< "gtk-dialog-info"
-						<< "Remote instalation service"
-						<< "This machine is acting as an installation server, keep it active"
-						<< std::vector<std::string>();
-
-				DBus::Connection::getSessionInstance().call_and_wait(message,[](DBus::Message &response){
-
-					if(response.failed()) {
-
-						error() << "Error '" << response.error_name() << "' sending notification"
-								<< endl << response.error_message() << endl;
-
-					} else {
-
-						info() << "Success??" << endl;
-					}
-
-				});
-			} catch(const std::exception &e) {
-
-				cout << "-----------------------------" << endl << e.what() << endl << "------------------------------" << endl;
+			void start() override {
+				Agent<unsigned int>::start( ((unsigned int) rand()) % limit );
 			}
 
-			cout << "---[ Message Test Finish ]--------------------------------------------" << endl;
+		};
 
-		}
+		return make_shared<RandomAgent>(node);
 
-		/// @brief Deinitialize service.
-		void deinit() override {
-			delete bus;
-			cout << Application::Name() << "\tDeinitializing" << endl;
-			Udjat::Module::unload();
-		}
+	}
 
-	public:
-		Service() : SystemService{"./test.xml"} {
-		}
+ };
 
-		virtual ~Service() {
-		}
+ int main(int argc, char **argv) {
 
-	};
+	Logger::verbosity(9);
+	Logger::redirect();
+	Logger::console(true);
 
-	return Service().run(argc,argv);
+	UserBus bus{1000};
+	//SessionBus bus;
 
+	Udjat::DBus::Member *member = &bus.subscribe("com.example.signal","hello",[&member,&bus](DBus::Message &message){
 
-}
+		cout << "Got signal hello" << endl;
 
-int main(int argc, char **argv) {
+		// Cant remove member while running, then, enqueue cleanup.
+		ThreadPool::getInstance().push([&member,&bus](){
+			bus.remove(*member);
+		});
 
-	run_as_service(argc,argv);
+	});
 
-	//Udjat::DBus::Connection::getSystemInstance();
+	bus.call(
+		"org.gnome.ScreenSaver",
+		"/org/gnome/ScreenSaver",
+		"org.gnome.ScreenSaver",
+		"GetActiveTime",
+		[](DBus::Message & message) {
 
+			if(message) {
+
+				unsigned int active;
+				message.pop(active);
+
+				debug("-------------------------> Got response active=",active);
+
+			} else {
+
+				debug("-------------------------> Error calling gnome");
+
+			}
+
+		});
+
+	udjat_module_init();
+	RandomFactory rfactory;
+
+	auto rc = Application{}.run(argc,argv,"./test.xml");
+
+	debug("Application exits with rc=",rc);
+
+	return rc;
 }

@@ -18,9 +18,10 @@
  */
 
  #include <config.h>
- #include <udjat/tools/dbus.h>
  #include <udjat/tools/value.h>
  #include <udjat/tools/logger.h>
+ #include <udjat/tools/dbus/value.h>
+ #include <udjat/tools/dbus/message.h>
  #include <cstring>
  #include <string>
  #include <iostream>
@@ -560,7 +561,7 @@
 		return *this;
 	}
 
-	const Udjat::Value & DBus::Value::get(TimeStamp &value) const {
+	const Udjat::Value & DBus::Value::get(TimeStamp &) const {
 		throw system_error(ENOTSUP,system_category(),"Timestamp conversion is not available");
 	}
 

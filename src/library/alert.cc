@@ -23,10 +23,10 @@
  #include <udjat/alert/activation.h>
  #include <dbus/dbus-protocol.h>
  #include <udjat/tools/logger.h>
- #include <udjat/tools/dbus.h>
  #include <udjat/tools/string.h>
+ #include <udjat/tools/dbus/signal.h>
  #include <string>
- #include "private.h"
+ #include <udjat/alert/d-bus.h>
 
  using namespace std;
 
@@ -300,6 +300,8 @@
 			}
 
 		};
+
+		debug("Activating D-Bus alert");
 
 		return make_shared<Activation>(this);
 
