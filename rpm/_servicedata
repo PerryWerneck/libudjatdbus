@@ -1,0 +1,4 @@
+<servicedata>
+<service name="tar_scm">
+                <param name="url">https://github.com/PerryWerneck/udjat-module-dbus</param>
+              <param name="changesrevision">dff252b0c7e6ec643ceb158aac1706865e5de878</param></service></servicedata>

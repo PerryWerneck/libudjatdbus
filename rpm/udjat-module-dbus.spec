@@ -21,7 +21,7 @@
 
 Summary:		DBus client/server module for %{product_name}
 Name:			udjat-module-dbus
-Version:		2.0
+Version:		2.0+git20240202
 Release:		0
 License:		LGPL-3.0
 Source:			%{name}-%{version}.tar.xz

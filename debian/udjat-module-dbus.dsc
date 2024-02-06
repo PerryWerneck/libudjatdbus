@@ -1,6 +1,6 @@
 Format: 1.0
 Source: libudjatdbus
-Version: 1.1-0
+Version: 2.0+git20240202-0
 Binary: libudjatdbus
 Maintainer: Perry Werneck <perry.werneck@gmail.com>
 Architecture: any
