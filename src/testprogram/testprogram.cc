@@ -83,7 +83,7 @@
 	UserBus bus{1000};
 	//SessionBus bus;
 
-	Udjat::DBus::Member *member = &bus.subscribe("com.example.signal","hello",[&member,&bus](DBus::Message &message){
+	Udjat::DBus::Member *member = &bus.subscribe("com.example.signal","hello",[&member,&bus](DBus::Message &){
 
 		cout << "Got signal hello" << endl;
 
@@ -115,6 +115,18 @@
 			}
 
 		});
+
+	bus.subscribe(
+			"org.gnome.ScreenSaver",
+			"ActiveChanged",
+			[](DBus::Message &message) {
+
+				// Active state of gnome screensaver has changed, deal with it.
+				bool locked = DBus::Value(message).as_bool();
+				Logger::String{"Gnome screensaver is now ",(locked ? "active" : "inactive")}.info("d-bus");
+
+			}
+	);
 
 	udjat_module_init();
 	RandomFactory rfactory;
