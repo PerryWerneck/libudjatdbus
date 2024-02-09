@@ -18,7 +18,7 @@ if [ "$?" != "0" ]; then
 	exit -1
 fi
 
-sudo ln -sf libudjatdbus.so.1.0 ${LIBDIR}/libudjatdbus.so
+sudo ln -sf libudjatdbus.so.2.0 ${LIBDIR}/libudjatdbus.so
 
 cat > .bin/sdk.pc << EOF
 prefix=/usr
@@ -28,7 +28,7 @@ includedir=$(readlink -f ./src/include)
 
 Name: udjat-module-dbus
 Description: UDJAT D-Bus library
-Version: 1.0
+Version: 2.0
 Libs: -L$(readlink -f .bin/Debug) -ludjatdbus -ldbus-1
 Libs.private:  -L/home/perry/project/udjat/libudjat/.bin/Debug -Wl,-rpath,/home/perry/project/udjat/libudjat/.bin/Debug -ludjat
 Cflags: -I$(readlink -f ./src/include)
