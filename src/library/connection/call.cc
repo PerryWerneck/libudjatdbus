@@ -252,16 +252,6 @@
 
 	}
 
-	/*
-	void Abstract::DBus::Connection::call(const Udjat::DBus::Message &message, const std::function<void(Udjat::DBus::Message & message)> &call) {
-		DBusMessage *msg = (DBusMessage *) message;
-		if(!msg) {
-			throw runtime_error("Empty D-Bus message");
-		}
-		this->call(msg,call);
-	}
-	*/
-
 	void Abstract::DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
 		DBusMessage * message = dbus_message_new_method_call(destination,path,interface,member);

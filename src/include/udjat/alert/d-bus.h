@@ -21,6 +21,8 @@
   * @brief Declare d-bus alerts.
   */
 
+ #pragma once
+
  #include <udjat/defs.h>
  #include <udjat/alert/abstract.h>
  #include <dbus/dbus-shared.h>
