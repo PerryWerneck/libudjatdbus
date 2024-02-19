@@ -1,4 +1,18 @@
 -------------------------------------------------------------------
+Sat Feb 03 03:59:33 UTC 2024 - perry.werneck@gmail.com
+
+- Update to version 2.0+git20240202:
+  * Refactoring method calls.
+  * Updating package control file, adding named bus connection.
+  * Adding legacy header.
+  * Updating sdk.
+  * Debugging d-bus connections.
+  * Better trace messages.
+  * Refactoring signal subscribe/unsubscribe.
+  * Updating to version 2.0 due to refactor.
+  * Debugging private session.
+
+-------------------------------------------------------------------
 Sat Jul 10 12:21:30 UTC 2021 - Perry Werneck <perry.werneck@gmail.com>
 
 - First build on OBS 

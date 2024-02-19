@@ -36,7 +36,7 @@
 
 		class UDJAT_API Member : public std::string {
 		private:
-			const std::function<void(Message & message)> &callback;
+			std::function<void(Message & message)> callback;	// Cant be reference!!
 
 		public:
 			Member(const char *name,const std::function<void(Message & message)> &callback);
