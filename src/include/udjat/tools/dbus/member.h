@@ -38,12 +38,19 @@
 		private:
 			std::function<void(Message & message)> callback;	// Cant be reference!!
 
+		protected:
+			int type;
+
 		public:
-			Member(const char *name,const std::function<void(Message & message)> &callback);
+			Member(const char *name, const std::function<void(Message & message)> &callback);
 			Member(const XML::Node &node,const std::function<void(Message & message)> &callback);
 			~Member();
 
 			bool operator==(const char *name) const noexcept;
+
+			inline bool operator==(const int t) const noexcept {
+				return type == t;
+			}
 
 			inline void call(Message &message) const {
 				callback(message);

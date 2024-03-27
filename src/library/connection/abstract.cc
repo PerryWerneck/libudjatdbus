@@ -112,7 +112,7 @@
 		dbus_connection_set_exit_on_disconnect(conn, false);
 
 		// Add message filter.
-		if (dbus_connection_add_filter(conn, (DBusHandleMessageFunction) filter, this, NULL) == FALSE) {
+		if (dbus_connection_add_filter(conn, (DBusHandleMessageFunction) on_message, this, NULL) == FALSE) {
 			throw std::runtime_error("Cant add filter to D-Bus connection");
 		}
 
@@ -195,7 +195,7 @@
 		});
 
 		// Remove filter
-		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) filter, this);
+		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) on_message, this);
 
 		Logger::String{"Restoring d-bus watchers"}.trace(name());
 
@@ -223,23 +223,15 @@
 
 	}
 
-	DBusHandlerResult Abstract::DBus::Connection::filter(DBusConnection *, DBusMessage *message, Abstract::DBus::Connection *connection) noexcept {
-
-		debug(__FUNCTION__);
-
-		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_SIGNAL) {
-			return connection->on_signal(message);
-		}
-
-		// TODO: Filter method calls.
-
-		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	DBusHandlerResult Abstract::DBus::Connection::on_message(DBusConnection *, DBusMessage *message, Abstract::DBus::Connection *connection) noexcept {
+		return connection->filter(message);
 	}
 
-	DBusHandlerResult Abstract::DBus::Connection::on_signal(DBusMessage *message) noexcept {
+	DBusHandlerResult Abstract::DBus::Connection::filter(DBusMessage *message) noexcept {
 
 		lock_guard<mutex> lock(guard);
 
+		int type = dbus_message_get_type(message);
 		const char *interface = dbus_message_get_interface(message);
 		const char *member = dbus_message_get_member(message);
 
@@ -253,7 +245,7 @@
 
 				for(const auto &imemb : intf) {
 
-					if(imemb == member) {
+					if(imemb == type && imemb == member) {
 
 						try {
 

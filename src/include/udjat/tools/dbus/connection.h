@@ -53,11 +53,11 @@
 				/// @brief Service thread.
 				std::thread * thread = nullptr;
 
-				/// @brief Handle signal
-				DBusHandlerResult on_signal(DBusMessage *message) noexcept;
+				/// @brief Filter message
+				DBusHandlerResult filter(DBusMessage *message) noexcept;
 
 				/// @brief Message filter method.
-				static DBusHandlerResult filter(DBusConnection *, DBusMessage *, Abstract::DBus::Connection *) noexcept;
+				static DBusHandlerResult on_message(DBusConnection *, DBusMessage *, Abstract::DBus::Connection *) noexcept;
 
 				/// @brief Interfaces in this connection.
 				std::list<Udjat::DBus::Interface> interfaces;

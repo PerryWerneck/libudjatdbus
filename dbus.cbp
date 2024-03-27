@@ -54,8 +54,6 @@
 		<Unit filename="src/include/udjat/tools/dbus/signal.h" />
 		<Unit filename="src/include/udjat/tools/dbus/value.h" />
 		<Unit filename="src/library/alert.cc" />
-		<Unit filename="src/library/call.cc" />
-		<Unit filename="src/library/connection.cc" />
 		<Unit filename="src/library/connection/abstract.cc" />
 		<Unit filename="src/library/connection/call.cc" />
 		<Unit filename="src/library/connection/named.cc" />
@@ -65,16 +63,12 @@
 		<Unit filename="src/library/connection/timeout.cc" />
 		<Unit filename="src/library/connection/user.cc" />
 		<Unit filename="src/library/connection/watch.cc" />
-		<Unit filename="src/library/connection_factories.cc" />
-		<Unit filename="src/library/dispatcher.cc" />
-		<Unit filename="src/library/filter.cc" />
 		<Unit filename="src/library/interface.cc" />
 		<Unit filename="src/library/member.cc" />
 		<Unit filename="src/library/message/message.cc" />
 		<Unit filename="src/library/message/push_back.cc" />
 		<Unit filename="src/library/private.h" />
 		<Unit filename="src/library/signal.cc" />
-		<Unit filename="src/library/signals.cc" />
 		<Unit filename="src/library/value.cc" />
 		<Unit filename="src/module/init.cc" />
 		<Unit filename="src/module/private.h" />

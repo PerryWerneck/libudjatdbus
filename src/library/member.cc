@@ -31,7 +31,8 @@
 
  namespace Udjat {
 
-	DBus::Member::Member(const char *name,const std::function<void(Message & message)> &c) : string{name}, callback{c} {
+	DBus::Member::Member(const char *name,const std::function<void(Message & message)> &c)
+		: string{name}, callback{c}, type{DBUS_MESSAGE_TYPE_SIGNAL} {
 		Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
 	}
 
