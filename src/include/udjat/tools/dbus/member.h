@@ -36,14 +36,14 @@
 
 		class UDJAT_API Member : public std::string {
 		private:
-			std::function<void(Message & message)> callback;	// Cant be reference!!
+			std::function<bool(Message & message)> callback;
 
 		protected:
 			int type;
 
 		public:
-			Member(const char *name, const std::function<void(Message & message)> &callback);
-			Member(const XML::Node &node,const std::function<void(Message & message)> &callback);
+			Member(const char *name, const std::function<bool(Message & message)> &callback);
+			Member(const XML::Node &node,const std::function<bool(Message & message)> &callback);
 			~Member();
 
 			bool operator==(const char *name) const noexcept;

@@ -345,7 +345,7 @@
 		return push_back(intf);
 	}
 
-	Udjat::DBus::Member & Abstract::DBus::Connection::subscribe(const char *interface, const char *member, const std::function<void(Udjat::DBus::Message &message)> &callback) {
+	Udjat::DBus::Member & Abstract::DBus::Connection::subscribe(const char *interface, const char *member, const std::function<bool(Udjat::DBus::Message &message)> &callback) {
 		return emplace_back(interface).emplace_back(member,callback);
 	}
 

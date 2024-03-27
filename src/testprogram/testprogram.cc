@@ -92,6 +92,8 @@
 			bus.remove(*member);
 		});
 
+		return false;
+
 	});
 
 	bus.call(
@@ -124,6 +126,8 @@
 				// Active state of gnome screensaver has changed, deal with it.
 				bool locked = DBus::Value(message).as_bool();
 				Logger::String{"Gnome screensaver is now ",(locked ? "active" : "inactive")}.info("d-bus");
+
+				return false;
 
 			}
 	);

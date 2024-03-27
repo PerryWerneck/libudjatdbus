@@ -31,13 +31,31 @@
 
  namespace Udjat {
 
-	DBus::Member::Member(const char *name,const std::function<void(Message & message)> &c)
+	DBus::Member::Member(const char *name,const std::function<bool(Message & message)> &c)
 		: string{name}, callback{c}, type{DBUS_MESSAGE_TYPE_SIGNAL} {
 		Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
 	}
 
-	DBus::Member::Member(const XML::Node &node,const std::function<void(Message & message)> &callback) : Member{String{node,"dbus-member"}.c_str(),callback} {
-		Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
+	DBus::Member::Member(const XML::Node &node,const std::function<bool(Message & message)> &callback) : Member{String{node,"dbus-member"}.c_str(),callback} {
+
+		const char *name = XML::StringFactory(node,"dbus-message-type");
+
+		if(name && *name) {
+
+			int index = String{name}.select("signal","method",nullptr);
+			if(index < 0) {
+				throw runtime_error(Logger::String{"Unexpected message type: ",type});
+			}
+
+			static const int types[] = {DBUS_MESSAGE_TYPE_SIGNAL,DBUS_MESSAGE_TYPE_METHOD_CALL};
+			type = types[index % 1];
+
+			Logger::String{"Watching ",type," '",c_str(),"'"}.trace("d-bus");
+
+		} else {
+			Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
+		}
+
 	}
 
 	DBus::Member::~Member() {

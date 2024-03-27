@@ -41,11 +41,11 @@
 		return strcasecmp(intf,c_str()) == 0;
 	}
 
-	Udjat::DBus::Member & DBus::Interface::push_back(const XML::Node &node,const std::function<void(Udjat::DBus::Message & message)> &callback) {
+	Udjat::DBus::Member & DBus::Interface::push_back(const XML::Node &node,const std::function<bool(Udjat::DBus::Message & message)> &callback) {
 		return members.emplace_back(node,callback);
 	}
 
-	Udjat::DBus::Member & DBus::Interface::emplace_back(const char *member, const std::function<void(Udjat::DBus::Message & message)> &callback) {
+	Udjat::DBus::Member & DBus::Interface::emplace_back(const char *member, const std::function<bool(Udjat::DBus::Message & message)> &callback) {
 		return members.emplace_back(member,callback);
 	}
 

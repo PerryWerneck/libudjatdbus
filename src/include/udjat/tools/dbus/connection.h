@@ -112,7 +112,11 @@
 
 				/// @brief Subscribe to d-bus signal.
 				/// @return Member handling the signal.
-				Udjat::DBus::Member & subscribe(const char *interface, const char *member, const std::function<void(Udjat::DBus::Message &message)> &callback);
+				Udjat::DBus::Member & subscribe(const char *interface, const char *member, const std::function<bool(Udjat::DBus::Message &message)> &callback);
+
+				/// @brief Watch d-bus method calls.
+				/// @return Member handling the signal.
+				Udjat::DBus::Member & watch(const char *interface, const char *member, const std::function<bool(Udjat::DBus::Message &message)> &callback);
 
 				/// @brief Unsubscribe from d-bus signal.
 				void remove(const Udjat::DBus::Member &member);
