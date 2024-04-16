@@ -48,11 +48,43 @@
 	}
 
 	DBus::NamedBus::NamedBus(const char *connection_name, const char *bus_name) : Abstract::DBus::Connection{connection_name,NamedConnectionFactory(bus_name)} {
-		open();
-		bus_register();
+
+		try {
+
+			open();
+			bus_register();
+
+			int fd = -1;
+			if(dbus_connection_get_socket(conn,&fd)) {
+				Logger::String("Got connection to '",connection_name,"' on socket '",fd,"'").trace("d-bus");
+			} else {
+				Logger::String("Got connection to '",connection_name,"'").trace("d-bus");
+			}
+
+		} catch(...) {
+
+			if(conn) {
+				Logger::String{"Closing connection to '",connection_name,"' due to initialization error"}.error("d-bus");
+				dbus_connection_close(conn);
+				dbus_connection_unref(conn);
+				conn = nullptr;
+			}
+
+			throw;
+
+		}
+
 	}
 
 	DBus::NamedBus::~NamedBus() {
+
+		int fd = -1;
+		if(dbus_connection_get_socket(conn,&fd)) {
+			Logger::String("Closing named connection '",name(),"' on socket '",fd,"'").trace("d-bus");
+		} else {
+			Logger::String("Closing named connection '",name(),"'").trace("d-bus");
+		}
+
 		close();
 		dbus_connection_close(conn);
 		dbus_connection_unref(conn);

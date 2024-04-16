@@ -68,7 +68,7 @@
 			protected:
 
 				/// @brief Connection to D-Bus.
-				DBusConnection * conn;
+				DBusConnection * conn = nullptr;
 
 				Connection(const char *name, DBusConnection * conn);
 
