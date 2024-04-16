@@ -23,6 +23,7 @@
 
  #include <config.h>
  #include <udjat/defs.h>
+ #include <udjat/version.h>
  #include <udjat/tools/dbus/member.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/logger.h>
@@ -38,7 +39,11 @@
 
 	DBus::Member::Member(const XML::Node &node,const std::function<bool(Message & message)> &callback) : Member{String{node,"dbus-member"}.c_str(),callback} {
 
+#if UDJAT_CHECK_VERSION(1,2,0)
 		const char *name = XML::StringFactory(node,"dbus-message-type");
+#else
+		const char *name = XML::StringFactory(node,"dbus-message-type").c_str();
+#endif
 
 		if(name && *name) {
 
