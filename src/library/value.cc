@@ -327,9 +327,16 @@
 			return false;
 
 		case DBUS_TYPE_VARIANT:
-			cerr << "d-bus\tUnsupported DBUS_TYPE_VARIANT value" << endl;
-			reset(Value::Type::Undefined);
-			return false;
+			{
+				DBusMessageIter sub;
+				dbus_message_iter_recurse(iter, &sub);
+
+				debug("------------------> VTYPE=",dbus_message_iter_get_arg_type(&sub));
+
+				bool rc = this->set(&sub);
+
+				return rc;
+			}
 
 		default:
 			dbus_message_iter_get_basic(iter,&value);
