@@ -80,6 +80,32 @@
 	Logger::redirect();
 	Logger::console(true);
 
+	SystemBus bus;
+	bus.get(
+		"org.freedesktop.systemd1",
+		"/org/freedesktop/systemd1",
+		"org.freedesktop.systemd1.Manager",
+		"Virtualization",
+		[](Udjat::DBus::Message & message) {
+
+			if(message) {
+
+				string response;
+				message.pop(response);
+
+				debug("-------------------------> Got response Virtualization=",response);
+
+			} else {
+
+				debug("-------------------------> Error calling org.freedesktop.systemd1");
+
+			}
+
+		}
+	);
+
+
+	/*
 	UserBus bus{1000};
 	//SessionBus bus;
 
@@ -134,6 +160,7 @@
 
 	udjat_module_init();
 	RandomFactory rfactory;
+	*/
 
 	auto rc = Application{}.run(argc,argv,"./test.xml");
 

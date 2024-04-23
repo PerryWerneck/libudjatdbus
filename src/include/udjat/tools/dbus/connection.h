@@ -138,6 +138,15 @@
 							const std::function<void(Udjat::DBus::Message & message)> &call
 						);
 
+				/// @brief Get property.
+				/// @param name	Property name.
+				void get(	const char *destination,
+							const char *path,
+							const char *interface,
+							const char *property_name,
+							const std::function<void(Udjat::DBus::Message & message)> &call
+						);
+
 			};
 
 

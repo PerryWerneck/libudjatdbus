@@ -252,6 +252,36 @@
 
 	}
 
+	void Abstract::DBus::Connection::get(const char *destination, const char *path, const char *interface, const char *property_name, const std::function<void(Udjat::DBus::Message & message)> &call) {
+
+		DBusMessage * message = dbus_message_new_method_call(destination,path,"org.freedesktop.DBus.Properties","Get");
+		if(message == NULL) {
+			throw std::runtime_error("Error creating DBus method call");
+		}
+
+		debug("interface='",interface,"' property='",property_name,"'");
+
+		if(!dbus_message_append_args(
+			message,
+			DBUS_TYPE_STRING, &interface,
+			DBUS_TYPE_STRING, &property_name,
+			DBUS_TYPE_INVALID)
+		) {
+			dbus_message_unref(message);
+			throw std::runtime_error("Error appending arguments to DBus method call");
+		}
+
+		try {
+			this->call(message,call);
+		} catch(...) {
+			dbus_message_unref(message);
+			throw;
+		}
+
+		dbus_message_unref(message);
+
+	}
+
 	void Abstract::DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
 		DBusMessage * message = dbus_message_new_method_call(destination,path,interface,member);
@@ -259,7 +289,12 @@
 			throw std::runtime_error("Error creating DBus method call");
 		}
 
-		this->call(message,call);
+		try {
+			this->call(message,call);
+		} catch(...) {
+			dbus_message_unref(message);
+			throw;
+		}
 
 		dbus_message_unref(message);
 
