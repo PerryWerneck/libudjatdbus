@@ -30,6 +30,7 @@
  #include <udjat/tools/configuration.h>
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/worker.h>
 
  using namespace std;
  using namespace Udjat;
@@ -109,14 +110,79 @@
 		private:
 			const char *service_name;
 
+			DBusHandlerResult filter(DBusMessage *message) override {
+
+				if(dbus_message_get_type(message) != DBUS_MESSAGE_TYPE_METHOD_CALL) {
+					return Abstract::DBus::Connection::filter(message);
+				}
+
+				const char * interface = dbus_message_get_interface(message);
+				debug("----> Interface=",interface);
+
+				{
+					size_t sz = strlen(service_name);
+
+					if(strlen(interface) <= sz || interface[sz] != '.' || strncasecmp(interface,service_name,sz)) {
+						Logger::String("Rejecting interface '",interface,"'");
+						return Abstract::DBus::Connection::filter(message);
+					}
+
+					interface += (sz+1);
+					debug("Interface name: '",interface,"'");
+
+				}
+
+				DBusMessage *reply = nullptr;	///< @brief The message reply.
+
+				try {
+
+					const Worker &worker{Udjat::Worker::find(interface)};
+					debug("Got worker '",worker.c_str(),"'");
+
+					throw runtime_error("Incomplete");
+
+
+				} catch(const std::exception &e) {
+
+					Logger::String{"Cant handle '",dbus_message_get_interface(message),"': ",e.what()}.error("d-bus");
+					reply = dbus_message_new_error(message,DBUS_ERROR_FAILED,e.what());
+
+				} catch(...) {
+
+					Logger::String{"Cant handle '",dbus_message_get_interface(message),"': Unexpected error"}.error("d-bus");
+					reply = dbus_message_new_error(message,DBUS_ERROR_FAILED,"Unexpected error");
+
+				}
+
+				if(reply) {
+					dbus_uint32_t serial = 0;
+					if(!dbus_connection_send(conn, reply, &serial)) {
+						Logger::String{"Cant send response to '",dbus_message_get_interface(message),"'"}.error("d-bus");
+						return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+					}
+					dbus_connection_flush(conn);
+					dbus_message_unref(reply);
+					return DBUS_HANDLER_RESULT_HANDLED;
+				}
+
+				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+			}
+
 		public:
 			Service(DBusBusType bustype, const char *sname) : Abstract::DBus::Connection{"d-bus",SharedConnectionFactory(bustype)}, Udjat::NamedObject{"d-bus"}, service_name{sname} {
 				Logger::String{"Starting ",service_name}.info("d-bus");
-				request_name(service_name);
+				if(request_name(service_name) != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
+					throw runtime_error(Logger::String{"Cant get ownership of ",service_name});
+				}
+				open();
+
 			}
 
 			virtual ~Service() {
 				Logger::String{"Stopping ",service_name}.info("d-bus");
+				close();
+				dbus_connection_unref(conn);
 			}
 
 		};

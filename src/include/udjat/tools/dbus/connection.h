@@ -53,9 +53,6 @@
 				/// @brief Service thread.
 				std::thread * thread = nullptr;
 
-				/// @brief Filter message
-				DBusHandlerResult filter(DBusMessage *message) noexcept;
-
 				/// @brief Message filter method.
 				static DBusHandlerResult on_message(DBusConnection *, DBusMessage *, Abstract::DBus::Connection *) noexcept;
 
@@ -77,11 +74,14 @@
 
 				static DBusConnection * SharedConnectionFactory(DBusBusType type);
 
+				/// @brief Filter message
+				virtual DBusHandlerResult filter(DBusMessage *message);
+
 				/// @brief Registers a connection with the bus.
 				void bus_register();
 
 				/// @brief Asks the bus to assign the given name to this connection by invoking the RequestName method on the bus.
-				void request_name(const char *name);
+				int request_name(const char *name);
 
 			public:
 

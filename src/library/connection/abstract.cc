@@ -241,12 +241,39 @@
 	}
 
 	DBusHandlerResult Abstract::DBus::Connection::on_message(DBusConnection *, DBusMessage *message, Abstract::DBus::Connection *connection) noexcept {
-		return connection->filter(message);
+
+		lock_guard<mutex> lock(connection->guard);
+
+		try {
+
+			return connection->filter(message);
+
+		} catch(const std::exception &e) {
+
+			Logger::String{
+				dbus_message_get_interface(message),
+				".",
+				dbus_message_get_member(message),
+				": ",
+				e.what()
+			}.error(connection->name());
+
+		} catch(...) {
+
+			Logger::String{
+				dbus_message_get_interface(message),
+				".",
+				dbus_message_get_member(message),
+				": Unexpected error",
+			}.error(connection->name());
+
+		}
+
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
 	}
 
-	DBusHandlerResult Abstract::DBus::Connection::filter(DBusMessage *message) noexcept {
-
-		lock_guard<mutex> lock(guard);
+	DBusHandlerResult Abstract::DBus::Connection::filter(DBusMessage *message) {
 
 		int type = dbus_message_get_type(message);
 		const char *interface = dbus_message_get_interface(message);
@@ -264,21 +291,9 @@
 
 					if(imemb == type && imemb == member) {
 
-						try {
-
-							debug("Processing ",interface,".",member);
-							Udjat::DBus::Message msg(message);
-							imemb.call(msg);
-
-						} catch(const std::exception &e) {
-
-							Logger::String{interface,".",member,": ",e.what()}.error(name());
-
-						} catch(...) {
-
-							Logger::String{interface,".",member,": Unexpecter error"}.error(name());
-
-						}
+						debug("Processing ",interface,".",member);
+						Udjat::DBus::Message msg(message);
+						imemb.call(msg);
 
 					}
 
@@ -397,12 +412,12 @@
 
 	}
 
-	void Abstract::DBus::Connection::request_name(const char *name) {
+	int Abstract::DBus::Connection::request_name(const char *name) {
 
 		DBusError err;
 		dbus_error_init(&err);
 
-		dbus_bus_request_name(
+		int reqstatus = dbus_bus_request_name(
 			conn,
 			name,
 			DBUS_NAME_FLAG_REPLACE_EXISTING,
@@ -415,6 +430,7 @@
 			throw std::runtime_error(message);
 		}
 
+		return reqstatus;
 
 	}
 
