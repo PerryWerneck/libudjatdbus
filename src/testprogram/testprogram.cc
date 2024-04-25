@@ -80,6 +80,9 @@
 	Logger::redirect();
 	Logger::console(true);
 
+	udjat_module_init();
+
+	/*
 	SystemBus bus;
 	bus.get(
 		"org.freedesktop.systemd1",
@@ -103,6 +106,7 @@
 
 		}
 	);
+	*/
 
 
 	/*

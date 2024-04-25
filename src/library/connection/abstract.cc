@@ -70,6 +70,23 @@
 		Logger::String("Connection '",((unsigned long) connection),"' was released").trace("d-bus");
 	}
 
+	std::shared_ptr<Abstract::DBus::Connection> Abstract::DBus::Connection::factory(const XML::Node &node) {
+
+		lock_guard<mutex> lock(guard);
+
+		const char *bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system");
+
+		if(!strcasecmp(bus,"system")) {
+			return make_shared<Udjat::DBus::SystemBus>();
+		}
+
+		if(!strcasecmp(bus,"session")) {
+			return make_shared<Udjat::DBus::SessionBus>();
+		}
+
+		throw runtime_error(Logger::String{"Unexpected bus name: '",bus,"'"});
+	}
+
 	DBusConnection * Abstract::DBus::Connection::SharedConnectionFactory(DBusBusType type) {
 
 		DBusError err;
@@ -377,6 +394,27 @@
 		if(!rc) {
 			throw runtime_error("Can't send D-Bus signal");
 		}
+
+	}
+
+	void Abstract::DBus::Connection::request_name(const char *name) {
+
+		DBusError err;
+		dbus_error_init(&err);
+
+		dbus_bus_request_name(
+			conn,
+			name,
+			DBUS_NAME_FLAG_REPLACE_EXISTING,
+			&err
+		);
+
+		if(dbus_error_is_set(&err)) {
+			std::string message{err.message};
+			dbus_error_free(&err);
+			throw std::runtime_error(message);
+		}
+
 
 	}
 

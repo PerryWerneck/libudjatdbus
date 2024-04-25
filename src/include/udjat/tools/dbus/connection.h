@@ -80,7 +80,12 @@
 				/// @brief Registers a connection with the bus.
 				void bus_register();
 
+				/// @brief Asks the bus to assign the given name to this connection by invoking the RequestName method on the bus.
+				void request_name(const char *name);
+
 			public:
+
+				static std::shared_ptr<Connection> factory(const XML::Node &node);
 
 				inline const char *name() const noexcept {
 					return object_name.c_str();

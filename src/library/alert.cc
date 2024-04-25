@@ -150,9 +150,9 @@
 		// Get bus type
 		{
 			static DBusBusType types[] = {
-				DBUS_BUS_SESSION,
-				DBUS_BUS_SYSTEM,
-				DBUS_BUS_STARTER
+				DBUS_BUS_SESSION,	///< @brief The login session bus.
+				DBUS_BUS_SYSTEM,	///< @brief The systemwide bus.
+				DBUS_BUS_STARTER	///< @brief The bus that started us, if any.
 			};
 
 			size_t type = String(node,"dbus-bus-type","starter").select("session","system","starter",NULL);
