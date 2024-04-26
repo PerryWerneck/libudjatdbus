@@ -157,7 +157,17 @@
 
 						worker.get(request,response);
 
-						throw runtime_error("Incomplete");
+						// Set response message.
+						reply = dbus_message_new_method_return(message);
+						try {
+
+
+						} catch(...) {
+
+							dbus_message_unref(reply);
+							reply = NULL;
+
+						}
 
 					}
 
