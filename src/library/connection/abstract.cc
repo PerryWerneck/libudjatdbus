@@ -273,6 +273,27 @@
 
 	}
 
+	static const char * type_name(int type) noexcept {
+
+		static const struct {
+			int type;
+			const char *name;
+		} typenames[] = {
+			 { DBUS_MESSAGE_TYPE_METHOD_CALL,	"method-call"	},
+			 { DBUS_MESSAGE_TYPE_METHOD_RETURN, "return"		},
+			 { DBUS_MESSAGE_TYPE_ERROR,			"error"			},
+			 { DBUS_MESSAGE_TYPE_SIGNAL,		"signal"		}
+		};
+
+		for(auto &item : typenames) {
+			if(item.type == type) {
+				return item.name;
+			}
+		}
+
+		return "unknown";
+	}
+
 	DBusHandlerResult Abstract::DBus::Connection::filter(DBusMessage *message) {
 
 		int type = dbus_message_get_type(message);
@@ -280,7 +301,7 @@
 		const char *member = dbus_message_get_member(message);
 
 		if(Logger::enabled(Logger::Trace)) {
-			Logger::String{"Signal ", interface," ",member}.trace(name());
+			Logger::String{type_name(type)," ",interface," ",member," ",dbus_message_get_path(message)}.trace(name());
 		}
 
 		for(const auto &intf : interfaces) {

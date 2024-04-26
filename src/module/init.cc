@@ -31,6 +31,8 @@
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/worker.h>
+ #include <udjat/tools/request.h>
+ #include <udjat/tools/response/object.h>
 
  using namespace std;
  using namespace Udjat;
@@ -137,10 +139,33 @@
 				try {
 
 					const Worker &worker{Udjat::Worker::find(interface)};
+
 					debug("Got worker '",worker.c_str(),"'");
+					debug("Path='",dbus_message_get_path(message),"'");
+					debug("Member='",dbus_message_get_member(message),"'");
 
-					throw runtime_error("Incomplete");
+					const char *member = dbus_message_get_member(message);
+					if(strcasecmp(member,"get")) {
 
+						// Only 'get' member is valid.
+						reply = dbus_message_new_error(message,DBUS_ERROR_UNKNOWN_METHOD,Logger::String{"Invalid member '",member,"'"}.c_str());
+
+					} else {
+
+						Request request{dbus_message_get_path(message)};
+						Response::Object response;
+
+						worker.get(request,response);
+
+						throw runtime_error("Incomplete");
+
+					}
+
+
+				} catch(const std::system_error &e) {
+
+					Logger::String{"Cant handle '",dbus_message_get_interface(message),"': ",e.what()," (rc=",e.code().value(),")"}.error("d-bus");
+					reply = dbus_message_new_error(message,DBUS_ERROR_FAILED,e.what());
 
 				} catch(const std::exception &e) {
 
