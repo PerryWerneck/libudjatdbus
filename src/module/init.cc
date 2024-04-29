@@ -19,7 +19,8 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/module/abstract.h>
+ #include <udjat/version.h>
+ #include <udjat/module.h>
  #include <udjat/moduleinfo.h>
  #include <udjat/factory.h>
  #include <dbus/dbus-protocol.h>
@@ -30,9 +31,12 @@
  #include <udjat/tools/configuration.h>
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus/connection.h>
- #include <udjat/tools/worker.h>
- #include <udjat/tools/request.h>
- #include <udjat/tools/response/object.h>
+ #include <udjat/worker.h>
+ #include <udjat/request.h>
+
+ #if UDJAT_CHECK_VERSION(1,2,0)
+	#include <udjat/tools/response/object.h>
+ #endif
 
  using namespace std;
  using namespace Udjat;
@@ -99,6 +103,7 @@
 	}
 
 
+#if UDJAT_CHECK_VERSION(1,2,0)
 	void set(std::shared_ptr<Abstract::Agent> agent) noexcept override {
 
 		if(bustype ==(DBusBusType) -1 || !(service_name && *service_name)) {
@@ -240,6 +245,7 @@
 
 
 	}
+#endif // UDJAT_CHECK_VERSION
 
  };
 
