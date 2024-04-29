@@ -166,6 +166,28 @@
 	RandomFactory rfactory;
 	*/
 
+
+	SystemBus bus;
+	bus.subscribe(
+			"org.freedesktop.login1.Manager",
+			"SessionNew",
+			[](DBus::Message &message) {
+
+				debug("----------------------------------> SessionNew");
+
+				string sid;
+				message.pop(sid);
+
+				string path;
+				message.pop(path);
+
+				cout << "users\t Session '" << sid << "' started on path '" << path << "'" << endl;
+
+				return false;
+
+			}
+	);
+
 	auto rc = Application{}.run(argc,argv,"./test.xml");
 
 	debug("Application exits with rc=",rc);

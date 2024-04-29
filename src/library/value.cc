@@ -445,6 +445,7 @@
 		EXCEPTION_ON_UNSUPPORTED_OR_INVALID
 
 		case DBUS_TYPE_STRING:
+		case DBUS_TYPE_OBJECT_PATH:
 			value = this->value.str;
 			break;
 
