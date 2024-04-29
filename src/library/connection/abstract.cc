@@ -23,6 +23,7 @@
 
  #include <config.h>
  #include <udjat/defs.h>
+ #include <udjat/version.h>
  #include <dbus/dbus.h>
  #include <string>
  #include <mutex>
@@ -74,6 +75,7 @@
 
 		lock_guard<mutex> lock(guard);
 
+#if UDJAT_CHECK_VERSION(1,2,0)
 		const char *bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system");
 
 		if(!strcasecmp(bus,"system")) {
@@ -83,6 +85,17 @@
 		if(!strcasecmp(bus,"session")) {
 			return make_shared<Udjat::DBus::SessionBus>();
 		}
+#else
+		std::string bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system");
+
+		if(!strcasecmp(bus.c_str(),"system")) {
+			return make_shared<Udjat::DBus::SystemBus>();
+		}
+
+		if(!strcasecmp(bus.c_str(),"session")) {
+			return make_shared<Udjat::DBus::SessionBus>();
+		}
+#endif // UDJAT_CHECK_VERSION
 
 		throw runtime_error(Logger::String{"Unexpected bus name: '",bus,"'"});
 	}
