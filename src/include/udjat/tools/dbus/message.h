@@ -148,3 +148,7 @@
 
  }
 
+ template <typename T>
+ inline Udjat::DBus::Message & operator<<(Udjat::DBus::Message &message, const T value) {
+	return message.push_back(value);
+ }
