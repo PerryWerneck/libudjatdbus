@@ -173,7 +173,6 @@
 			throw runtime_error("dbus_connection_set_timeout_functions has failed");
 		}
 
-
 		if(Logger::enabled(Logger::Trace)) {
 
 			dbus_connection_set_data(conn,DataSlot::getInstance().value(),this,(DBusFreeFunction) trace_connection_free);
@@ -395,7 +394,7 @@
 
 		for(auto &inserted : interfaces) {
 			if(!strcasecmp(inserted.c_str(),intf)) {
-				Logger::String{"Already watching '",intf,"'"}.trace(name());
+				Logger::String{"Already watching '",intf,"'"}.write(Logger::Debug,name());
 				return inserted;
 			}
 		}

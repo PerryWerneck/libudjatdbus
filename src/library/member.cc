@@ -24,6 +24,7 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/version.h>
+ #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/member.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/logger.h>

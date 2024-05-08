@@ -31,14 +31,14 @@
 
  namespace Udjat {
 
-	static DBusConnection * NamedConnectionFactory(const char *bus_name) {
+	static DBusConnection * NamedConnectionFactory(const char *address) {
 
 		DBusError err;
 		dbus_error_init(&err);
 
-		DBusConnection *connection = dbus_connection_open_private(bus_name, &err);
+		DBusConnection *connection = dbus_connection_open(address, &err);
 		if(dbus_error_is_set(&err)) {
-			Logger::String message{"Cant open '",bus_name,"': ",err.message};
+			Logger::String message{"Cant open '",address,"': ",err.message};
 			dbus_error_free(&err);
 			throw runtime_error(message);
 		}
@@ -47,7 +47,11 @@
 
 	}
 
-	DBus::NamedBus::NamedBus(const char *connection_name, const char *bus_name) : Abstract::DBus::Connection{connection_name,NamedConnectionFactory(bus_name)} {
+	DBus::NamedBus::NamedBus(const char *connection_name, const char *address) : Abstract::DBus::Connection{connection_name,NamedConnectionFactory(address)} {
+
+		if(!(address && *address)) {
+			throw system_error(EINVAL,system_category(),"Invalid D-bus address");
+		}
 
 		try {
 
@@ -56,16 +60,16 @@
 
 			int fd = -1;
 			if(dbus_connection_get_socket(conn,&fd)) {
-				Logger::String("Got connection to '",connection_name,"' on socket '",fd,"'").trace("d-bus");
+				Logger::String("Got connection to '",address,"' on socket '",fd,"'").write(Logger::Debug,connection_name);
 			} else {
-				Logger::String("Got connection to '",connection_name,"'").trace("d-bus");
+				Logger::String("Got connection to '",address,"'").write(Logger::Debug,connection_name);
 			}
 
 		} catch(...) {
 
 			if(conn) {
 				Logger::String{"Closing connection to '",connection_name,"' due to initialization error"}.error("d-bus");
-				dbus_connection_close(conn);
+				dbus_connection_flush(conn);
 				dbus_connection_unref(conn);
 				conn = nullptr;
 			}
@@ -80,13 +84,13 @@
 
 		int fd = -1;
 		if(dbus_connection_get_socket(conn,&fd)) {
-			Logger::String("Closing named connection '",name(),"' on socket '",fd,"'").trace("d-bus");
+			Logger::String("Closing named connection on socket '",fd,"'").write(Logger::Debug,name());
 		} else {
-			Logger::String("Closing named connection '",name(),"'").trace("d-bus");
+			Logger::String("Closing named connection").write(Logger::Debug,name());
 		}
 
 		close();
-		dbus_connection_close(conn);
+		dbus_connection_flush(conn);
 		dbus_connection_unref(conn);
 	}
 

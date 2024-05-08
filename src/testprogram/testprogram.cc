@@ -168,6 +168,9 @@
 
 
 	SystemBus bus;
+	NamedBus nbus1{"named1",getenv("DBUS_SESSION_BUS_ADDRESS")};
+	NamedBus nbus2{"named2",getenv("DBUS_SESSION_BUS_ADDRESS")};
+
 	bus.subscribe(
 			"org.freedesktop.login1.Manager",
 			"SessionNew",

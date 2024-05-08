@@ -199,7 +199,9 @@
 		/// @brief Private connection to a named bus.
 		class UDJAT_API NamedBus : public Abstract::DBus::Connection {
 		public:
-			NamedBus(const char *connection_name, const char *bus_name);
+			/// @param connection_name The object name (for logging).
+			/// @param address The D-Bus Address for this connection.
+			NamedBus(const char *connection_name, const char *address);
 			virtual ~NamedBus();
 
 		};

@@ -144,7 +144,7 @@
 
 								ptr += 25;
 
-								connection = dbus_connection_open_private(ptr, &err);
+								connection = dbus_connection_open(ptr, &err);
 								if(dbus_error_is_set(&err)) {
 
 									clog << "dbus\tError '" << err.message << "' opening BUS " << ptr << endl;
@@ -222,7 +222,7 @@
 
 			if(conn) {
 				Logger::String{"Closing connection to '",uid,"' due to initialization error"}.error("d-bus");
-				dbus_connection_close(conn);
+				dbus_connection_flush(conn);
 				dbus_connection_unref(conn);
 				conn = nullptr;
 			}
