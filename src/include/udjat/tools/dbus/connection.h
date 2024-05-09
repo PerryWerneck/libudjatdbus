@@ -185,19 +185,11 @@
 
 		};
 
-		/// @brief Private connection to an user's bus.
-		class UDJAT_API UserBus : public Abstract::DBus::Connection {
-		protected:
-			uid_t userid;
-
-		public:
-			UserBus(uid_t uid, const char *sid = "");
-			virtual ~UserBus();
-
-		};
-
 		/// @brief Private connection to a named bus.
 		class UDJAT_API NamedBus : public Abstract::DBus::Connection {
+		protected:
+			NamedBus(const char *connection_name, DBusConnection * conn);
+
 		public:
 			/// @param connection_name The object name (for logging).
 			/// @param address The D-Bus Address for this connection.
@@ -206,6 +198,15 @@
 
 		};
 
+		/// @brief Private connection to an user's bus.
+		class UDJAT_API UserBus : public NamedBus {
+		protected:
+			uid_t userid;
+
+		public:
+			UserBus(uid_t uid, const char *sid = "");
+
+		};
  	}
 
  }

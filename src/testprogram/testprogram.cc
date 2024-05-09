@@ -167,10 +167,12 @@
 	*/
 
 
-	SystemBus bus;
-	NamedBus nbus1{"named1",getenv("DBUS_SESSION_BUS_ADDRESS")};
-	NamedBus nbus2{"named2",getenv("DBUS_SESSION_BUS_ADDRESS")};
+	{
+		NamedBus nbus1{"named1",getenv("DBUS_SESSION_BUS_ADDRESS")};
+	}
 
+	/*
+	SystemBus bus;
 	bus.subscribe(
 			"org.freedesktop.login1.Manager",
 			"SessionNew",
@@ -190,9 +192,9 @@
 
 			}
 	);
+	*/
 
 	auto rc = Application{}.run(argc,argv,"./test.xml");
-
 	debug("Application exits with rc=",rc);
 
 	return rc;

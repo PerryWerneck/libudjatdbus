@@ -144,7 +144,9 @@
 
 								ptr += 25;
 
-								connection = dbus_connection_open(ptr, &err);
+								Logger::String{"Found bus '",ptr,"' for user"}.trace("d-bus");
+
+								connection = dbus_connection_open_private(ptr, &err);
 								if(dbus_error_is_set(&err)) {
 
 									clog << "dbus\tError '" << err.message << "' opening BUS " << ptr << endl;
@@ -213,7 +215,7 @@
 
 	}
 
-	DBus::UserBus::UserBus(uid_t uid, const char *sid) : Abstract::DBus::Connection{get_username(uid).c_str(),UserConnectionFactory(uid,sid)}, userid{uid} {
+	DBus::UserBus::UserBus(uid_t uid, const char *sid) : NamedBus{get_username(uid).c_str(),UserConnectionFactory(uid,sid)}, userid{uid} {
 
 		try {
 			open();
@@ -223,27 +225,14 @@
 			if(conn) {
 				Logger::String{"Closing connection to '",uid,"' due to initialization error"}.error("d-bus");
 				dbus_connection_flush(conn);
+				dbus_connection_close(conn);
 				dbus_connection_unref(conn);
-				conn = nullptr;
+				conn = NULL;
 			}
 
 			throw;
 
 		}
-	}
-
-	DBus::UserBus::~UserBus() {
-
-		int fd = -1;
-		if(dbus_connection_get_socket(conn,&fd)) {
-			Logger::String("Closing user connection on socket '",fd,"'").trace("d-bus");
-		} else {
-			Logger::String("Closing user connection").trace("d-bus");
-		}
-
-		close();
-		dbus_connection_close(conn);
-		dbus_connection_unref(conn);
 	}
 
  }

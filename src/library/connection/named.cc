@@ -33,10 +33,14 @@
 
 	static DBusConnection * NamedConnectionFactory(const char *address) {
 
+		if(!(address && *address)) {
+			throw runtime_error("Empty d-bus address");
+		}
+
 		DBusError err;
 		dbus_error_init(&err);
 
-		DBusConnection *connection = dbus_connection_open(address, &err);
+		DBusConnection *connection = dbus_connection_open_private(address, &err);
 		if(dbus_error_is_set(&err)) {
 			Logger::String message{"Cant open '",address,"': ",err.message};
 			dbus_error_free(&err);
@@ -47,31 +51,27 @@
 
 	}
 
-	DBus::NamedBus::NamedBus(const char *connection_name, const char *address) : Abstract::DBus::Connection{connection_name,NamedConnectionFactory(address)} {
-
-		if(!(address && *address)) {
-			throw system_error(EINVAL,system_category(),"Invalid D-bus address");
-		}
+	DBus::NamedBus::NamedBus(const char *connection_name, DBusConnection * conn) : Abstract::DBus::Connection{connection_name,conn} {
 
 		try {
 
 			open();
-			bus_register();
 
 			int fd = -1;
 			if(dbus_connection_get_socket(conn,&fd)) {
-				Logger::String("Got connection to '",address,"' on socket '",fd,"'").write(Logger::Debug,connection_name);
+				Logger::String("Got private connection ",((unsigned long) this)," on socket '",fd,"'").write(Logger::Debug,connection_name);
 			} else {
-				Logger::String("Got connection to '",address,"'").write(Logger::Debug,connection_name);
+				Logger::String("Got private connection",((unsigned long) this)).write(Logger::Debug,connection_name);
 			}
 
 		} catch(...) {
 
 			if(conn) {
-				Logger::String{"Closing connection to '",connection_name,"' due to initialization error"}.error("d-bus");
+				Logger::String{"Closing private connection due to initialization error"}.error(connection_name);
 				dbus_connection_flush(conn);
+				dbus_connection_close(conn);
 				dbus_connection_unref(conn);
-				conn = nullptr;
+				conn = NULL;
 			}
 
 			throw;
@@ -80,18 +80,25 @@
 
 	}
 
+	DBus::NamedBus::NamedBus(const char *connection_name, const char *address) : DBus::NamedBus::NamedBus{connection_name,NamedConnectionFactory(address)} {
+	}
+
+
 	DBus::NamedBus::~NamedBus() {
+
+		dbus_connection_flush(conn);
+		close();
 
 		int fd = -1;
 		if(dbus_connection_get_socket(conn,&fd)) {
-			Logger::String("Closing named connection on socket '",fd,"'").write(Logger::Debug,name());
+			Logger::String("Closing private connection ",((unsigned long) this)," on socket '",fd,"'").write(Logger::Debug,name());
 		} else {
-			Logger::String("Closing named connection").write(Logger::Debug,name());
+			Logger::String("Closing private connection ",((unsigned long) this)).write(Logger::Debug,name());
 		}
 
-		close();
-		dbus_connection_flush(conn);
+		dbus_connection_close(conn);
 		dbus_connection_unref(conn);
+		conn = NULL;
 	}
 
  }
