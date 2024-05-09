@@ -69,6 +69,12 @@
 
 				Connection(const char *name, DBusConnection * conn);
 
+				/// @brief Bind to mainloop.
+				void bind();
+
+				/// @brief Unbind from mainloop.
+				void unbind();
+
 				void open();
 				void close();
 
@@ -161,11 +167,13 @@
 
  	namespace DBus {
 
-		/// @brief D-Bus shared system connection.
+		/// @brief System bus connection.
 		class UDJAT_API SystemBus : public Abstract::DBus::Connection {
 		public:
 			SystemBus();
 			virtual ~SystemBus();
+
+			static SystemBus & getInstance();
 
 		};
 
@@ -175,6 +183,8 @@
 			SessionBus();
 			virtual ~SessionBus();
 
+			static SessionBus & getInstance();
+
 		};
 
 		/// @brief D-Bus shared starter connection.
@@ -182,6 +192,8 @@
 		public:
 			StarterBus();
 			virtual ~StarterBus();
+
+			static StarterBus & getInstance();
 
 		};
 

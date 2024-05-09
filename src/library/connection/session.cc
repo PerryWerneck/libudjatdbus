@@ -37,5 +37,10 @@
 		dbus_connection_unref(conn);
 	}
 
+	DBus::SessionBus & DBus::SessionBus::getInstance() {
+		static DBus::SessionBus instance;
+		return instance;
+	}
+
  }
 

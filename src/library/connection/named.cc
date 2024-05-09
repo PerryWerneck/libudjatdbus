@@ -26,6 +26,7 @@
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/logger.h>
+ #include <private/mainloop.h>
 
  using namespace std;
 
@@ -55,6 +56,7 @@
 
 		try {
 
+			bind();
 			open();
 
 			int fd = -1;
@@ -88,6 +90,7 @@
 
 		dbus_connection_flush(conn);
 		close();
+		unbind();
 
 		int fd = -1;
 		if(dbus_connection_get_socket(conn,&fd)) {

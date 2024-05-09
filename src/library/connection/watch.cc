@@ -29,15 +29,15 @@
  class Context : public MainLoop::Handler {
  private:
 
-	Abstract::DBus::Connection	* connection	= nullptr;
-	DBusWatch					* watch			= nullptr;
+	DBusConnection	* connection	= nullptr;
+	DBusWatch		* watch			= nullptr;
 
  protected:
 	void handle_event(const Event events) override;
 
  public:
 
-	Context(Abstract::DBus::Connection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Handler::Event) e), connection(c), watch(w) {
+	Context(DBusConnection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Handler::Event) e), connection(c), watch(w) {
 #ifdef DEBUG
 		Logger::trace() << "handler\tCreating d-bus context " << hex << ((void *) this) << dec << endl;
 #endif // DEBUG
@@ -51,7 +51,7 @@
 
  };
 
- dbus_bool_t add_watch(DBusWatch *watch, Abstract::DBus::Connection *connection) {
+ dbus_bool_t add_watch(DBusWatch *watch, DBusConnection *connection) {
 
 	// Get event
 	short event = 0;
@@ -82,7 +82,7 @@
 	return true;
  }
 
- void remove_watch(DBusWatch *watch, Abstract::DBus::Connection *) {
+ void remove_watch(DBusWatch *watch, DBusConnection *) {
 
 	Context *context = (Context *) dbus_watch_get_data(watch);
 
@@ -99,7 +99,7 @@
 
  }
 
- void toggle_watch(DBusWatch *watch, Abstract::DBus::Connection *) {
+ void toggle_watch(DBusWatch *watch, DBusConnection *) {
 
 	Context *context = (Context *) dbus_watch_get_data(watch);
 
@@ -176,11 +176,73 @@
 		return;
 	}
 
-	DBusConnection *c = connection->connection();
-	dbus_connection_ref(c);
-	while (dbus_connection_get_dispatch_status(c) == DBUS_DISPATCH_DATA_REMAINS)
-        dbus_connection_dispatch(c);
-	dbus_connection_unref(c);
+	dbus_connection_ref(connection);
+	while (dbus_connection_get_dispatch_status(connection) == DBUS_DISPATCH_DATA_REMAINS)
+        dbus_connection_dispatch(connection);
+	dbus_connection_unref(connection);
+
+ }
+
+ void Abstract::DBus::Connection::bind() {
+
+	lock_guard<mutex> lock(guard);
+
+	// Keep running if d-bus disconnect.
+	dbus_connection_set_exit_on_disconnect(conn, false);
+
+	// Initialize Main loop.
+	MainLoop::getInstance();
+
+	// Set watch functions.
+	if(!dbus_connection_set_watch_functions(
+		conn,
+		(DBusAddWatchFunction) add_watch,
+		(DBusRemoveWatchFunction) remove_watch,
+		(DBusWatchToggledFunction) toggle_watch,
+		conn,
+		nullptr)
+	) {
+		throw runtime_error("dbus_connection_set_watch_functions has failed");
+	}
+
+	// Set timeout functions.
+	if(!dbus_connection_set_timeout_functions(
+		conn,
+		(DBusAddTimeoutFunction) add_timeout,
+		(DBusRemoveTimeoutFunction) remove_timeout,
+		(DBusTimeoutToggledFunction) toggle_timeout,
+		conn,
+		nullptr)
+	) {
+		throw runtime_error("dbus_connection_set_timeout_functions has failed");
+	}
+ }
+
+ void Abstract::DBus::Connection::unbind() {
+
+	lock_guard<mutex> lock(guard);
+
+	if(!dbus_connection_set_watch_functions(
+		conn,
+		(DBusAddWatchFunction) NULL,
+		(DBusRemoveWatchFunction) NULL,
+		(DBusWatchToggledFunction) NULL,
+		NULL,
+		nullptr)
+	) {
+		Logger::String{"dbus_connection_set_watch_functions failed"}.error("d-bus");
+	}
+
+	if(!dbus_connection_set_timeout_functions(
+		conn,
+		(DBusAddTimeoutFunction) NULL,
+		(DBusRemoveTimeoutFunction) NULL,
+		(DBusTimeoutToggledFunction) NULL,
+		NULL,
+		nullptr)
+	) {
+		Logger::String{"dbus_connection_set_timeout_functions failed"}.error("d-bus");
+	}
 
  }
 

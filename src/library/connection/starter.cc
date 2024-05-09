@@ -37,5 +37,10 @@
 		dbus_connection_unref(conn);
 	}
 
+	DBus::StarterBus & DBus::StarterBus::getInstance() {
+		static DBus::StarterBus instance;
+		return instance;
+	}
+
  }
 

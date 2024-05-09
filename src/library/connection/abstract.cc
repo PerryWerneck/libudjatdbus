@@ -138,39 +138,9 @@
 
 		lock_guard<mutex> lock(guard);
 
-		// Keep running if d-bus disconnect.
-		dbus_connection_set_exit_on_disconnect(conn, false);
-
 		// Add message filter.
 		if (dbus_connection_add_filter(conn, (DBusHandleMessageFunction) on_message, this, NULL) == FALSE) {
 			throw std::runtime_error("Cant add filter to D-Bus connection");
-		}
-
-		// Initialize Main loop.
-		MainLoop::getInstance();
-
-		// Set watch functions.
-		if(!dbus_connection_set_watch_functions(
-			conn,
-			(DBusAddWatchFunction) add_watch,
-			(DBusRemoveWatchFunction) remove_watch,
-			(DBusWatchToggledFunction) toggle_watch,
-			this,
-			nullptr)
-		) {
-			throw runtime_error("dbus_connection_set_watch_functions has failed");
-		}
-
-		// Set timeout functions.
-		if(!dbus_connection_set_timeout_functions(
-			conn,
-			(DBusAddTimeoutFunction) add_timeout,
-			(DBusRemoveTimeoutFunction) remove_timeout,
-			(DBusTimeoutToggledFunction) toggle_timeout,
-			this,
-			nullptr)
-		) {
-			throw runtime_error("dbus_connection_set_timeout_functions has failed");
 		}
 
 		if(Logger::enabled(Logger::Trace)) {
@@ -225,30 +195,6 @@
 
 		// Remove filter
 		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) on_message, this);
-
-		Logger::String{"Restoring d-bus watchers"}.trace(name());
-
-		if(!dbus_connection_set_watch_functions(
-			conn,
-			(DBusAddWatchFunction) NULL,
-			(DBusRemoveWatchFunction) NULL,
-			(DBusWatchToggledFunction) NULL,
-			this,
-			nullptr)
-		) {
-			Logger::String{"dbus_connection_set_watch_functions failed"}.error(name());
-		}
-
-		if(!dbus_connection_set_timeout_functions(
-			conn,
-			(DBusAddTimeoutFunction) NULL,
-			(DBusRemoveTimeoutFunction) NULL,
-			(DBusTimeoutToggledFunction) NULL,
-			NULL,
-			nullptr)
-		) {
-			Logger::String{"dbus_connection_set_timeout_functions failed"}.error(name());
-		}
 
 	}
 
