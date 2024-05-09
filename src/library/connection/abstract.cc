@@ -71,6 +71,16 @@
 		Logger::String("Connection '",((unsigned long) connection),"' was released").trace("d-bus");
 	}
 
+	void DBus::initialize() {
+		static bool initialized = false;
+		if(!initialized) {
+			initialized = true;
+			Logger::String("Initializing d-bus thread system").trace("d-bus");
+			dbus_threads_init_default();
+
+		}
+	}
+
 	std::shared_ptr<Abstract::DBus::Connection> Abstract::DBus::Connection::factory(const XML::Node &node) {
 
 		lock_guard<mutex> lock(guard);
@@ -100,35 +110,7 @@
 		throw runtime_error(Logger::String{"Unexpected bus name: '",bus,"'"});
 	}
 
-	DBusConnection * Abstract::DBus::Connection::SharedConnectionFactory(DBusBusType type) {
-
-		DBusError err;
-		dbus_error_init(&err);
-
-		DBusConnection * connct = dbus_bus_get(type, &err);
-		if(dbus_error_is_set(&err)) {
-			std::string message(err.message);
-			dbus_error_free(&err);
-			throw std::runtime_error(message);
-		}
-
-		return connct;
-
-	}
-
 	Abstract::DBus::Connection::Connection(const char *name, DBusConnection *c) : object_name{name}, conn{c} {
-
-		static bool initialized = false;
-		if(!initialized) {
-
-			initialized = true;
-
-			// Initialize d-bus threads.
-			Logger::String("Initializing d-bus thread system").trace("d-bus");
-			dbus_threads_init_default();
-
-		}
-
 	}
 
 	Abstract::DBus::Connection::~Connection() {

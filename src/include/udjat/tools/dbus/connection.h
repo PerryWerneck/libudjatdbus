@@ -67,6 +67,7 @@
 				/// @brief Connection to D-Bus.
 				DBusConnection * conn = nullptr;
 
+				Connection(const char *name, DBusBusType type);
 				Connection(const char *name, DBusConnection * conn);
 
 				/// @brief Bind to mainloop.
@@ -77,8 +78,6 @@
 
 				void open();
 				void close();
-
-				static DBusConnection * SharedConnectionFactory(DBusBusType type);
 
 				/// @brief Filter message
 				virtual DBusHandlerResult filter(DBusMessage *message);
@@ -166,6 +165,9 @@
  	}
 
  	namespace DBus {
+
+		/// @brief Initialize D-Bus system.
+		void UDJAT_API initialize();
 
 		/// @brief System bus connection.
 		class UDJAT_API SystemBus : public Abstract::DBus::Connection {

@@ -28,12 +28,32 @@
 
  namespace Udjat {
 
-	DBus::SystemBus::SystemBus() : Abstract::DBus::Connection{"SysBUS",SharedConnectionFactory(DBUS_BUS_SYSTEM)} {
+	static DBusConnection * SystemConnectionFactory() {
+
+		Udjat::DBus::initialize();
+
+		DBusError err;
+		dbus_error_init(&err);
+
+		DBusConnection * connct = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
+		if(dbus_error_is_set(&err)) {
+			std::string message(err.message);
+			dbus_error_free(&err);
+			throw std::runtime_error(message);
+		}
+
+		return connct;
+
+	}
+
+	DBus::SystemBus::SystemBus() : Abstract::DBus::Connection{"SysBUS",SystemConnectionFactory()} {
+		bind();
 		open();
 	}
 
 	DBus::SystemBus::~SystemBus() {
 		close();
+		unbind();
 		dbus_connection_unref(conn);
 	}
 

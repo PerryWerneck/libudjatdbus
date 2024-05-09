@@ -85,7 +85,6 @@
 	DBus::NamedBus::NamedBus(const char *connection_name, const char *address) : DBus::NamedBus::NamedBus{connection_name,NamedConnectionFactory(address)} {
 	}
 
-
 	DBus::NamedBus::~NamedBus() {
 
 		dbus_connection_flush(conn);

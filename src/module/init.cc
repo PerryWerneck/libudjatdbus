@@ -251,6 +251,7 @@
 
  /// @brief Register udjat module.
  Udjat::Module * udjat_module_init() {
+	Udjat::DBus::initialize();
 	return new ::Module();
  }
 
