@@ -174,6 +174,9 @@
 
 		/// @brief D-Bus shared connection to session bus.
 		class UDJAT_API SessionBus : public Abstract::DBus::Connection {
+		private:
+			static DBusConnection * ConnectionFactory();
+
 		public:
 			SessionBus();
 			virtual ~SessionBus();
@@ -184,6 +187,9 @@
 
 		/// @brief D-Bus shared connection to starter bus.
 		class UDJAT_API StarterBus : public Abstract::DBus::Connection {
+		private:
+			static DBusConnection * ConnectionFactory();
+
 		public:
 			StarterBus();
 			virtual ~StarterBus();
