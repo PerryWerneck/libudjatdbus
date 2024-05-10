@@ -35,41 +35,13 @@
  #include <udjat/tools/mainloop.h>
  #include <private/mainloop.h>
  #include <udjat/tools/string.h>
+ #include <private/mainloop.h>
 
  using namespace std;
 
  namespace Udjat {
 
-	class DataSlot {
-	private:
-		dbus_int32_t slot = -1; // The passed-in slot must be initialized to -1, and is filled in with the slot ID
-		DataSlot() {
-			dbus_connection_allocate_data_slot(&slot);
-			Logger::String{"Got slot '",slot,"' for connection watchdog"}.trace("d-bus");
-		}
-
-	public:
-
-		~DataSlot() {
-			dbus_connection_free_data_slot(&slot);
-		}
-
-		static DataSlot & getInstance() {
-			static DataSlot instance;
-			return instance;
-		}
-
-		inline dbus_int32_t value() const noexcept {
-			return slot;
-		}
-
-	};
-
 	std::mutex Abstract::DBus::Connection::guard;
-
-	static void trace_connection_free(const Abstract::DBus::Connection *connection) {
-		Logger::String("Connection '",((unsigned long) connection),"' was released").trace("d-bus");
-	}
 
 	void DBus::initialize() {
 		static bool initialized = false;
@@ -86,7 +58,7 @@
 		lock_guard<mutex> lock(guard);
 
 #if UDJAT_CHECK_VERSION(1,2,0)
-		const char *bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system");
+		const char *bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system", "starter");
 
 		if(!strcasecmp(bus,"system")) {
 			return make_shared<Udjat::DBus::SystemBus>();
@@ -95,6 +67,11 @@
 		if(!strcasecmp(bus,"session")) {
 			return make_shared<Udjat::DBus::SessionBus>();
 		}
+
+		if(!strcasecmp(bus,"starter")) {
+			return make_shared<Udjat::DBus::StarterBus>();
+		}
+
 #else
 		std::string bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system");
 
@@ -102,41 +79,81 @@
 			return make_shared<Udjat::DBus::SystemBus>();
 		}
 
+		/*
 		if(!strcasecmp(bus.c_str(),"session")) {
 			return make_shared<Udjat::DBus::SessionBus>();
 		}
+		*/
 #endif // UDJAT_CHECK_VERSION
 
 		throw runtime_error(Logger::String{"Unexpected bus name: '",bus,"'"});
 	}
 
 	Abstract::DBus::Connection::Connection(const char *name, DBusConnection *c) : object_name{name}, conn{c} {
-	}
 
-	Abstract::DBus::Connection::~Connection() {
-	}
-
-	void Abstract::DBus::Connection::open() {
+		// Keep running if d-bus disconnect.
+		dbus_connection_set_exit_on_disconnect(conn, false);
 
 		lock_guard<mutex> lock(guard);
 
-		// Add message filter.
-		if (dbus_connection_add_filter(conn, (DBusHandleMessageFunction) on_message, this, NULL) == FALSE) {
-			throw std::runtime_error("Cant add filter to D-Bus connection");
-		}
+		try {
 
-		if(Logger::enabled(Logger::Trace)) {
-
-			dbus_connection_set_data(conn,DataSlot::getInstance().value(),this,(DBusFreeFunction) trace_connection_free);
-
-			int fd = -1;
-			if(dbus_connection_get_socket(conn,&fd)) {
-				Logger::String("Allocating connection '",((unsigned long) this),"' with socket '",fd,"'").trace(name());
-			} else {
-				Logger::String("Allocating connection '",((unsigned long) this),"'").trace(name());
+			// Add message filter.
+			if (dbus_connection_add_filter(conn, (DBusHandleMessageFunction) on_message, this, NULL) == FALSE) {
+				throw std::runtime_error("Cant add filter to D-Bus connection");
 			}
 
+			if(Logger::enabled(Logger::Debug)) {
+
+				int fd = -1;
+				if(dbus_connection_get_socket(conn,&fd)) {
+					Logger::String("Allocating connection '",((unsigned long) this),"' with socket '",fd,"'").write(Logger::Debug,name);
+				} else {
+					Logger::String("Allocating connection '",((unsigned long) this),"'").write(Logger::Debug,name);
+				}
+
+			}
+
+		} catch(...) {
+
+			if(conn) {
+				Logger::String{"Closing private connection due to initialization error"}.error(name);
+				dbus_connection_unref(conn);
+				conn = NULL;
+			}
+
+			throw;
+
 		}
+
+	}
+
+	Abstract::DBus::Connection::~Connection() {
+
+		lock_guard<mutex> lock(guard);
+
+        if(Logger::enabled(Logger::Debug)) {
+			int fd = -1;
+			if(dbus_connection_get_socket(conn,&fd)) {
+				Logger::String("Dealocating connection '",((unsigned long) this),"' from socket '",fd,"'").write(Logger::Debug,name());
+			} else {
+				Logger::String("Dealocating connection '",((unsigned long) this),"'").write(Logger::Debug,name());
+			}
+        }
+
+		flush();
+
+		// Remove interfaces.
+		interfaces.remove_if([this](Udjat::DBus::Interface &intf) {
+			remove(intf);
+			return true;
+		});
+
+		// Remove filter
+		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) on_message, this);
+
+		// Release connection
+		dbus_connection_unref(conn);
 
 	}
 
@@ -151,32 +168,6 @@
 			dbus_error_free(&err);
 			throw std::runtime_error(message);
 		}
-
-	}
-
-	void Abstract::DBus::Connection::close() {
-
-		lock_guard<mutex> lock(guard);
-
-        if(Logger::enabled(Logger::Trace)) {
-			int fd = -1;
-			if(dbus_connection_get_socket(conn,&fd)) {
-				Logger::String("Dealocating connection '",((unsigned long) this),"' from socket '",fd,"'").trace(name());
-			} else {
-				Logger::String("Dealocating connection '",((unsigned long) this),"'").trace(name());
-			}
-        }
-
-		flush();
-
-		// Remove interfaces.
-		interfaces.remove_if([this](Udjat::DBus::Interface &intf) {
-			remove(intf);
-			return true;
-		});
-
-		// Remove filter
-		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) on_message, this);
 
 	}
 

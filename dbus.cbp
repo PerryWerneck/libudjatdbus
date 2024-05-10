@@ -43,6 +43,8 @@
 			<Add option="-pthread" />
 		</Linker>
 		<Unit filename="src/include/config.h" />
+		<Unit filename="src/include/private/connection.h" />
+		<Unit filename="src/include/private/dataslot.h" />
 		<Unit filename="src/include/private/mainloop.h" />
 		<Unit filename="src/include/udjat/alert/d-bus.h" />
 		<Unit filename="src/include/udjat/tools/dbus.h" />
@@ -58,6 +60,7 @@
 		<Unit filename="src/library/connection/call.cc" />
 		<Unit filename="src/library/connection/named.cc" />
 		<Unit filename="src/library/connection/session.cc" />
+		<Unit filename="src/library/connection/shared.cc" />
 		<Unit filename="src/library/connection/starter.cc" />
 		<Unit filename="src/library/connection/system.cc" />
 		<Unit filename="src/library/connection/timeout.cc" />

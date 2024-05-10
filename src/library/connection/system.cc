@@ -25,36 +25,71 @@
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/logger.h>
+ #include <private/dataslot.h>
+ #include <private/mainloop.h>
+
+ using namespace std;
 
  namespace Udjat {
 
-	static DBusConnection * SystemConnectionFactory() {
+	static DBusConnection *connct = NULL;
+	static size_t refcount = 0;
 
-		Udjat::DBus::initialize();
+	static void trace_connection_free(DBusConnection **connection) {
+		if(refcount) {
+			Logger::String("System connection '",((unsigned long) *connection),"' was released with ",refcount," references").warning("d-bus");
+		} else {
+			Logger::String("System connection '",((unsigned long) *connection),"' was released").trace("d-bus");
+		}
+		*connection = nullptr;
+	}
+
+	DBusConnection * DBus::SystemBus::ConnectionFactory() {
+
+		lock_guard<mutex> lock(guard);
+
+		if(connct) {
+			refcount++;
+			dbus_connection_ref(connct);
+			return connct;
+		}
+
+		Logger::String{"Opening shared connection to system bus"}.trace("d-bus");
+
+		// https://github.com/dbus-cxx/dbus-cxx/blob/master/dbus-cxx/connection.cpp
 
 		DBusError err;
 		dbus_error_init(&err);
 
-		DBusConnection * connct = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
+		connct = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
 		if(dbus_error_is_set(&err)) {
 			std::string message(err.message);
 			dbus_error_free(&err);
 			throw std::runtime_error(message);
 		}
 
+		// Setup connection.
+		dbus_connection_set_data(connct,DataSlot::getInstance().value(),&connct,(DBusFreeFunction) trace_connection_free);
+		mainloop_add(connct);
+
+		refcount++;
 		return connct;
 
 	}
 
-	DBus::SystemBus::SystemBus() : Abstract::DBus::Connection{"SysBUS",SystemConnectionFactory()} {
-		bind();
-		open();
+	DBus::SystemBus::SystemBus() : Abstract::DBus::Connection{"SysBUS",SystemBus::ConnectionFactory()} {
 	}
 
 	DBus::SystemBus::~SystemBus() {
-		close();
-		unbind();
-		dbus_connection_unref(conn);
+		lock_guard<mutex> lock(guard);
+		refcount--;
+
+		debug("SystemBus refcount is ",refcount);
+		if(!refcount) {
+			mainloop_remove(connct);
+			connct = NULL;
+		}
 	}
 
 	DBus::SystemBus & DBus::SystemBus::getInstance() {

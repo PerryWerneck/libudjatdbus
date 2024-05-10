@@ -218,8 +218,9 @@
 	DBus::UserBus::UserBus(uid_t uid, const char *sid) : NamedBus{get_username(uid).c_str(),UserConnectionFactory(uid,sid)}, userid{uid} {
 
 		try {
-			open();
+
 			bus_register();
+
 		} catch(...) {
 
 			if(conn) {

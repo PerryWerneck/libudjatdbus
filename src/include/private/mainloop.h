@@ -43,4 +43,7 @@
 	UDJAT_PRIVATE void remove_timeout(DBusTimeout *t, DBusConnection *connection);
 	UDJAT_PRIVATE void toggle_timeout(DBusTimeout *t, DBusConnection *connection);
 
+	UDJAT_PRIVATE void mainloop_add(DBusConnection *connection);
+	UDJAT_PRIVATE void mainloop_remove(DBusConnection *connection);
+
  }

@@ -44,9 +44,6 @@
 			class UDJAT_API Connection {
 			private:
 
-				/// @brief Mutex for serialization.
-				static std::mutex guard;
-
 				/// @brief The connection name.
 				std::string object_name;
 
@@ -67,17 +64,10 @@
 				/// @brief Connection to D-Bus.
 				DBusConnection * conn = nullptr;
 
-				Connection(const char *name, DBusBusType type);
+				/// @brief Mutex for serialization.
+				static std::mutex guard;
+
 				Connection(const char *name, DBusConnection * conn);
-
-				/// @brief Bind to mainloop.
-				void bind();
-
-				/// @brief Unbind from mainloop.
-				void unbind();
-
-				void open();
-				void close();
 
 				/// @brief Filter message
 				virtual DBusHandlerResult filter(DBusMessage *message);
@@ -92,7 +82,7 @@
 
 				static std::shared_ptr<Connection> factory(const XML::Node &node);
 
-				inline const char *name() const noexcept {
+				inline const char * name() const noexcept {
 					return object_name.c_str();
 				}
 
@@ -171,6 +161,9 @@
 
 		/// @brief System bus connection.
 		class UDJAT_API SystemBus : public Abstract::DBus::Connection {
+		private:
+			static DBusConnection * ConnectionFactory();
+
 		public:
 			SystemBus();
 			virtual ~SystemBus();
@@ -179,7 +172,7 @@
 
 		};
 
-		/// @brief D-Bus shared user connection.
+		/// @brief D-Bus shared connection to session bus.
 		class UDJAT_API SessionBus : public Abstract::DBus::Connection {
 		public:
 			SessionBus();
@@ -189,7 +182,7 @@
 
 		};
 
-		/// @brief D-Bus shared starter connection.
+		/// @brief D-Bus shared connection to starter bus.
 		class UDJAT_API StarterBus : public Abstract::DBus::Connection {
 		public:
 			StarterBus();
@@ -202,7 +195,7 @@
 		/// @brief Private connection to a named bus.
 		class UDJAT_API NamedBus : public Abstract::DBus::Connection {
 		protected:
-			NamedBus(const char *connection_name, DBusConnection * conn);
+			NamedBus(const char *name, DBusConnection * conn);
 
 		public:
 			/// @param connection_name The object name (for logging).

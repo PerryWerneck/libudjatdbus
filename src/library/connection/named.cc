@@ -27,10 +27,12 @@
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/logger.h>
  #include <private/mainloop.h>
+ #include <private/dataslot.h>
 
  using namespace std;
 
  namespace Udjat {
+
 
 	static DBusConnection * NamedConnectionFactory(const char *address) {
 
@@ -52,55 +54,32 @@
 
 	}
 
-	DBus::NamedBus::NamedBus(const char *connection_name, DBusConnection * conn) : Abstract::DBus::Connection{connection_name,conn} {
+	static void trace_connection_free(const Abstract::DBus::Connection *connection) {
+		Logger::String("Named connection '",((unsigned long) connection),"' was released").trace("d-bus");
+	}
 
-		try {
+	DBus::NamedBus::NamedBus(const char *name, DBusConnection * conn) : Abstract::DBus::Connection{name,conn} {
 
-			bind();
-			open();
-
-			int fd = -1;
-			if(dbus_connection_get_socket(conn,&fd)) {
-				Logger::String("Got private connection ",((unsigned long) this)," on socket '",fd,"'").write(Logger::Debug,connection_name);
-			} else {
-				Logger::String("Got private connection",((unsigned long) this)).write(Logger::Debug,connection_name);
-			}
-
-		} catch(...) {
-
-			if(conn) {
-				Logger::String{"Closing private connection due to initialization error"}.error(connection_name);
-				dbus_connection_flush(conn);
-				dbus_connection_close(conn);
-				dbus_connection_unref(conn);
-				conn = NULL;
-			}
-
-			throw;
-
+		if(Logger::enabled(Logger::Trace)) {
+			dbus_connection_set_data(conn,DataSlot::getInstance().value(),this,(DBusFreeFunction) trace_connection_free);
 		}
+
+		mainloop_add(conn);
 
 	}
 
-	DBus::NamedBus::NamedBus(const char *connection_name, const char *address) : DBus::NamedBus::NamedBus{connection_name,NamedConnectionFactory(address)} {
+	DBus::NamedBus::NamedBus(const char *connection_name, const char *address) : NamedBus{connection_name,NamedConnectionFactory(address)} {
 	}
 
 	DBus::NamedBus::~NamedBus() {
 
+		// Disconnect from mainloop
+		mainloop_remove(conn);
+
+		// Close connection.
 		dbus_connection_flush(conn);
-		close();
-		unbind();
-
-		int fd = -1;
-		if(dbus_connection_get_socket(conn,&fd)) {
-			Logger::String("Closing private connection ",((unsigned long) this)," on socket '",fd,"'").write(Logger::Debug,name());
-		} else {
-			Logger::String("Closing private connection ",((unsigned long) this)).write(Logger::Debug,name());
-		}
-
 		dbus_connection_close(conn);
-		dbus_connection_unref(conn);
-		conn = NULL;
+
 	}
 
  }

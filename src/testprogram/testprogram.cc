@@ -171,6 +171,16 @@
 		NamedBus nbus1{"named1",getenv("DBUS_SESSION_BUS_ADDRESS")};
 	}
 
+	{
+		SystemBus sbus0;
+		SystemBus sbus1;
+		SystemBus sbus2;
+		//SystemBus sbus3;
+		//SystemBus sbus4;
+		//SystemBus sbus5;
+		//SystemBus sbus6;
+	}
+
 	/*
 	SystemBus bus;
 	bus.subscribe(

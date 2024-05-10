@@ -18,53 +18,38 @@
  */
 
  /**
-  * @brief Implements system bus connection.
+  * @brief Declares singleton for data slot.
   */
+
+ #pragma once
 
  #include <config.h>
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
- #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/logger.h>
 
- namespace Udjat {
-
-	/*
-	static DBusConnection * StarterConnectionFactory() {
-
-		#error refactor
-
-		Udjat::DBus::initialize();
-
-		DBusError err;
-		dbus_error_init(&err);
-
-		DBusConnection * connct = dbus_bus_get(DBUS_BUS_STARTER, &err);
-		if(dbus_error_is_set(&err)) {
-			std::string message(err.message);
-			dbus_error_free(&err);
-			throw std::runtime_error(message);
-		}
-
-		return connct;
-
+ class DataSlot {
+ private:
+	dbus_int32_t slot = -1; // The passed-in slot must be initialized to -1, and is filled in with the slot ID
+	DataSlot() {
+		dbus_connection_allocate_data_slot(&slot);
+		Udjat::Logger::String{"Got slot '",slot,"' for connection watchdog"}.write(Udjat::Logger::Debug,"d-bus");
 	}
 
-	DBus::StarterBus::StarterBus() : Abstract::DBus::Connection{"StarterBUS",StarterConnectionFactory()} {
-		bind();
-		open();
+ public:
+
+	~DataSlot() {
+		dbus_connection_free_data_slot(&slot);
 	}
 
-	DBus::StarterBus::~StarterBus() {
-		close();
-		unbind();
-		dbus_connection_unref(conn);
-	}
-
-	DBus::StarterBus & DBus::StarterBus::getInstance() {
-		static DBus::StarterBus instance;
+	static DataSlot & getInstance() {
+		static DataSlot instance;
 		return instance;
 	}
-	*/
 
- }
+	inline dbus_int32_t value() const noexcept {
+		return slot;
+	}
+
+ };
 

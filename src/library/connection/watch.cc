@@ -183,12 +183,7 @@
 
  }
 
- void Abstract::DBus::Connection::bind() {
-
-	lock_guard<mutex> lock(guard);
-
-	// Keep running if d-bus disconnect.
-	dbus_connection_set_exit_on_disconnect(conn, false);
+ void mainloop_add(DBusConnection *conn) {
 
 	// Initialize Main loop.
 	MainLoop::getInstance();
@@ -216,11 +211,10 @@
 	) {
 		throw runtime_error("dbus_connection_set_timeout_functions has failed");
 	}
+
  }
 
- void Abstract::DBus::Connection::unbind() {
-
-	lock_guard<mutex> lock(guard);
+ void mainloop_remove(DBusConnection *conn) {
 
 	if(!dbus_connection_set_watch_functions(
 		conn,
@@ -245,5 +239,4 @@
 	}
 
  }
-
 

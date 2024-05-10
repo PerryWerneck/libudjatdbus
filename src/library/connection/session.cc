@@ -28,7 +28,10 @@
 
  namespace Udjat {
 
+	/*
 	static DBusConnection * SessionConnectionFactory() {
+
+		#error refactor
 
 		Udjat::DBus::initialize();
 
@@ -61,6 +64,7 @@
 		static DBus::SessionBus instance;
 		return instance;
 	}
+	*/
 
  }
 
