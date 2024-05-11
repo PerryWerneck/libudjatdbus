@@ -55,8 +55,6 @@
 
 	std::shared_ptr<Abstract::DBus::Connection> Abstract::DBus::Connection::factory(const XML::Node &node) {
 
-		lock_guard<mutex> lock(guard);
-
 #if UDJAT_CHECK_VERSION(1,2,0)
 		Udjat::String bus{node, "dbus-bus-name", "starter"};
 #else
