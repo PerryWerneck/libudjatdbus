@@ -43,7 +43,6 @@
 			<Add option="-pthread" />
 		</Linker>
 		<Unit filename="src/include/config.h" />
-		<Unit filename="src/include/private/connection.h" />
 		<Unit filename="src/include/private/dataslot.h" />
 		<Unit filename="src/include/private/mainloop.h" />
 		<Unit filename="src/include/udjat/alert/d-bus.h" />

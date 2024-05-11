@@ -169,6 +169,19 @@
 
 	{
 		NamedBus nbus1{"named1",getenv("DBUS_SESSION_BUS_ADDRESS")};
+		nbus1.subscribe(
+				"org.gnome.ScreenSaver",
+				"ActiveChanged",
+				[](DBus::Message &message) {
+
+					// Active state of gnome screensaver has changed, deal with it.
+					bool locked = DBus::Value(message).as_bool();
+					Logger::String{"Gnome screensaver is now ",(locked ? "active" : "inactive")}.info("d-bus");
+
+					return false;
+
+				}
+		);
 	}
 
 	{
