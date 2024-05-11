@@ -58,33 +58,22 @@
 		lock_guard<mutex> lock(guard);
 
 #if UDJAT_CHECK_VERSION(1,2,0)
-		const char *bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system", "starter");
-
-		if(!strcasecmp(bus,"system")) {
-			return make_shared<Udjat::DBus::SystemBus>();
-		}
-
-		if(!strcasecmp(bus,"session")) {
-			return make_shared<Udjat::DBus::SessionBus>();
-		}
-
-		if(!strcasecmp(bus,"starter")) {
-			return make_shared<Udjat::DBus::StarterBus>();
-		}
-
+		Udjat::String bus{node, "dbus-bus-name", "starter"};
 #else
-		std::string bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system");
+		std::string bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system", "starter");
+#endif // UDJAT_CHECK_VERSION
 
 		if(!strcasecmp(bus.c_str(),"system")) {
 			return make_shared<Udjat::DBus::SystemBus>();
 		}
 
-		/*
 		if(!strcasecmp(bus.c_str(),"session")) {
 			return make_shared<Udjat::DBus::SessionBus>();
 		}
-		*/
-#endif // UDJAT_CHECK_VERSION
+
+		if(!strcasecmp(bus.c_str(),"starter")) {
+			return make_shared<Udjat::DBus::StarterBus>();
+		}
 
 		throw runtime_error(Logger::String{"Unexpected bus name: '",bus,"'"});
 	}
