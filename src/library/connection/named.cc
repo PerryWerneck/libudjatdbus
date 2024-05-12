@@ -65,6 +65,7 @@
 		}
 
 		mainloop_add(conn);
+		bus_register();
 
 	}
 
@@ -73,12 +74,20 @@
 
 	DBus::NamedBus::~NamedBus() {
 
-		// Disconnect from mainloop
-		mainloop_remove(conn);
+		{
+			clear();
+		}
 
-		// Close connection.
-		dbus_connection_flush(conn);
-		dbus_connection_close(conn);
+		{
+			lock_guard<mutex> lock(guard);
+
+			// Disconnect from mainloop
+			mainloop_remove(conn);
+
+			// Close connection.
+			dbus_connection_flush(conn);
+			dbus_connection_close(conn);
+		}
 
 	}
 

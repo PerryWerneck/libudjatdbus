@@ -59,7 +59,6 @@
 		<Unit filename="src/library/connection/call.cc" />
 		<Unit filename="src/library/connection/named.cc" />
 		<Unit filename="src/library/connection/session.cc" />
-		<Unit filename="src/library/connection/shared.cc" />
 		<Unit filename="src/library/connection/starter.cc" />
 		<Unit filename="src/library/connection/system.cc" />
 		<Unit filename="src/library/connection/timeout.cc" />

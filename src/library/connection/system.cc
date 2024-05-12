@@ -82,14 +82,21 @@
 	}
 
 	DBus::SystemBus::~SystemBus() {
-		lock_guard<mutex> lock(guard);
-		refcount--;
 
-		debug("SystemBus refcount is ",refcount);
-		if(!refcount) {
-			mainloop_remove(connct);
-			connct = NULL;
+		{
+			clear();
 		}
+
+		{
+			lock_guard<mutex> lock(guard);
+			refcount--;
+
+			debug("SystemBus refcount is ",refcount);
+			if(!refcount) {
+				mainloop_remove(connct);
+			}
+		}
+
 	}
 
 	DBus::SystemBus & DBus::SystemBus::getInstance() {

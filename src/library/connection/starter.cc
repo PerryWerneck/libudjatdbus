@@ -82,14 +82,21 @@
 	}
 
 	DBus::StarterBus::~StarterBus() {
-		lock_guard<mutex> lock(guard);
-		refcount--;
 
-		debug("StarterBus refcount is ",refcount);
-		if(!refcount) {
-			mainloop_remove(connct);
-			connct = NULL;
+		{
+			clear();
 		}
+
+		{
+			lock_guard<mutex> lock(guard);
+			refcount--;
+
+			debug("StarterBus refcount is ",refcount);
+			if(!refcount) {
+				mainloop_remove(connct);
+			}
+		}
+
 	}
 
 	DBus::StarterBus & DBus::StarterBus::getInstance() {

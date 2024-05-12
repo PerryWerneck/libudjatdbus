@@ -115,10 +115,11 @@
 
 	}
 
-	Abstract::DBus::Connection::~Connection() {
+	void Abstract::DBus::Connection::clear() {
 
 		lock_guard<mutex> lock(guard);
 
+		/*
         if(Logger::enabled(Logger::Debug)) {
 			int fd = -1;
 			if(dbus_connection_get_socket(conn,&fd)) {
@@ -127,6 +128,7 @@
 				Logger::String("Dealocating connection '",((unsigned long) this),"'").write(Logger::Debug,name());
 			}
         }
+        */
 
 		flush();
 
@@ -139,9 +141,12 @@
 		// Remove filter
 		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) on_message, this);
 
+
+	}
+
+	Abstract::DBus::Connection::~Connection() {
 		// Release connection
 		dbus_connection_unref(conn);
-
 	}
 
 	void Abstract::DBus::Connection::bus_register() {

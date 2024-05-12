@@ -78,6 +78,8 @@
 				/// @brief Asks the bus to assign the given name to this connection by invoking the RequestName method on the bus.
 				int request_name(const char *name);
 
+				void clear();
+
 			public:
 
 				static std::shared_ptr<Connection> factory(const XML::Node &node);
