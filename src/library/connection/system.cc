@@ -93,6 +93,7 @@
 
 			debug("SystemBus refcount is ",refcount);
 			if(!refcount) {
+				debug("Cleaning system bus");
 				mainloop_remove(connct);
 			}
 		}

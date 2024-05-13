@@ -184,6 +184,7 @@
 		);
 	}
 
+	debug("-------------------------------------------");
 	{
 		SystemBus sbus0;
 		SystemBus sbus1;
@@ -193,6 +194,7 @@
 		//SystemBus sbus5;
 		//SystemBus sbus6;
 	}
+	debug("-------------------------------------------");
 
 	/*
 	SystemBus bus;
