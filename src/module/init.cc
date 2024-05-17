@@ -102,7 +102,7 @@
 		return make_shared<Udjat::DBus::Alert>(parent,node);
 	}
 
-
+/*
 #if UDJAT_CHECK_VERSION(1,2,0)
 	void set(std::shared_ptr<Abstract::Agent> agent) noexcept override {
 
@@ -246,6 +246,7 @@
 
 	}
 #endif // UDJAT_CHECK_VERSION
+*/
 
  };
 
