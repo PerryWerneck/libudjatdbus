@@ -84,6 +84,10 @@
 
 				static std::shared_ptr<Connection> factory(const XML::Node &node);
 
+				inline operator bool() const noexcept {
+					return (bool) conn;
+				}
+
 				inline const char * name() const noexcept {
 					return object_name.c_str();
 				}
