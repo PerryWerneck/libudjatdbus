@@ -252,7 +252,7 @@ install-linux-static: \
 	@$(MKDIR) $(DESTDIR)$(libdir)
 	@$(INSTALL_DATA) \
 		$(BINRLS)/libudjatdbus.a \
-		$(DESTDIR)$(libdir)/libudjatdbus.static.a
+		$(DESTDIR)$(libdir)/libudjatdbus.a
 
 install-windows-static: \
 	$(BINRLS)/libudjatdbus.a
