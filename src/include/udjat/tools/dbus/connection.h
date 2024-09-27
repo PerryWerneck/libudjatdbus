@@ -136,12 +136,29 @@
 				/// @brief Call method (syncronous);
 				void call_and_wait(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call);
 
-				/// @brief Call method
+				/// @brief Call method (async)
 				void call(	const char *destination,
 							const char *path,
 							const char *interface,
 							const char *member,
 							const std::function<void(Udjat::DBus::Message & message)> &call
+						);
+
+				/// @brief Call method (async)
+				void call(	const Udjat::DBus::Message & request,
+							const std::function<void(Udjat::DBus::Message & response)> &call
+						);
+
+				/// @brief Call method (sync)
+				void call_and_wait(	const char *destination,
+									const char *path,
+									const char *interface,
+									const char *member,
+									const std::function<void(Udjat::DBus::Message & message)> &call
+						);
+
+				void call_and_wait(	const Udjat::DBus::Message & request,
+									const std::function<void(Udjat::DBus::Message & response)> &call
 						);
 
 				/// @brief Get property.
