@@ -6,6 +6,7 @@ includedir=@includedir@
 Name: @PACKAGE_NAME@
 Description: UDJAT D-Bus library
 Version: @PACKAGE_VERSION@
+Requires: dbus-1
 Libs: -ludjatdbus
 Libs.private: @LIBS@ @UDJAT_LIBS@
 
