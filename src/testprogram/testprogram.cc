@@ -184,7 +184,37 @@
 		);
 	}
 
-	debug("-------------------------------------------");
+	try {
+		// https://www.freedesktop.org/wiki/Software/systemd/logind/
+		debug("------------------------------ Check if can power off -------------------------");
+		SystemBus::getInstance().call_and_wait(
+			DBus::Message{
+				"org.freedesktop.login1",
+				"/org/freedesktop/login1",
+				"org.freedesktop.login1.Manager",
+				"CanPowerOff"
+			},
+			[](Udjat::DBus::Message & response) {
+
+				if(response) {
+					std::string value;
+					response.pop(value);
+					debug("Got response: ",value);
+				} else {
+					cerr << "Error" << endl;
+				}
+
+			}
+		);
+		debug("----------------------------xxxxxxxxxxxxxxxxxx--------------------");
+
+
+	} catch(const std::exception &e) {
+
+		cerr << "---> " << e.what() << endl;
+	}
+
+	/*
 	{
 		SystemBus sbus0;
 		SystemBus sbus1;
@@ -194,7 +224,7 @@
 		//SystemBus sbus5;
 		//SystemBus sbus6;
 	}
-	debug("-------------------------------------------");
+	*/
 
 	/*
 	SystemBus bus;
