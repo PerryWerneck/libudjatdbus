@@ -17,6 +17,7 @@
 #
 
 %define product_name %(pkg-config --variable=product_name libudjat)
+%define product_version %(pkg-config --modversion libudjat)
 %define module_path %(pkg-config --variable=module_path libudjat)
 
 Summary:		DBus client/server module for %{product_name}
@@ -58,13 +59,13 @@ D-Bus client/server abstraction library for %{product_name}
 
 #---[ Development ]---------------------------------------------------------------------------------------------------
 
-%package -n udjat-dbus-devel
+%package -n libudjatdbus-devel
 Summary:	Development files for %{name}
-Requires:	pkgconfig(libudjat)
+Requires:	pkgconfig(libudjat) = %{product_version}
 Requires:	pkgconfig(dbus-1)
 Requires:	libudjatdbus%{_libvrs} = %{version}
 
-%description -n udjat-dbus-devel
+%description -n libudjatdbus-devel
 
 Development files for %{product_name}'s abstraction D-Bus library.
 
@@ -91,14 +92,14 @@ make all
 %defattr(-,root,root)
 %{_libdir}/libudjatdbus.so.%{MAJOR_VERSION}.%{MINOR_VERSION}
 
-%files -n udjat-dbus-devel
+%files -n libudjatdbus-devel
 %defattr(-,root,root)
 %dir %{_includedir}/udjat/tools/dbus
 %{_includedir}/udjat/tools/*.h
 %{_includedir}/udjat/tools/dbus/*.h
 %{_includedir}/udjat/alert/*.h
 %{_libdir}/*.so
-%exclude %{_libdir}/*.a
+%{_libdir}/*.a
 %{_libdir}/pkgconfig/*.pc
 
 %pre -n libudjatdbus%{_libvrs} -p /sbin/ldconfig
