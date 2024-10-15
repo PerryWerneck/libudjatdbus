@@ -119,17 +119,6 @@
 
 		lock_guard<mutex> lock(guard);
 
-		/*
-        if(Logger::enabled(Logger::Debug)) {
-			int fd = -1;
-			if(dbus_connection_get_socket(conn,&fd)) {
-				Logger::String("Dealocating connection '",((unsigned long) this),"' from socket '",fd,"'").write(Logger::Debug,name());
-			} else {
-				Logger::String("Dealocating connection '",((unsigned long) this),"'").write(Logger::Debug,name());
-			}
-        }
-        */
-
 		flush();
 
 		// Remove interfaces.
@@ -196,6 +185,7 @@
 
 	}
 
+	/*
 	static const char * type_name(int type) noexcept {
 
 		static const struct {
@@ -216,21 +206,28 @@
 
 		return "unknown";
 	}
+	*/
 
 	DBusHandlerResult Abstract::DBus::Connection::filter(DBusMessage *message) {
 
-		int type = dbus_message_get_type(message);
+//		int type = dbus_message_get_type(message);
+//		const char *member = dbus_message_get_member(message);
+
+//		if(Logger::enabled(Logger::Trace)) {
+//			Logger::String{type_name(type)," ",interface," ",member," ",dbus_message_get_path(message)}.trace(name());
+//		}
+
 		const char *interface = dbus_message_get_interface(message);
-		const char *member = dbus_message_get_member(message);
-
-		if(Logger::enabled(Logger::Trace)) {
-			Logger::String{type_name(type)," ",interface," ",member," ",dbus_message_get_path(message)}.trace(name());
-		}
-
 		for(const auto &intf : interfaces) {
 
 			if(intf == interface) {
 
+				DBusHandlerResult rc = intf.filter(message);
+				if(rc != DBUS_HANDLER_RESULT_NOT_YET_HANDLED) {
+					return rc;
+				}
+
+				/*
 				for(const auto &imemb : intf) {
 
 					if(imemb == type && imemb == member) {
@@ -242,6 +239,7 @@
 					}
 
 				}
+				*/
 
 			}
 

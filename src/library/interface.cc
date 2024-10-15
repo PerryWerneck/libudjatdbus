@@ -55,6 +55,24 @@
 		});
 	}
 
+	DBusHandlerResult DBus::Interface::filter(DBusMessage *message) const {
+
+		int type = dbus_message_get_type(message);
+		const char *name = dbus_message_get_member(message);
+
+		for(auto &member : members) {
+
+			if(member == type && member == name) {
+				Udjat::DBus::Message msg(message);
+				member.call(msg);
+			}
+
+		}
+
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	}
+
+
  }
 
 

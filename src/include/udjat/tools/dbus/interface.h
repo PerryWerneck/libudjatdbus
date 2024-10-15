@@ -40,6 +40,9 @@
 			std::list<Udjat::DBus::Member> members;
 
 		public:
+
+			virtual DBusHandlerResult filter(DBusMessage *message) const;
+
 			Interface(const char *name);
 			Interface(const XML::Node &node);
 
