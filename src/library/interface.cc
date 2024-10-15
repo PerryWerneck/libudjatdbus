@@ -24,20 +24,23 @@
 
  namespace Udjat {
 
-	DBus::Interface::Interface(const char *n) : std::string{n}, type{"signal"} {
+	Abstract::DBus::Interface::Interface(const char *n) : std::string{n}, type{"signal"} {
 	}
 
-	DBus::Interface::Interface(const XML::Node &node) : std::string{String{node,"dbus-interface"}}, type{"signal"} {
+	Abstract::DBus::Interface::Interface(const XML::Node &node) : std::string{String{node,"dbus-interface"}}, type{"signal"} {
+	}
+
+	Abstract::DBus::Interface::~Interface() {
 	}
 
 	DBus::Interface::~Interface() {
 	}
 
-	const std::string DBus::Interface::rule() const {
+	const std::string Abstract::DBus::Interface::rule() const {
 		return String{"type='",type,"',interface='",c_str(),"'"};
 	}
 
-	bool DBus::Interface::operator==(const char *intf) const noexcept {
+	bool Abstract::DBus::Interface::operator==(const char *intf) const noexcept {
 		return strcasecmp(intf,c_str()) == 0;
 	}
 

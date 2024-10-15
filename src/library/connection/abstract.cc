@@ -254,7 +254,6 @@
 	}
 
 	void Abstract::DBus::Connection::insert(const Udjat::DBus::Interface &interface) {
-
 		Logger::String{"Connecting to '",interface.rule().c_str(),"'"}.trace(name());
 
 		DBusError error;

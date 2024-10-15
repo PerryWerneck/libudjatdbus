@@ -31,24 +31,50 @@
 
  namespace Udjat {
 
+	namespace Abstract {
+
+		namespace DBus {
+
+			class UDJAT_API Interface : public std::string {
+			protected:
+				const char *type;
+
+			public:
+
+				virtual DBusHandlerResult filter(DBusMessage *message) const = 0;
+
+				Interface(const char *name);
+				Interface(const XML::Node &node);
+				virtual ~Interface();
+
+				bool operator==(const char *intf) const noexcept;
+
+				/// @brief Get textual form of match rule for this interface.
+				const std::string rule() const;
+
+			};
+
+		}
+
+	}
+
 	namespace DBus {
 
-		class UDJAT_API Interface : public std::string {
+		class UDJAT_API Interface : public Abstract::DBus::Interface {
 		private:
-
-			const char *type;
 			std::list<Udjat::DBus::Member> members;
 
 		public:
 
-			virtual DBusHandlerResult filter(DBusMessage *message) const;
+			virtual DBusHandlerResult filter(DBusMessage *message) const override;
 
-			Interface(const char *name);
-			Interface(const XML::Node &node);
+			Interface(const char *name) : Abstract::DBus::Interface{name} {
+			}
 
-			~Interface();
+			Interface(const XML::Node &node): Abstract::DBus::Interface{node} {
+			}
 
-			bool operator==(const char *intf) const noexcept;
+			virtual ~Interface();
 
 			inline bool empty() const noexcept {
 				return members.empty();
@@ -58,9 +84,6 @@
 			Udjat::DBus::Member & emplace_back(const char *member, const std::function<bool(Message & message)> &callback);
 
 			void remove(const Udjat::DBus::Member &member);
-
-			/// @brief Get textual form of match rule for this interface.
-			const std::string rule() const;
 
 			inline auto begin() const noexcept {
 				return members.begin();
