@@ -52,6 +52,7 @@
 		<Unit filename="src/include/udjat/tools/dbus/interface.h" />
 		<Unit filename="src/include/udjat/tools/dbus/member.h" />
 		<Unit filename="src/include/udjat/tools/dbus/message.h" />
+		<Unit filename="src/include/udjat/tools/dbus/service.h" />
 		<Unit filename="src/include/udjat/tools/dbus/signal.h" />
 		<Unit filename="src/include/udjat/tools/dbus/value.h" />
 		<Unit filename="src/library/alert.cc" />
@@ -69,6 +70,7 @@
 		<Unit filename="src/library/message/message.cc" />
 		<Unit filename="src/library/message/push_back.cc" />
 		<Unit filename="src/library/private.h" />
+		<Unit filename="src/library/service.cc" />
 		<Unit filename="src/library/signal.cc" />
 		<Unit filename="src/library/value.cc" />
 		<Unit filename="src/module/init.cc" />
