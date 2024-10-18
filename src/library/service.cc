@@ -18,8 +18,13 @@
  */
 
  /**
-  * @brief Declare D-Bus service object.
+  * @brief Implement D-Bus service object.
   */
+
+ // References:
+ //
+ // https://github.com/fbuihuu/samples-dbus/blob/master/dbus-server.c
+ //
 
  #include <config.h>
  #include <udjat/defs.h>
@@ -32,36 +37,13 @@
  #include <udjat/tools/string.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/exception.h>
+ #include <udjat/tools/dbus/exception.h>
  #include <stdexcept>
  #include <udjat/tools/intl.h>
 
  using namespace std;
 
  namespace Udjat {
-
-	DBusConnection * connection_factory(const XML::Node &node) {
-
-#if UDJAT_CHECK_VERSION(1,2,0)
-		Udjat::String bus{node, "dbus-bus-name", "starter"};
-#else
-		std::string bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system", "starter");
-#endif // UDJAT_CHECK_VERSION
-
-		if(!strcasecmp(bus.c_str(),"system")) {
-			return Udjat::DBus::SystemBus::ConnectionFactory();
-		}
-
-		if(!strcasecmp(bus.c_str(),"session")) {
-			return Udjat::DBus::SessionBus::ConnectionFactory();
-		}
-
-		if(!strcasecmp(bus.c_str(),"starter")) {
-			return Udjat::DBus::StarterBus::ConnectionFactory();
-		}
-
-		throw runtime_error(Logger::String{"Unexpected bus name: '",bus,"'"});
-
-	}
 
 	DBus::Service::Service(const ModuleInfo &module, DBusConnection *c, const char *name, const char *destination)
 		: Udjat::Service{name,module}, conn{c}, dest{destination} {
@@ -87,6 +69,13 @@
 
 			}
 
+			{
+				DBus::Error err;
+				dbus_bus_register(conn,err);
+				err.verify();
+			}
+
+
 		} catch(...) {
 
 			if(conn) {
@@ -108,7 +97,7 @@
 	DBus::Service::Service(const ModuleInfo &module, const XML::Node &node)
 		: Service{
 			module,
-			connection_factory(node),
+			Abstract::DBus::Connection::ConnectionFactory(node),
 			String{node,"name","d-bus"}.as_quark(),
 			String{node,"dbus-name",true}.as_quark()
 		} {
@@ -119,15 +108,46 @@
 	}
 
 	void DBus::Service::start() {
+
+		DBus::Error err;
+
+		debug("--------------------------> START ",dest);
+		dbus_bus_request_name(conn, dest, DBUS_NAME_FLAG_REPLACE_EXISTING, err);
+		err.verify();
+
+
 	}
 
 	void DBus::Service::stop() {
+
+		DBus::Error err;
+
+		debug("--------------------------> STOP ",dest);
+		dbus_bus_release_name(conn, dest, err);
+		err.verify();
+
 	}
 
 	DBusHandlerResult DBus::Service::on_message(DBusConnection *connct, DBusMessage *message, DBus::Service *service) noexcept {
 
 		if(strcasecmp(service->dest,dbus_message_get_destination(message)) != 0) {
 			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+		}
+
+		const char *interface = dbus_message_get_interface(message);
+
+		if(strcasecmp("org.freedesktop.DBus.Introspectable",interface) == 0) {
+			// TODO: Implement introspection
+			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+		}
+
+		if(Logger::enabled(Logger::Trace)) {
+			Logger::String{
+				"Got message ",
+				interface,
+				".",
+				dbus_message_get_member(message),
+			}.trace(service->name());
 		}
 
 		Udjat::DBus::Message request{message};
@@ -147,36 +167,48 @@
 			} catch(const std::system_error &e) {
 
 					Logger::String{
-						dbus_message_get_interface(message),
+						interface,
 						".",
 						dbus_message_get_member(message),
 						": ",
 						e.what()
 					}.error(service->name());
 
-					const char *name = DBUS_ERROR_FAILED;
+					DBusMessage *response;
 
-					static const struct {
-						int value;
-						const char *name;
-					} codes[] = {
-						{ ENOTSUP,	DBUS_ERROR_NOT_SUPPORTED },
-						{ EPERM,	DBUS_ERROR_ACCESS_DENIED },
-					};
+					switch(e.code().value()) {
+					case ENOTSUP:
+						response = dbus_message_new_error(
+							message,
+							DBUS_ERROR_NOT_SUPPORTED,
+							String{
+								interface,
+								".",
+								dbus_message_get_member(message),
+							}.c_str()
+						);
+						break;
 
-					int value = e.code().value();
-					for(auto &code : codes) {
-						if(code.value == value) {
-							name = code.name;
-							break;
-						}
+					case EPERM:
+						response = dbus_message_new_error(
+							message,
+							DBUS_ERROR_ACCESS_DENIED,
+							String{
+								interface,
+								".",
+								dbus_message_get_member(message),
+							}.c_str()
+						);
+						break;
+
+					default:
+						response = dbus_message_new_error(
+							message,
+							DBUS_ERROR_FAILED,
+							e.what()
+						);
 					}
 
-					DBusMessage *response = dbus_message_new_error(
-						message,
-						name,
-						e.what()
-					);
 
 					dbus_connection_send(connct, response, NULL);
 					dbus_message_unref(response);

@@ -25,6 +25,7 @@
  #include <udjat/tools/logger.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/threadpool.h>
 
  #if UDJAT_CHECK_VERSION(1,2,0)
@@ -243,6 +244,8 @@
 
 	});
 
+
+	DBus::Service srvc{moduleinfo,"service","br.eti.werneck.udjat"};
 
 	auto rc = Application{}.run(argc,argv,"./test.xml");
 	debug("Application exits with rc=",rc);

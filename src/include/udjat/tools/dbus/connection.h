@@ -82,6 +82,8 @@
 
 			public:
 
+				static DBusConnection * ConnectionFactory(const XML::Node &node);
+
 				static std::shared_ptr<Connection> factory(const XML::Node &node);
 
 				inline operator bool() const noexcept {

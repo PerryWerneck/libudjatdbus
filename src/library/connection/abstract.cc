@@ -53,6 +53,30 @@
 		}
 	}
 
+	DBusConnection * Abstract::DBus::Connection::ConnectionFactory(const XML::Node &node) {
+
+#if UDJAT_CHECK_VERSION(1,2,0)
+		Udjat::String bus{node, "dbus-bus-name", "starter"};
+#else
+		std::string bus = Udjat::XML::StringFactory(node, "dbus-bus-name", "system", "starter");
+#endif // UDJAT_CHECK_VERSION
+
+		if(!strcasecmp(bus.c_str(),"system")) {
+			return Udjat::DBus::SystemBus::ConnectionFactory();
+		}
+
+		if(!strcasecmp(bus.c_str(),"session")) {
+			return Udjat::DBus::SessionBus::ConnectionFactory();
+		}
+
+		if(!strcasecmp(bus.c_str(),"starter")) {
+			return Udjat::DBus::StarterBus::ConnectionFactory();
+		}
+
+		throw runtime_error(Logger::String{"Unexpected bus name: '",bus,"'"});
+
+	}
+
 	std::shared_ptr<Abstract::DBus::Connection> Abstract::DBus::Connection::factory(const XML::Node &node) {
 
 #if UDJAT_CHECK_VERSION(1,2,0)
