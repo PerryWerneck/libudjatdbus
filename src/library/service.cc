@@ -111,25 +111,20 @@
 		dbus_connection_unref(conn);
 	}
 
+	bool DBus::Service::introspect(const Udjat::String &xmldata) {
+		return Udjat::introspect(xmldata);
+	}
+
 	void DBus::Service::start() {
-
 		DBus::Error err;
-
-		debug("--------------------------> START ",dest);
 		dbus_bus_request_name(conn, dest, DBUS_NAME_FLAG_REPLACE_EXISTING, err);
 		err.verify();
-
-
 	}
 
 	void DBus::Service::stop() {
-
 		DBus::Error err;
-
-		debug("--------------------------> STOP ",dest);
 		dbus_bus_release_name(conn, dest, err);
 		err.verify();
-
 	}
 
 	DBusHandlerResult DBus::Service::on_message(DBusConnection *connct, DBusMessage *message, DBus::Service *service) noexcept {
@@ -139,18 +134,34 @@
 
 		} else if(dbus_message_is_method_call(message, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
 
-			// TODO: Implement introspection.
-			Logger::String{"Introspection wasnt implemented"}.write(Logger::Debug,"dbus");
+			Udjat::String xmldata{
+				"<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" " \
+				"\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n" \
+				"<node name=\"",service->dest,"\">\n"
+ 			};
+
+			if(service->introspect(xmldata)) {
+
+				xmldata += "</node>";
+				DBusMessage *reply = dbus_message_new_method_return(message);
+				const char * server_introspection_xml = xmldata.c_str();
+				dbus_message_append_args(reply,DBUS_TYPE_STRING, &server_introspection_xml,DBUS_TYPE_INVALID);
+				dbus_connection_send(connct, reply, NULL);
+				return DBUS_HANDLER_RESULT_HANDLED;
+
+			} else {
+				Logger::String{"Introspection 'Introspect' is not available"}.write(Logger::Debug,"dbus");
+			}
 
 		}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "Get")) {
 
 			// TODO: Implement introspection.
-			Logger::String{"Introspection wasnt implemented"}.write(Logger::Debug,"dbus");
+			Logger::String{"Introspection 'Get', wasnt implemented"}.write(Logger::Debug,"dbus");
 
 		}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "GetAll")) {
 
 			// TODO: Implement introspection.
-			Logger::String{"Introspection wasnt implemented"}.write(Logger::Debug,"dbus");
+			Logger::String{"Introspection 'GetAll' wasnt implemented"}.write(Logger::Debug,"dbus");
 
 		} else if(!strncasecmp(dbus_message_get_interface(message),PRODUCT_ID,strlen(PRODUCT_ID))) {
 

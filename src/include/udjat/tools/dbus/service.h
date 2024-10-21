@@ -29,6 +29,7 @@
  #include <udjat/tools/dbus/defs.h>
  #include <udjat/tools/service.h>
  #include <udjat/tools/xml.h>
+ #include <udjat/tools/string.h>
 
  namespace Udjat {
 
@@ -61,6 +62,9 @@
 			/// @retval true The method was handled.
 			/// @retval false The method was not handled.
 			virtual bool on_method(Udjat::DBus::Message &request, Udjat::Value &response);
+
+			/// @brief Get introspection
+			virtual bool introspect(const Udjat::String &xmldata);
 
 		public:
 
