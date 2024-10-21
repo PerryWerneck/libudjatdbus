@@ -163,9 +163,34 @@
 
 					if(!service->on_method(request, response)) {
 						return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+					}
+					debug("Got response");
+
+					DBusMessage *reply;
+					if(response.empty()) {
+
+						// Empty response - Send error.
+						reply = dbus_message_new_error(
+							message,
+							DBUS_ERROR_FAILED,
+							"Empty response from backend"
+						);
+
+					} else {
+
+						// Load response.
+						DBusMessageIter args;
+						reply = dbus_message_new_method_return(message);
+
+						dbus_message_iter_init_append(reply, &args);
+						response.get(&args);
 					}
 
-					debug("Got response");
+
+
+					dbus_connection_send(connct, reply, NULL);
+					dbus_message_unref(reply);
 
 				} catch(const Udjat::DBus::Exception &e) {
 
@@ -312,7 +337,7 @@
 		return false;
 	}
 
-	bool DBus::Service::on_method(Udjat::DBus::Message &request, Udjat::DBus::Value &response) {
+	bool DBus::Service::on_method(Udjat::DBus::Message &request, Udjat::Value &response) {
 
 		// Check for standard interface
 		const char *interface = dbus_message_get_interface(request);
