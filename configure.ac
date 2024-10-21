@@ -187,6 +187,10 @@ app_cv_module_path=`pkg-config --variable=module_path libudjat`
 AC_DEFINE_UNQUOTED(MODULE_PATH, $app_cv_module_path, [The path for module installation])
 AC_SUBST(MODULE_PATH,$app_cv_module_path)
 
+app_cv_product_id=`pkg-config --variable=product_id libudjat`
+AC_DEFINE_UNQUOTED(PRODUCT_ID, "$app_cv_product_id", [The product id])
+AC_SUBST(PRODUCT_ID,$app_cv_product_id)
+
 dnl ---------------------------------------------------------------------------
 dnl Check for libdbus
 dnl ---------------------------------------------------------------------------

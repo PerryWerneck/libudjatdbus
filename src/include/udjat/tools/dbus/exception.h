@@ -31,6 +31,18 @@
 
 	namespace DBus {
 
+		class UDJAT_API Exception : public std::runtime_error {
+		private:
+			DBusMessage *error_message;
+
+		public:
+			Exception(DBusMessage *message, const char *error_name, const char *error_text = nullptr);
+			~Exception();
+
+			void send(DBusConnection *connct) const noexcept;
+
+		};
+
 		class UDJAT_API Error {
 		private:
 			DBusError err;

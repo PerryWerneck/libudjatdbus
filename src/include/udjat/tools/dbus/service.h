@@ -60,7 +60,7 @@
 			/// @return Status.
 			/// @retval true The method was handled.
 			/// @retval false The method was not handled.
-			virtual bool on_method(Udjat::DBus::Message &request, Udjat::DBus::Message &response);
+			virtual bool on_method(Udjat::DBus::Message &request, Udjat::DBus::Value &response);
 
 		public:
 

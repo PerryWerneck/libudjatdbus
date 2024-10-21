@@ -32,15 +32,19 @@
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/defs.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/service.h>
+ #include <udjat/tools/worker.h>
  #include <udjat/tools/xml.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/exception.h>
  #include <udjat/tools/dbus/exception.h>
+ #include <udjat/tools/application.h>
  #include <stdexcept>
  #include <udjat/tools/intl.h>
-
+ #include <udjat/tools/exception.h>
+ #include <sstream>
  using namespace std;
 
  namespace Udjat {
@@ -130,164 +134,177 @@
 
 	DBusHandlerResult DBus::Service::on_message(DBusConnection *connct, DBusMessage *message, DBus::Service *service) noexcept {
 
-		if(strcasecmp(service->dest,dbus_message_get_destination(message)) != 0) {
+		if(!dbus_message_has_destination(message,service->dest)) {
 			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-		}
 
-		const char *interface = dbus_message_get_interface(message);
+		} else if(dbus_message_is_method_call(message, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
 
-		if(strcasecmp("org.freedesktop.DBus.Introspectable",interface) == 0) {
-			// TODO: Implement introspection
-			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-		}
+			// TODO: Implement introspection.
+			Logger::String{"Introspection wasnt implemented"}.write(Logger::Debug,"dbus");
 
-		if(Logger::enabled(Logger::Trace)) {
-			Logger::String{
-				"Got message ",
-				interface,
-				".",
-				dbus_message_get_member(message),
-			}.trace(service->name());
-		}
+		}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "Get")) {
 
-		Udjat::DBus::Message request{message};
+			// TODO: Implement introspection.
+			Logger::String{"Introspection wasnt implemented"}.write(Logger::Debug,"dbus");
 
-		switch(dbus_message_get_type(message)) {
-		case DBUS_MESSAGE_TYPE_METHOD_CALL:
-			try {
+		}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "GetAll")) {
 
-				DBus::Message response{dbus_message_new_method_return(message)};
-				if(!service->on_method(request,response)) {
-					return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-				}
+			// TODO: Implement introspection.
+			Logger::String{"Introspection wasnt implemented"}.write(Logger::Debug,"dbus");
 
-				// Send response
-				dbus_connection_send(connct, (DBusMessage *) response, NULL);
+		} else if(!strncasecmp(dbus_message_get_interface(message),PRODUCT_ID,strlen(PRODUCT_ID))) {
 
-			} catch(const std::system_error &e) {
+			switch(dbus_message_get_type(message)) {
+			case DBUS_MESSAGE_TYPE_METHOD_CALL:
+				try {
 
-					Logger::String{
-						interface,
-						".",
-						dbus_message_get_member(message),
-						": ",
-						e.what()
-					}.error(service->name());
+					DBus::Value response;
+					Udjat::DBus::Message request{message};
 
-					DBusMessage *response;
+					if(!service->on_method(request, response)) {
+						return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+					}
 
-					switch(e.code().value()) {
-					case ENOTSUP:
-						response = dbus_message_new_error(
-							message,
-							DBUS_ERROR_NOT_SUPPORTED,
-							String{
-								interface,
-								".",
-								dbus_message_get_member(message),
-							}.c_str()
-						);
-						break;
+					debug("Got response");
 
-					case EPERM:
-						response = dbus_message_new_error(
-							message,
-							DBUS_ERROR_ACCESS_DENIED,
-							String{
-								interface,
-								".",
-								dbus_message_get_member(message),
-							}.c_str()
-						);
-						break;
+				} catch(const Udjat::DBus::Exception &e) {
 
-					default:
-						response = dbus_message_new_error(
+						Logger::String{
+							dbus_message_get_interface(message),
+							".",
+							dbus_message_get_member(message),
+							": ",
+							e.what()
+						}.error(service->name());
+
+						e.send(connct);
+
+				} catch(const std::system_error &e) {
+
+						Logger::String{
+							dbus_message_get_interface(message),
+							".",
+							dbus_message_get_member(message),
+							": ",
+							e.what()
+						}.error(service->name());
+
+						DBusMessage *response;
+
+						switch(e.code().value()) {
+						case ENOTSUP:
+							response = dbus_message_new_error(
+								message,
+								DBUS_ERROR_NOT_SUPPORTED,
+								String{
+									dbus_message_get_interface(message),
+									".",
+									dbus_message_get_member(message),
+								}.c_str()
+							);
+							break;
+
+						case EPERM:
+							response = dbus_message_new_error(
+								message,
+								DBUS_ERROR_ACCESS_DENIED,
+								String{
+									dbus_message_get_interface(message),
+									".",
+									dbus_message_get_member(message),
+								}.c_str()
+							);
+							break;
+
+						default:
+							response = dbus_message_new_error(
+								message,
+								DBUS_ERROR_FAILED,
+								e.what()
+							);
+						}
+
+						dbus_connection_send(connct, response, NULL);
+						dbus_message_unref(response);
+
+				} catch(const std::exception &e) {
+
+						Logger::String{
+							dbus_message_get_interface(message),
+							".",
+							dbus_message_get_member(message),
+							": ",
+							e.what()
+						}.error(service->name());
+
+						DBusMessage *response = dbus_message_new_error(
 							message,
 							DBUS_ERROR_FAILED,
 							e.what()
 						);
-					}
 
+						dbus_connection_send(connct, response, NULL);
+						dbus_message_unref(response);
 
-					dbus_connection_send(connct, response, NULL);
-					dbus_message_unref(response);
-
-			} catch(const std::exception &e) {
+				} catch(...) {
 
 					Logger::String{
 						dbus_message_get_interface(message),
 						".",
 						dbus_message_get_member(message),
-						": ",
-						e.what()
+						": Unexpected error",
 					}.error(service->name());
 
 					DBusMessage *response = dbus_message_new_error(
 						message,
 						DBUS_ERROR_FAILED,
-						e.what()
+						"Unexpected error"
 					);
 
 					dbus_connection_send(connct, response, NULL);
 					dbus_message_unref(response);
 
-			} catch(...) {
-
-				Logger::String{
-					dbus_message_get_interface(message),
-					".",
-					dbus_message_get_member(message),
-					": Unexpected error",
-				}.error(service->name());
-
-				DBusMessage *response = dbus_message_new_error(
-					message,
-					DBUS_ERROR_FAILED,
-					"Unexpected error"
-				);
-
-				dbus_connection_send(connct, response, NULL);
-				dbus_message_unref(response);
-
-			}
-			break;
-
-		case DBUS_MESSAGE_TYPE_SIGNAL:
-			try {
-
-				if(!service->on_signal(request)) {
-					return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 				}
 
-			} catch(const std::exception &e) {
+				return DBUS_HANDLER_RESULT_HANDLED;
+
+			case DBUS_MESSAGE_TYPE_SIGNAL:
+				try {
+					Udjat::DBus::Message request{message};
+					if(!service->on_signal(request)) {
+						return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+					}
+				} catch(const std::exception &e) {
+
+						Logger::String{
+							dbus_message_get_interface(message),
+							".",
+							dbus_message_get_member(message),
+							": ",
+							e.what()
+						}.error(service->name());
+
+				} catch(...) {
 
 					Logger::String{
 						dbus_message_get_interface(message),
 						".",
 						dbus_message_get_member(message),
-						": ",
-						e.what()
+						": Unexpected error",
 					}.error(service->name());
 
-			} catch(...) {
+				}
+				return DBUS_HANDLER_RESULT_HANDLED;
 
-				Logger::String{
-					dbus_message_get_interface(message),
-					".",
-					dbus_message_get_member(message),
-					": Unexpected error",
-				}.error(service->name());
-
+			default:
+				Logger::String{"Ignoring unknown message ",dbus_message_get_interface(message),".",dbus_message_get_member(message)}.warning("dbus");
 			}
-			break;
 
-		default:
-			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
 		}
 
-		return DBUS_HANDLER_RESULT_HANDLED;
+		//debug("Returning DBUS_HANDLER_RESULT_NOT_YET_HANDLED for ",dbus_message_get_interface(message)," ",dbus_message_get_member(message));
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
 	}
 
@@ -295,8 +312,68 @@
 		return false;
 	}
 
-	bool DBus::Service::on_method(Udjat::DBus::Message &, Udjat::DBus::Message &) {
-		throw system_error(ENOTSUP,system_category(),_("Unsupported or unknown request"));
+	bool DBus::Service::on_method(Udjat::DBus::Message &request, Udjat::DBus::Value &response) {
+
+		// Check for standard interface
+		const char *interface = dbus_message_get_interface(request);
+
+		size_t szintf = strlen(PRODUCT_ID);
+		if(strncasecmp(interface,PRODUCT_ID,szintf)) {
+			debug("Ignoring request. Interface: '",interface,"' member: '",dbus_message_get_member(request),"'");
+			return false;
+		}
+
+		interface += szintf;
+		if(interface[0] != '.') {
+			throw DBus::Exception(request,DBUS_ERROR_UNKNOWN_INTERFACE,dbus_message_get_interface(request));
+		}
+		interface++;
+
+		debug("Request: '",interface,"' member: '",dbus_message_get_member(request),"'");
+
+		if(!Worker::for_each([interface,&request,&response](const Worker &worker){
+
+			if(!strcasecmp(worker.c_str(),interface)) {
+
+				debug("Achei worker '",worker.c_str(),"'");
+
+				switch(worker.call(dbus_message_get_member(request),dbus_message_get_path(request),response)) {
+				case 0: // Success.
+					break;
+
+				case -1: // Failed
+					throw DBus::Exception(request,DBUS_ERROR_FAILED,dbus_message_get_path(request));
+
+				case ENOSYS:
+				case ENOTSUP:
+					throw DBus::Exception(request,DBUS_ERROR_NOT_SUPPORTED,dbus_message_get_member(request));
+
+				case ENOENT: // Path not found.
+					throw DBus::Exception(request,DBUS_ERROR_UNKNOWN_OBJECT,dbus_message_get_path(request));
+
+				case ESRCH: // Method not found.
+					throw DBus::Exception(request,DBUS_ERROR_UNKNOWN_METHOD,dbus_message_get_member(request));
+
+				case EPERM: // Access to method was denied.
+					throw DBus::Exception(request,DBUS_ERROR_ACCESS_DENIED,dbus_message_get_path(request));
+
+				default:
+					throw DBus::Exception(request,DBUS_ERROR_FAILED,dbus_message_get_path(request));
+				}
+
+				return true;
+			}
+
+			debug("Ignorando worker '",worker.c_str(),"'");
+
+			return false;
+
+		})) {
+			throw DBus::Exception(request,DBUS_ERROR_UNKNOWN_INTERFACE,dbus_message_get_interface(request));
+		}
+
+		return true;
+
 	}
 
  }

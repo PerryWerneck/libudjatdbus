@@ -143,6 +143,12 @@
 			std::ostream & trace() const;
 
 		};
+		
+		/// @brief Response message.
+		class UDJAT_API Response : public DBus::Value {
+		private:
+			
+		};
 
  	}
 

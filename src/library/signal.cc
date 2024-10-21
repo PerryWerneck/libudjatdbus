@@ -60,11 +60,11 @@
 	}
 
 	void DBus::Signal::session() {
-//		SessionBus::getInstance().signal(*this);
+		SessionBus::getInstance().signal(*this);
 	}
 
 	void DBus::Signal::starter() {
-//		StarterBus::getInstance().signal(*this);
+		StarterBus::getInstance().signal(*this);
 	}
 
 	void DBus::Signal::user(uid_t uid, const char *sid) {
