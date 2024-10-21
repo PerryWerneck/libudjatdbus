@@ -64,7 +64,7 @@
 			virtual bool on_method(Udjat::DBus::Message &request, Udjat::Value &response);
 
 			/// @brief Get introspection
-			virtual bool introspect(const Udjat::String &xmldata);
+			virtual bool introspect(Udjat::String &xmldata);
 
 		public:
 

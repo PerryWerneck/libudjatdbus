@@ -111,8 +111,12 @@
 		dbus_connection_unref(conn);
 	}
 
-	bool DBus::Service::introspect(const Udjat::String &xmldata) {
+	bool DBus::Service::introspect(Udjat::String &xmldata) {
+#if UDJAT_CHECK_VERSION(1,2,1)
 		return Udjat::introspect(xmldata);
+#else
+		return false;
+#endif // UDJAT_CHECK_VERSION
 	}
 
 	void DBus::Service::start() {
