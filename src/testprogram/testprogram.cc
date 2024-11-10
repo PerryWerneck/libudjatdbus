@@ -108,7 +108,6 @@
 
 	udjat_module_init();
 
-	/*
 	SystemBus bus;
 	bus.get(
 		"org.freedesktop.systemd1",
@@ -132,10 +131,7 @@
 
 		}
 	);
-	*/
 
-
-	/*
 	UserBus bus{1000};
 	//SessionBus bus;
 
@@ -177,7 +173,6 @@
 
 	udjat_module_init();
 	RandomFactory rfactory;
-	*/
 
 
 	{
@@ -227,7 +222,6 @@
 		cerr << "---> " << e.what() << endl;
 	}
 
-	/*
 	{
 		SystemBus sbus0;
 		SystemBus sbus1;
@@ -237,9 +231,7 @@
 		//SystemBus sbus5;
 		//SystemBus sbus6;
 	}
-	*/
 
-	/*
 	SystemBus bus;
 	bus.subscribe(
 			"org.freedesktop.login1.Manager",
@@ -260,7 +252,6 @@
 
 			}
 	);
-	*/
 
 	Udjat::DBus::SessionBus::getInstance().subscribe("com.example.signal","hello",[](DBus::Message &){
 
