@@ -18,6 +18,31 @@
  */
 
  #include <config.h>
+ #include <udjat/defs.h>
+ #include <udjat/tests.h>
+ #include <udjat/moduleinfo.h>
+ #include <udjat/module.h>
+ #include <udjat/tools/application.h>
+ #include <udjat/tools/dbus.h>
+ 
+ using namespace std;
+ using namespace Udjat;
+
+ int main(int argc, char **argv) {
+
+	static const ModuleInfo info{"dbus-tester"};
+	
+	return Testing::run(argc,argv,info,[](Application &){
+
+	 	udjat_module_init();
+
+	});
+
+ }
+
+
+/*
+ #include <config.h>
  #include <udjat/tools/application.h>
  #include <udjat/module.h>
  #include <unistd.h>
@@ -137,3 +162,5 @@
 
 	return rc;
 }
+
+*/

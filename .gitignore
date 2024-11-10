@@ -54,3 +54,4 @@ po
 *.pc
 ABOUT-NLS
 
+.vscode
