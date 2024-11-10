@@ -1,8 +1,7 @@
 #
-# spec file for package udjat-module-dbus
+# spec file for package libudjatdbus
 #
-# Copyright (c) 2015 SUSE LINUX GmbH, Nuernberg, Germany.
-# Copyright (C) <2008> <Banco do Brasil S.A.>
+# Copyright (c) <2024> Perry Werneck <perry.werneck@gmail.com>.
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -13,99 +12,125 @@
 # license that conforms to the Open Source Definition (Version 1.9)
 # published by the Open Source Initiative.
 
-# Please submit bugfixes or comments via http://bugs.opensuse.org/
+# Please submit bugfixes or comments via https://github.com/PerryWerneck/libudjadbus/issues
 #
 
+%define module_name dbus
+
 %define product_name %(pkg-config --variable=product_name libudjat)
+%define product_version %(pkg-config --variable=product_version libudjat)
 %define module_path %(pkg-config --variable=module_path libudjat)
 
-Summary:		DBus client/server module for %{product_name}
-Name:			udjat-module-dbus
-Version:		2.0+git20240202
+Summary:		DBus client/server library for %{product_name}  
+Name:			libudjat%{module_name}
+Version: 2.0.0
 Release:		0
 License:		LGPL-3.0
 Source:			%{name}-%{version}.tar.xz
 
-URL:			https://github.com/PerryWerneck/udjat-module-dbus
+URL:			https://github.com/PerryWerneck/libudjat%{module_name}
 
 Group:			Development/Libraries/C and C++
 BuildRoot:		/var/tmp/%{name}-%{version}
 
-BuildRequires:	autoconf >= 2.61
-BuildRequires:	automake
-BuildRequires:	libtool
 BuildRequires:	binutils
 BuildRequires:	coreutils
-BuildRequires:	gcc-c++
 
-BuildRequires:	pkgconfig(libudjat)
+%if "%{_vendor}" == "debbuild"
+BuildRequires:  meson-deb-macros
+BuildRequires:	libdbus-1-dev
+BuildRequires:	libudjat-dev
+%else
+BuildRequires:	gcc-c++ >= 5
 BuildRequires:	pkgconfig(dbus-1)
+BuildRequires:	pkgconfig(libudjat)
+%endif
+
+%if 0%{?suse_version} == 01500
+BuildRequires:  meson = 0.61.4
+%else
+BuildRequires:  meson
+%endif
+
+%description
+DBus client/server library for %{product_name}
+
+C++ DBus client and server classes for use with lib%{product_name}
+
+#---[ Library ]-------------------------------------------------------------------------------------------------------
 
 %define MAJOR_VERSION %(echo %{version} | cut -d. -f1)
 %define MINOR_VERSION %(echo %{version} | cut -d. -f2 | cut -d+ -f1)
 %define _libvrs %{MAJOR_VERSION}_%{MINOR_VERSION}
 
-%description
-D-Bus client/server module for %{product_name}
+%package -n %{name}%{_libvrs}
+Summary: DBus client/server library for %{product_name}
 
-#---[ Library ]-------------------------------------------------------------------------------------------------------
+%description -n %{name}%{_libvrs}
+DBus client/server library for %{product_name}
 
-%package -n libudjatdbus%{_libvrs}
-Summary:	UDJat core library
-
-%description -n libudjatdbus%{_libvrs}
-D-Bus client/server abstraction library for %{product_name}
+C++ DBus client/service classes for use with lib%{product_name}
 
 #---[ Development ]---------------------------------------------------------------------------------------------------
 
-%package -n udjat-dbus-devel
-Summary:	Development files for %{name}
-Requires:	pkgconfig(libudjat)
-Requires:	pkgconfig(dbus-1)
-Requires:	libudjatdbus%{_libvrs} = %{version}
+%package devel
+Summary: Development files for %{name}
+Requires: %{name}%{_libvrs} = %{version}
 
-%description -n udjat-dbus-devel
+%if "%{_vendor}" == "debbuild"
+Provides:	%{name}-dev
+Provides:	pkgconfig(%{name})
+Provides:	pkgconfig(%{name}-static)
+%endif
 
-Development files for %{product_name}'s abstraction D-Bus library.
+%description devel
+DBus client/server library for %{product_name}
+
+C++ DBus client/server classes for use with lib%{product_name}
+
+#---[ Module ]--------------------------------------------------------------------------------------------------------
+
+%package -n %{product_name}-module-%{module_name}
+Summary: DBus module for %{name}
+
+%description -n %{product_name}-module-%{module_name}
+%{product_name} module with http client support.
 
 #---[ Build & Install ]-----------------------------------------------------------------------------------------------
 
 %prep
-%setup
-
-NOCONFIGURE=1 \
-	./autogen.sh
-
-%configure 
+%autosetup
+%meson
 
 %build
-make all
+%meson_build
 
 %install
-%makeinstall
+%meson_install
 
-%files
+%files -n %{name}%{_libvrs}
+%defattr(-,root,root)
+%{_libdir}/%{name}.so.%{MAJOR_VERSION}.%{MINOR_VERSION}
+
+%files -n %{product_name}-module-%{module_name}
 %{module_path}/*.so
 
-%files -n libudjatdbus%{_libvrs}
+%files devel
 %defattr(-,root,root)
-%{_libdir}/libudjatdbus.so.%{MAJOR_VERSION}.%{MINOR_VERSION}
 
-%files -n udjat-dbus-devel
-%defattr(-,root,root)
-%dir %{_includedir}/udjat/tools/dbus
-%{_includedir}/udjat/tools/*.h
-%{_includedir}/udjat/tools/dbus/*.h
-%{_includedir}/udjat/alert/*.h
 %{_libdir}/*.so
-%exclude %{_libdir}/*.a
+%{_libdir}/*.a
 %{_libdir}/pkgconfig/*.pc
 
-%pre -n libudjatdbus%{_libvrs} -p /sbin/ldconfig
+%dir %{_includedir}/udjat/tools/dbus
+%{_includedir}/udjat/tools/dbus/*.h
 
-%post -n libudjatdbus%{_libvrs} -p /sbin/ldconfig
+%dir %{_includedir}/udjat/alert
+%{_includedir}/udjat/alert/*.h
 
-%postun -n libudjatdbus%{_libvrs} -p /sbin/ldconfig
+%post -n %{name}%{_libvrs} -p /sbin/ldconfig
+
+%postun -n %{name}%{_libvrs} -p /sbin/ldconfig
 
 %changelog
 
