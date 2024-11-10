@@ -78,6 +78,10 @@
 				return children.empty();
 			}
 
+			inline size_t size() const noexcept {
+				return children.size();
+			}
+
 			inline bool operator==(int type) const noexcept {
 				return this->type == type;
 			}

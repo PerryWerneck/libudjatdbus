@@ -39,6 +39,9 @@
 /* Define to the full name of this package. */
 #undef PACKAGE_NAME
 
+/* The module release version */
+#undef PACKAGE_RELEASE
+
 /* Define to the full name and version of this package. */
 #undef PACKAGE_STRING
 
@@ -50,6 +53,9 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* The product id */
+#undef PRODUCT_ID
 
 /* The product name */
 #undef PRODUCT_NAME

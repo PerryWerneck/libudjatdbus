@@ -18,46 +18,38 @@
  */
 
  /**
-  * @brief Declare dbus-member.
+  * @brief Declares singleton for data slot.
   */
 
  #pragma once
 
- #pragma once
+ #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/tools/dbus/message.h>
- #include <string>
- #include <functional>
- #include <udjat/tools/xml.h>
+ #include <dbus/dbus.h>
+ #include <udjat/tools/logger.h>
 
- namespace Udjat {
-
-	namespace DBus {
-
-		class UDJAT_API Member : public std::string {
-		private:
-			std::function<bool(Message & message)> callback;
-
-		protected:
-			int type;
-
-		public:
-			Member(const char *name, const std::function<bool(Message & message)> &callback);
-			Member(const XML::Node &node,const std::function<bool(Message & message)> &callback);
-			~Member();
-
-			bool operator==(const char *name) const noexcept;
-
-			inline bool operator==(const int t) const noexcept {
-				return type == t;
-			}
-
-			inline void call(Message &message) const {
-				callback(message);
-			}
-
-		};
-
+ class DataSlot {
+ private:
+	dbus_int32_t slot = -1; // The passed-in slot must be initialized to -1, and is filled in with the slot ID
+	DataSlot() {
+		dbus_connection_allocate_data_slot(&slot);
+		Udjat::Logger::String{"Got slot '",slot,"' for connection watchdog"}.write(Udjat::Logger::Debug,"d-bus");
 	}
 
- }
+ public:
+
+	~DataSlot() {
+		dbus_connection_free_data_slot(&slot);
+	}
+
+	static DataSlot & getInstance() {
+		static DataSlot instance;
+		return instance;
+	}
+
+	inline dbus_int32_t value() const noexcept {
+		return slot;
+	}
+
+ };
+

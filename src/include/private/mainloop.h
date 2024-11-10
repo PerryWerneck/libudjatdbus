@@ -35,12 +35,15 @@
 
 	UDJAT_PRIVATE void handle_dispatch_status(DBusConnection *c, DBusDispatchStatus status, Udjat::Abstract::DBus::Connection *connection);
 
-	UDJAT_PRIVATE dbus_bool_t add_watch(DBusWatch *w, Udjat::Abstract::DBus::Connection *connection);
-	UDJAT_PRIVATE void remove_watch(DBusWatch *w, Udjat::Abstract::DBus::Connection *connection);
-	UDJAT_PRIVATE void toggle_watch(DBusWatch *w, Udjat::Abstract::DBus::Connection *connection);
+	UDJAT_PRIVATE dbus_bool_t add_watch(DBusWatch *w, DBusConnection *connection);
+	UDJAT_PRIVATE void remove_watch(DBusWatch *w, DBusConnection *connection);
+	UDJAT_PRIVATE void toggle_watch(DBusWatch *w, DBusConnection *connection);
 
-	UDJAT_PRIVATE dbus_bool_t add_timeout(DBusTimeout *t, Udjat::Abstract::DBus::Connection *connection);
-	UDJAT_PRIVATE void remove_timeout(DBusTimeout *t, Udjat::Abstract::DBus::Connection *connection);
-	UDJAT_PRIVATE void toggle_timeout(DBusTimeout *t, Udjat::Abstract::DBus::Connection *connection);
+	UDJAT_PRIVATE dbus_bool_t add_timeout(DBusTimeout *t, DBusConnection *connection);
+	UDJAT_PRIVATE void remove_timeout(DBusTimeout *t, DBusConnection *connection);
+	UDJAT_PRIVATE void toggle_timeout(DBusTimeout *t, DBusConnection *connection);
+
+	UDJAT_PRIVATE void mainloop_add(DBusConnection *connection);
+	UDJAT_PRIVATE void mainloop_remove(DBusConnection *connection);
 
  }

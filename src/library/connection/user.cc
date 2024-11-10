@@ -144,17 +144,25 @@
 
 								ptr += 25;
 
+								Logger::String{"Found bus '",ptr,"' for user"}.trace("d-bus");
+
 								connection = dbus_connection_open_private(ptr, &err);
 								if(dbus_error_is_set(&err)) {
+
 									clog << "dbus\tError '" << err.message << "' opening BUS " << ptr << endl;
 									dbus_error_free(&err);
 									connection = nullptr;
+
+								} else {
+
+									int fd = -1;
+									if(dbus_connection_get_socket(connection,&fd)) {
+										Logger::String("Got connection to user '",uid,"' with socket '",fd,"'").trace("d-bus");
+									} else {
+										Logger::String("Got connection to user '",uid,"'").trace("d-bus");
+									}
+
 								}
-#ifdef DEBUG
-								else {
-									cout << "dbus\tGot user connection on " << ptr << endl;
-								}
-#endif // DEBUG
 
 								// Restore to saved UID.
 								seteuid(saved_uid);
@@ -207,15 +215,25 @@
 
 	}
 
-	DBus::UserBus::UserBus(uid_t uid, const char *sid) : Abstract::DBus::Connection{get_username(uid).c_str(),UserConnectionFactory(uid,sid)}, userid{uid} {
-		open();
-		bus_register();
-	}
+	DBus::UserBus::UserBus(uid_t uid, const char *sid) : NamedBus{get_username(uid).c_str(),UserConnectionFactory(uid,sid)}, userid{uid} {
 
-	DBus::UserBus::~UserBus() {
-		close();
-		dbus_connection_close(conn);
-		dbus_connection_unref(conn);
+		try {
+
+			bus_register();
+
+		} catch(...) {
+
+			if(conn) {
+				Logger::String{"Closing connection to '",uid,"' due to initialization error"}.error("d-bus");
+				dbus_connection_flush(conn);
+				dbus_connection_close(conn);
+				dbus_connection_unref(conn);
+				conn = NULL;
+			}
+
+			throw;
+
+		}
 	}
 
  }

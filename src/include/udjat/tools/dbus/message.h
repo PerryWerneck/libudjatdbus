@@ -143,8 +143,18 @@
 			std::ostream & trace() const;
 
 		};
+		
+		/// @brief Response message.
+		class UDJAT_API Response : public DBus::Value {
+		private:
+			
+		};
 
  	}
 
  }
 
+ template <typename T>
+ inline Udjat::DBus::Message & operator<<(Udjat::DBus::Message &message, const T value) {
+	return message.push_back(value);
+ }

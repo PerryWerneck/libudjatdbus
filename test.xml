@@ -26,6 +26,11 @@
 		</alert -->
 
 	</agent>
-	
+
+  <event-listener type='d-bus' dbus-message-type='method' dbus-interface='org.freedesktop.Notifications' dbus-member='Notify' >
+  
+  
+  </event-listener>
+
 </config>
 

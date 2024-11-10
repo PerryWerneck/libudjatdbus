@@ -18,46 +18,53 @@
  */
 
  /**
-  * @brief Declare dbus-member.
+  * @brief Declare D-Bus Exception.
   */
 
- #pragma once
 
  #pragma once
  #include <udjat/defs.h>
- #include <udjat/tools/dbus/message.h>
- #include <string>
- #include <functional>
- #include <udjat/tools/xml.h>
+ #include <dbus/dbus.h>
+ #include <stdexcept>
 
  namespace Udjat {
 
 	namespace DBus {
 
-		class UDJAT_API Member : public std::string {
+		class UDJAT_API Exception : public std::runtime_error {
 		private:
-			std::function<bool(Message & message)> callback;
-
-		protected:
-			int type;
+			DBusMessage *error_message;
 
 		public:
-			Member(const char *name, const std::function<bool(Message & message)> &callback);
-			Member(const XML::Node &node,const std::function<bool(Message & message)> &callback);
-			~Member();
+			Exception(DBusMessage *message, const char *error_name, const char *error_text = nullptr);
+			~Exception();
 
-			bool operator==(const char *name) const noexcept;
+			void send(DBusConnection *connct) const noexcept;
 
-			inline bool operator==(const int t) const noexcept {
-				return type == t;
+		};
+
+		class UDJAT_API Error {
+		private:
+			DBusError err;
+
+		public:
+			Error() {
+				dbus_error_init(&err);
 			}
 
-			inline void call(Message &message) const {
-				callback(message);
+			~Error() {
+				dbus_error_free(&err);
 			}
+
+			operator DBusError *() {
+				return &err;
+			}
+
+			void verify();
 
 		};
 
 	}
-
  }
+
+

@@ -106,3 +106,7 @@
 
  }
 
+ template <typename T>
+ inline Udjat::DBus::Signal & operator<<(Udjat::DBus::Signal &signal, const T value) {
+	return signal.push_back(value);
+ }

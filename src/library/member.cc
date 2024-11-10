@@ -23,6 +23,8 @@
 
  #include <config.h>
  #include <udjat/defs.h>
+ #include <udjat/version.h>
+ #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/member.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/logger.h>
@@ -31,12 +33,35 @@
 
  namespace Udjat {
 
-	DBus::Member::Member(const char *name,const std::function<void(Message & message)> &c) : string{name}, callback{c} {
+	DBus::Member::Member(const char *name,const std::function<bool(Message & message)> &c)
+		: string{name}, callback{c}, type{DBUS_MESSAGE_TYPE_SIGNAL} {
 		Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
 	}
 
-	DBus::Member::Member(const XML::Node &node,const std::function<void(Message & message)> &callback) : Member{String{node,"dbus-member"}.c_str(),callback} {
-		Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
+	DBus::Member::Member(const XML::Node &node,const std::function<bool(Message & message)> &callback) : Member{String{node,"dbus-member"}.c_str(),callback} {
+
+#if UDJAT_CHECK_VERSION(1,2,0)
+		const char *name = XML::StringFactory(node,"dbus-message-type");
+#else
+		const char *name = XML::StringFactory(node,"dbus-message-type").c_str();
+#endif
+
+		if(name && *name) {
+
+			int index = String{name}.select("signal","method",nullptr);
+			if(index < 0) {
+				throw runtime_error(Logger::String{"Unexpected message type: ",type});
+			}
+
+			static const int types[] = {DBUS_MESSAGE_TYPE_SIGNAL,DBUS_MESSAGE_TYPE_METHOD_CALL};
+			type = types[index % 1];
+
+			Logger::String{"Watching ",type," '",c_str(),"'"}.trace("d-bus");
+
+		} else {
+			Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
+		}
+
 	}
 
 	DBus::Member::~Member() {

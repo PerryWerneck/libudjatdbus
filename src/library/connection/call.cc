@@ -31,7 +31,7 @@
 	/// @brief Parameters for method call.
 	struct CallParameters {
 
-		DBusConnection * connection;
+		DBusConnection * connection = nullptr;
 		const std::function<void(DBus::Message &)> call;
 
 		CallParameters(Abstract::DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c->connection()), call(f) {
@@ -134,6 +134,10 @@
 
 	void Abstract::DBus::Connection::call(DBusMessage * message) {
 
+		if(!conn) {
+			throw logic_error("Connection is not available");
+		}
+
 		DBusError error;
 		dbus_error_init(&error);
 
@@ -160,6 +164,10 @@
 	}
 
 	void Abstract::DBus::Connection::call_and_wait(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call) {
+
+		if(!conn) {
+			throw logic_error("Connection is not available");
+		}
 
 		DBusError error;
 		dbus_error_init(&error);
@@ -215,6 +223,10 @@
 
 	void Abstract::DBus::Connection::call(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
+		if(!conn) {
+			throw logic_error("Connection is not available");
+		}
+
 		debug("----------------------------------- pending call");
 
 		DBusPendingCall *pending = NULL;
@@ -252,17 +264,90 @@
 
 	}
 
+	void Abstract::DBus::Connection::get(const char *destination, const char *path, const char *interface, const char *property_name, const std::function<void(Udjat::DBus::Message & message)> &call) {
+
+		if(!conn) {
+			throw logic_error("Connection is not available");
+		}
+
+		DBusMessage * message = dbus_message_new_method_call(destination,path,"org.freedesktop.DBus.Properties","Get");
+		if(message == NULL) {
+			throw std::runtime_error("Error creating DBus method call");
+		}
+
+		debug("interface='",interface,"' property='",property_name,"'");
+
+		if(!dbus_message_append_args(
+			message,
+			DBUS_TYPE_STRING, &interface,
+			DBUS_TYPE_STRING, &property_name,
+			DBUS_TYPE_INVALID)
+		) {
+			dbus_message_unref(message);
+			throw std::runtime_error("Error appending arguments to DBus method call");
+		}
+
+		try {
+			this->call(message,call);
+		} catch(...) {
+			dbus_message_unref(message);
+			throw;
+		}
+
+		dbus_message_unref(message);
+
+	}
+
 	void Abstract::DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, const std::function<void(Udjat::DBus::Message & message)> &call) {
+
+		if(!conn) {
+			throw logic_error("Connection is not available");
+		}
 
 		DBusMessage * message = dbus_message_new_method_call(destination,path,interface,member);
 		if(message == NULL) {
 			throw std::runtime_error("Error creating DBus method call");
 		}
 
-		this->call(message,call);
+		try {
+			this->call(message,call);
+		} catch(...) {
+			dbus_message_unref(message);
+			throw;
+		}
 
 		dbus_message_unref(message);
 
+	}
+
+	void Abstract::DBus::Connection::call(const Udjat::DBus::Message & request,const std::function<void(Udjat::DBus::Message & response)> &call) {
+		this->call((DBusMessage *)request,call);
+	}
+
+	void Abstract::DBus::Connection::call_and_wait(const char *destination,const char *path, const char *interface, const char *member, const std::function<void(Udjat::DBus::Message & message)> &call) {
+
+		if(!conn) {
+			throw logic_error("Connection is not available");
+		}
+
+		DBusMessage * message = dbus_message_new_method_call(destination,path,interface,member);
+		if(message == NULL) {
+			throw std::runtime_error("Error creating DBus method call");
+		}
+
+		try {
+			this->call_and_wait(message,call);
+		} catch(...) {
+			dbus_message_unref(message);
+			throw;
+		}
+
+		dbus_message_unref(message);
+
+	}
+
+	void Abstract::DBus::Connection::call_and_wait(const Udjat::DBus::Message & request,const std::function<void(Udjat::DBus::Message & response)> &call) {
+		this->call_and_wait((DBusMessage *)request,call);
 	}
 
  }

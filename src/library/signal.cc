@@ -52,21 +52,19 @@
 	}
 
 	DBus::Signal::~Signal() {
-
 		dbus_message_unref(message);
-
 	}
 
 	void DBus::Signal::system() {
-		SystemBus{}.signal(*this);
+		SystemBus::getInstance().signal(*this);
 	}
 
 	void DBus::Signal::session() {
-		SessionBus{}.signal(*this);
+		SessionBus::getInstance().signal(*this);
 	}
 
 	void DBus::Signal::starter() {
-		StarterBus{}.signal(*this);
+		StarterBus::getInstance().signal(*this);
 	}
 
 	void DBus::Signal::user(uid_t uid, const char *sid) {

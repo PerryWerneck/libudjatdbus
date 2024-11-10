@@ -327,9 +327,12 @@
 			return false;
 
 		case DBUS_TYPE_VARIANT:
-			cerr << "d-bus\tUnsupported DBUS_TYPE_VARIANT value" << endl;
-			reset(Value::Type::Undefined);
-			return false;
+			{
+				DBusMessageIter sub;
+				dbus_message_iter_recurse(iter, &sub);
+				bool rc = this->set(&sub);
+				return rc;
+			}
 
 		default:
 			dbus_message_iter_get_basic(iter,&value);
@@ -402,11 +405,16 @@
 
 		case DBUS_TYPE_DICT_ENTRY:
 			{
+				debug("Getting dict entries");
 				DBusMessageIter subIter;
 				if(dbus_message_iter_open_container(iter, DBUS_TYPE_STRUCT, NULL, &subIter)) {
 
-					for(auto child : this->children) {
-						child.second->get(&subIter);
+					bool dbg = Logger::enabled(Logger::Debug);
+					for(const auto& [key, value] : this->children) {
+						if(dbg) {
+							Logger::String{key,"=",value->to_string().c_str()}.write(Logger::Debug,"d-bus");
+						}
+						value->get(&subIter);
 					}
 
 					dbus_message_iter_close_container(iter, &subIter);
@@ -420,12 +428,6 @@
 			return;
 		}
 
-#ifdef DEBUG
-		if(this->type == DBUS_TYPE_STRING) {
-			cout << "Value(" << ((char) this->type) << ") = '" << this->value.str << "' (" << ((void *) this->value.str) << ")" << endl;
-		}
-#endif // DEBUG
-
 		if(!dbus_message_iter_append_basic(iter,this->type,&this->value)) {
 			throw runtime_error("Can't add value to d-bus iterator");
 		}
@@ -438,11 +440,20 @@
 		EXCEPTION_ON_UNSUPPORTED_OR_INVALID
 
 		case DBUS_TYPE_STRING:
+		case DBUS_TYPE_OBJECT_PATH:
 			value = this->value.str;
 			break;
 
 		case DBUS_TYPE_BOOLEAN:
 			value = (this->value.bool_val ? "true" : "false");
+			break;
+
+		case DBUS_TYPE_INT16:
+			value = std::to_string(this->value.i16);
+			break;
+
+		case DBUS_TYPE_INT32:
+			value = std::to_string(this->value.i32);
 			break;
 
 		default:

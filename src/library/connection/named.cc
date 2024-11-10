@@ -26,19 +26,26 @@
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/logger.h>
+ #include <private/mainloop.h>
+ #include <private/dataslot.h>
 
  using namespace std;
 
  namespace Udjat {
 
-	static DBusConnection * NamedConnectionFactory(const char *bus_name) {
+
+	static DBusConnection * NamedConnectionFactory(const char *address) {
+
+		if(!(address && *address)) {
+			throw runtime_error("Empty d-bus address");
+		}
 
 		DBusError err;
 		dbus_error_init(&err);
 
-		DBusConnection *connection = dbus_connection_open_private(bus_name, &err);
+		DBusConnection *connection = dbus_connection_open_private(address, &err);
 		if(dbus_error_is_set(&err)) {
-			Logger::String message{"Cant open '",bus_name,"': ",err.message};
+			Logger::String message{"Cant open '",address,"': ",err.message};
 			dbus_error_free(&err);
 			throw runtime_error(message);
 		}
@@ -47,15 +54,41 @@
 
 	}
 
-	DBus::NamedBus::NamedBus(const char *connection_name, const char *bus_name) : Abstract::DBus::Connection{connection_name,NamedConnectionFactory(bus_name)} {
-		open();
+	static void trace_connection_free(const Abstract::DBus::Connection *connection) {
+		Logger::String("Named connection '",((unsigned long) connection),"' was released").trace("d-bus");
+	}
+
+	DBus::NamedBus::NamedBus(const char *name, DBusConnection * conn) : Abstract::DBus::Connection{name,conn} {
+
+		if(Logger::enabled(Logger::Trace)) {
+			dbus_connection_set_data(conn,DataSlot::getInstance().value(),this,(DBusFreeFunction) trace_connection_free);
+		}
+
+		mainloop_add(conn);
 		bus_register();
+
+	}
+
+	DBus::NamedBus::NamedBus(const char *connection_name, const char *address) : NamedBus{connection_name,NamedConnectionFactory(address)} {
 	}
 
 	DBus::NamedBus::~NamedBus() {
-		close();
-		dbus_connection_close(conn);
-		dbus_connection_unref(conn);
+
+		{
+			clear();
+		}
+
+		{
+			lock_guard<mutex> lock(guard);
+
+			// Disconnect from mainloop
+			mainloop_remove(conn);
+
+			// Close connection.
+			dbus_connection_flush(conn);
+			dbus_connection_close(conn);
+		}
+
 	}
 
  }

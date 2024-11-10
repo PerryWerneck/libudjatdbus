@@ -24,28 +24,31 @@
 
  namespace Udjat {
 
-	DBus::Interface::Interface(const char *n) : std::string{n}, type{"signal"} {
+	Abstract::DBus::Interface::Interface(const char *n) : std::string{n}, type{"signal"} {
 	}
 
-	DBus::Interface::Interface(const XML::Node &node) : std::string{String{node,"dbus-interface"}}, type{"signal"} {
+	Abstract::DBus::Interface::Interface(const XML::Node &node) : std::string{String{node,"dbus-interface"}}, type{"signal"} {
+	}
+
+	Abstract::DBus::Interface::~Interface() {
 	}
 
 	DBus::Interface::~Interface() {
 	}
 
-	const std::string DBus::Interface::rule() const {
+	const std::string Abstract::DBus::Interface::rule() const {
 		return String{"type='",type,"',interface='",c_str(),"'"};
 	}
 
-	bool DBus::Interface::operator==(const char *intf) const noexcept {
+	bool Abstract::DBus::Interface::operator==(const char *intf) const noexcept {
 		return strcasecmp(intf,c_str()) == 0;
 	}
 
-	Udjat::DBus::Member & DBus::Interface::push_back(const XML::Node &node,const std::function<void(Udjat::DBus::Message & message)> &callback) {
+	Udjat::DBus::Member & DBus::Interface::push_back(const XML::Node &node,const std::function<bool(Udjat::DBus::Message & message)> &callback) {
 		return members.emplace_back(node,callback);
 	}
 
-	Udjat::DBus::Member & DBus::Interface::emplace_back(const char *member, const std::function<void(Udjat::DBus::Message & message)> &callback) {
+	Udjat::DBus::Member & DBus::Interface::emplace_back(const char *member, const std::function<bool(Udjat::DBus::Message & message)> &callback) {
 		return members.emplace_back(member,callback);
 	}
 
@@ -54,6 +57,24 @@
 			return &m == &member;
 		});
 	}
+
+	DBusHandlerResult DBus::Interface::filter(DBusMessage *message) const {
+
+		int type = dbus_message_get_type(message);
+		const char *name = dbus_message_get_member(message);
+
+		for(auto &member : members) {
+
+			if(member == type && member == name) {
+				Udjat::DBus::Message msg(message);
+				member.call(msg);
+			}
+
+		}
+
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	}
+
 
  }
 

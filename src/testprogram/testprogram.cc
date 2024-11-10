@@ -50,6 +50,7 @@
  #include <udjat/tools/logger.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/threadpool.h>
 
  #if UDJAT_CHECK_VERSION(1,2,0)
@@ -105,19 +106,38 @@
 	Logger::redirect();
 	Logger::console(true);
 
+	udjat_module_init();
+
+	/*
+	SystemBus bus;
+	bus.get(
+		"org.freedesktop.systemd1",
+		"/org/freedesktop/systemd1",
+		"org.freedesktop.systemd1.Manager",
+		"Virtualization",
+		[](Udjat::DBus::Message & message) {
+
+			if(message) {
+
+				string response;
+				message.pop(response);
+
+				debug("-------------------------> Got response Virtualization=",response);
+
+			} else {
+
+				debug("-------------------------> Error calling org.freedesktop.systemd1");
+
+			}
+
+		}
+	);
+	*/
+
+
+	/*
 	UserBus bus{1000};
 	//SessionBus bus;
-
-	Udjat::DBus::Member *member = &bus.subscribe("com.example.signal","hello",[&member,&bus](DBus::Message &){
-
-		cout << "Got signal hello" << endl;
-
-		// Cant remove member while running, then, enqueue cleanup.
-		ThreadPool::getInstance().push([&member,&bus](){
-			bus.remove(*member);
-		});
-
-	});
 
 	bus.call(
 		"org.gnome.ScreenSaver",
@@ -150,14 +170,109 @@
 				bool locked = DBus::Value(message).as_bool();
 				Logger::String{"Gnome screensaver is now ",(locked ? "active" : "inactive")}.info("d-bus");
 
+				return false;
+
 			}
 	);
 
 	udjat_module_init();
 	RandomFactory rfactory;
+	*/
+
+
+	{
+		NamedBus nbus1{"named1",getenv("DBUS_SESSION_BUS_ADDRESS")};
+		nbus1.subscribe(
+				"org.gnome.ScreenSaver",
+				"ActiveChanged",
+				[](DBus::Message &message) {
+
+					// Active state of gnome screensaver has changed, deal with it.
+					bool locked = DBus::Value(message).as_bool();
+					Logger::String{"Gnome screensaver is now ",(locked ? "active" : "inactive")}.info("d-bus");
+
+					return false;
+
+				}
+		);
+	}
+
+	try {
+		// https://www.freedesktop.org/wiki/Software/systemd/logind/
+		debug("------------------------------ Check if can power off -------------------------");
+		SystemBus::getInstance().call_and_wait(
+			DBus::Message{
+				"org.freedesktop.login1",
+				"/org/freedesktop/login1",
+				"org.freedesktop.login1.Manager",
+				"CanPowerOff"
+			},
+			[](Udjat::DBus::Message & response) {
+
+				if(response) {
+					std::string value;
+					response.pop(value);
+					debug("Got response: ",value);
+				} else {
+					cerr << "Error" << endl;
+				}
+
+			}
+		);
+		debug("----------------------------xxxxxxxxxxxxxxxxxx--------------------");
+
+
+	} catch(const std::exception &e) {
+
+		cerr << "---> " << e.what() << endl;
+	}
+
+	/*
+	{
+		SystemBus sbus0;
+		SystemBus sbus1;
+		SystemBus sbus2;
+		//SystemBus sbus3;
+		//SystemBus sbus4;
+		//SystemBus sbus5;
+		//SystemBus sbus6;
+	}
+	*/
+
+	/*
+	SystemBus bus;
+	bus.subscribe(
+			"org.freedesktop.login1.Manager",
+			"SessionNew",
+			[](DBus::Message &message) {
+
+				debug("----------------------------------> SessionNew");
+
+				string sid;
+				message.pop(sid);
+
+				string path;
+				message.pop(path);
+
+				cout << "users\t Session '" << sid << "' started on path '" << path << "'" << endl;
+
+				return false;
+
+			}
+	);
+	*/
+
+	Udjat::DBus::SessionBus::getInstance().subscribe("com.example.signal","hello",[](DBus::Message &){
+
+		cout << "Got signal hello" << endl;
+		return false;
+
+	});
+
+
+	DBus::Service srvc{moduleinfo,"service","br.eti.werneck.udjat"};
 
 	auto rc = Application{}.run(argc,argv,"./test.xml");
-
 	debug("Application exits with rc=",rc);
 
 	return rc;
