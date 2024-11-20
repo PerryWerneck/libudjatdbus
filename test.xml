@@ -15,6 +15,18 @@
 
 	</agent>
 
+	<!-- service type='dbus' node='/com/example/MyService'>
+		<interface name='com.example.MyInterface'>
+		<method name='echo'>
+			<input>
+				<arg name="in" type="s" />
+			</input>
+			<output>
+				<arg name="out" type="s" />
+			</output>
+		</method>
+	</service -->
+
 	<agent type='random' name='alerter' update-timer='10' on-demand='false'>
 
 		<!-- alert name='on-value' type='d-bus' trigger-event='value-change' dbus-path='${agent.path}' dbus-interface='br.eti.werneck.udjat' dbus-member='changed'>
