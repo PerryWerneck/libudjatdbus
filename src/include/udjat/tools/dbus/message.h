@@ -23,10 +23,10 @@
 
  #pragma once
  #include <udjat/defs.h>
+ #include <udjat/tools/value.h>
  #include <dbus/dbus.h>
  #include <string>
- #include <udjat/tools/dbus/value.h>
-
+ 
  namespace Udjat {
 
  	namespace DBus {
@@ -90,8 +90,6 @@
 				return !err.valid;
 			}
 
-			Message & pop(Value &value);
-
 			DBusMessageIter * getIter();
 
 			inline bool failed() const {
@@ -100,13 +98,12 @@
 
 			bool next();
 
-			template <typename T>
-			Message & pop(T &value) {
-				Value v;
-				pop(v);
-				v.get(value);
-				return *this;
-			}
+			Message & pop(Udjat::Value &value);
+			Message & pop(std::string &value);
+			Message & pop(int &value);
+			Message & pop(unsigned int &value);
+			Message & pop(bool &value);
+			Message & pop(double &value);
 
 			inline const char * error_name() const {
 				return this->err.name.c_str();
@@ -116,7 +113,7 @@
 				return err.message.c_str();
 			}
 
-			Message & push_back(const DBus::Value &value);
+			Message & push_back(const Udjat::Value &value);
 
 			Message & push_back(const char *value);
 
@@ -125,31 +122,12 @@
 			}
 
 			Message & push_back(const bool value);
-
-			Message & push_back(const int16_t value);
-			Message & push_back(const uint16_t value);
-
-			Message & push_back(const int32_t value);
-			Message & push_back(const uint32_t value);
-
-			Message & push_back(const int64_t value);
-			Message & push_back(const uint64_t value);
-
-			Message & push_back(const std::vector<std::string> &elements);
-
-			std::ostream & info() const;
-			std::ostream & warning() const;
-			std::ostream & error() const;
-			std::ostream & trace() const;
+			Message & push_back(const int value);
+			Message & push_back(const unsigned int value);
+			Message & push_back(const double value);
 
 		};
 		
-		/// @brief Response message.
-		class UDJAT_API Response : public DBus::Value {
-		private:
-			
-		};
-
  	}
 
  }

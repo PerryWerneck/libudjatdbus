@@ -222,6 +222,5 @@ install_headers(
   'src/include/udjat/tools/dbus/member.h',
   'src/include/udjat/tools/dbus/message.h',
   'src/include/udjat/tools/dbus/signal.h',
-  'src/include/udjat/tools/dbus/value.h',
   subdir: 'udjat/tools/dbus'  
 )
