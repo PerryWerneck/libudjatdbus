@@ -162,25 +162,52 @@
 		if(type == DBUS_TYPE_VARIANT) {
 			DBusMessageIter sub;
 			dbus_message_iter_recurse(iter, &sub);
-			return to_value(&sub,value);
+			type = to_value(&sub,value);
+			dbus_message_iter_next(iter);
+			return type;
 		}
+
+		dbus_message_iter_get_basic(iter,&value);
+		dbus_message_iter_next(iter);
 
 		return type;
 	}
 
-	DBus::Message & DBus::Message::pop(std::string &value) {
+	static Udjat::String get_string(DBusMessageIter *iter) {
 
 		DBusBasicValue dval;
-		switch(to_value(&message.iter,dval)) {
+		int type = dbus_message_iter_get_arg_type(iter);
+
+		if(type == DBUS_TYPE_VARIANT) {
+			DBusMessageIter sub;
+			dbus_message_iter_recurse(iter, &sub);
+			return get_string(&sub);
+		}
+
+		char str[] = {(char) type,'\0'};
+		debug("Iterator type is '",str,"'");
+
+		switch(type) {
 		case DBUS_TYPE_STRING:
 		case DBUS_TYPE_OBJECT_PATH:
-			value = dval.str;
-			break;
+			dbus_message_iter_get_basic(iter,&dval);
+			return String{dval.str};
 
 		default:
-			throw runtime_error("Unexpected d-bus value");
-
+			throw runtime_error("Message iterator is not string");
 		}
+
+	}
+
+	Udjat::String DBus::Message::to_string() {
+		return get_string(&message.iter);
+	}
+
+
+	DBus::Message & DBus::Message::pop(std::string &value) {
+
+		value = get_string(&message.iter);
+		dbus_message_iter_next(&message.iter);
 
 		return *this;
 	}

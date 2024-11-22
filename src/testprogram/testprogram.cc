@@ -24,9 +24,11 @@
  #include <udjat/module.h>
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus.h>
+ #include <udjat/tools/dbus/connection.h>
  
  using namespace std;
  using namespace Udjat;
+ using namespace Udjat::DBus;
 
  int main(int argc, char **argv) {
 
@@ -35,6 +37,74 @@
 	return Testing::run(argc,argv,info,[](Application &){
 
 	 	udjat_module_init();
+
+		SystemBus::getInstance().get(
+			"org.freedesktop.systemd1",
+			"/org/freedesktop/systemd1",
+			"org.freedesktop.systemd1.Manager",
+			"Virtualization",
+			[](Udjat::DBus::Message & message) {
+
+				if(message) {
+
+					string response;
+					message.pop(response);
+
+					debug("-------------------------> Got response Virtualization=",response);
+
+				} else {
+
+					debug("-------------------------> Error calling org.freedesktop.systemd1");
+
+				}
+
+			}
+		);
+
+		SessionBus::getInstance().call(
+			"org.gnome.ScreenSaver",
+			"/org/gnome/ScreenSaver",
+			"org.gnome.ScreenSaver",
+			"GetActiveTime",
+			[](DBus::Message & message) {
+
+				if(message) {
+
+					unsigned int active;
+					message.pop(active);
+
+					debug("-------------------------> Got response active=",active);
+
+				} else {
+
+					debug("-------------------------> Error calling gnome");
+
+				}
+
+			});
+
+		SessionBus::getInstance().subscribe(
+				"org.gnome.ScreenSaver",
+				"ActiveChanged",
+				[](DBus::Message &message) {
+
+					// Active state of gnome screensaver has changed, deal with it.
+					bool active;
+					message.pop(active);
+
+					Logger::String{"Gnome screensaver is now ",(active ? "active" : "inactive")}.info("d-bus");
+
+					return false;
+
+				}
+		);
+
+		SessionBus::getInstance().subscribe("com.example.signal","hello",[](DBus::Message &message){
+
+			cout << "Got signal hello with message '" << message << "'" << endl;
+			return false;
+
+		});
 
 	});
 

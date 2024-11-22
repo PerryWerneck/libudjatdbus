@@ -78,7 +78,7 @@
 
 	}
 
-	DBus::SessionBus::SessionBus() : Abstract::DBus::Connection{"SysBUS",SessionBus::ConnectionFactory()} {
+	DBus::SessionBus::SessionBus() : Abstract::DBus::Connection{"SessionBUS",SessionBus::ConnectionFactory()} {
 	}
 
 	DBus::SessionBus::~SessionBus() {

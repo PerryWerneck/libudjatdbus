@@ -26,6 +26,7 @@
  #include <udjat/tools/value.h>
  #include <dbus/dbus.h>
  #include <string>
+ #include <udjat/tools/string.h>
  
  namespace Udjat {
 
@@ -126,6 +127,8 @@
 			Message & push_back(const unsigned int value);
 			Message & push_back(const double value);
 
+			Udjat::String to_string();
+
 		};
 		
  	}
@@ -135,4 +138,18 @@
  template <typename T>
  inline Udjat::DBus::Message & operator<<(Udjat::DBus::Message &message, const T value) {
 	return message.push_back(value);
+ }
+
+ namespace std {
+
+        UDJAT_API const char * to_string() noexcept;
+
+        inline string to_string(Udjat::DBus::Message &message) {
+                return message.to_string();
+        }
+
+        inline ostream& operator<< (ostream& os, Udjat::DBus::Message &message) {
+                return os << message.to_string();
+        }
+
  }
