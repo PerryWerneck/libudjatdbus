@@ -33,7 +33,7 @@
  #include <udjat/tools/configuration.h>
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus/connection.h>
- #include <udjat/worker.h>
+ #include <udjat/tools/worker.h>
  
  using namespace std;
  using namespace Udjat;
