@@ -23,6 +23,8 @@
 
  #pragma once
 
+ /*
+ 
  #include <udjat/defs.h>
  #include <udjat/module/info.h>
  #include <dbus/dbus.h>
@@ -79,5 +81,6 @@
 
 	}
 
+*/
 
  }

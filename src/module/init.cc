@@ -19,6 +19,22 @@
 
  #include <config.h>
  #include <udjat/defs.h>
+ #include <udjat/tools/dbus/connection.h>
+ #include <udjat/module/dbus.h>
+
+ using namespace Udjat;
+ 
+ Udjat::Module * udjat_module_init() {
+	Udjat::DBus::initialize();
+	return new DBus::Module();
+ }
+
+ Udjat::Module * udjat_module_init_from_xml(const pugi::xml_node &node) {
+	Udjat::DBus::initialize();
+	return new DBus::Module();
+ }
+
+ /*
  #include <udjat/version.h>
  #include <udjat/module.h>
  #include <udjat/moduleinfo.h>
@@ -37,6 +53,7 @@
  
  using namespace std;
  using namespace Udjat;
+
 
  static const Udjat::ModuleInfo moduleinfo { "D-Bus" STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " module" };
 
@@ -82,7 +99,7 @@
 		}
 
 		if(srvname[0] == '.') {
-			Config::Value<string> prefix{"dbus","service-prefix","br.eti.werneck"};
+			Config::Value<string> prefix{"dbus","service-prefix",PRODUCT_ID};
 			srvname = prefix + srvname.c_str();
 		}
 
@@ -111,3 +128,4 @@
 	return new ::Module(node);
  }
 
+ */

@@ -96,6 +96,8 @@ app_conf.set('PACKAGE_VERSION_MAJOR', pkg_major_version)
 app_conf.set('PACKAGE_VERSION_MINOR', pkg_minor_version)
 app_conf.set('PACKAGE_VERSION_MICRO', pkg_micro_version)
 
+app_conf.set_quoted('PRODUCT_ID', libudjat.get_variable('product_id'))
+
 if cxx.compiles('#include <unistd.h>', name : 'unistd.h')
   app_conf.set('HAVE_UNISTD_H', 1)
 endif
@@ -190,6 +192,7 @@ module = shared_library(
   install: true,
   link_with: dynamic,
   install_dir: libudjat.get_variable('module_path'),
+  install_tag: 'module',
   gnu_symbol_visibility: 'hidden',
   dependencies: lib_deps,
   include_directories: includes_dir

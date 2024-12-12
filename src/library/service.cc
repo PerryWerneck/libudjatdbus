@@ -49,6 +49,7 @@
 
  namespace Udjat {
 
+	/*
 	DBus::Service::Service(const ModuleInfo &module, DBusConnection *c, const char *name, const char *destination)
 		: Udjat::Service{name,module}, conn{c}, dest{destination} {
 
@@ -109,14 +110,6 @@
 
 	DBus::Service::~Service() {
 		dbus_connection_unref(conn);
-	}
-
-	bool DBus::Service::introspect(Udjat::String &xmldata) {
-#if UDJAT_CHECK_VERSION(1,2,1)
-		return Udjat::introspect(xmldata);
-#else
-		return false;
-#endif // UDJAT_CHECK_VERSION
 	}
 
 	void DBus::Service::start() {
@@ -354,6 +347,8 @@
 
 	bool DBus::Service::on_method(Udjat::DBus::Message &request, Udjat::Value &response) {
 
+		// TODO: Use the new Udjat::Interface() class 
+
 		// Check for standard interface
 		const char *interface = dbus_message_get_interface(request);
 
@@ -415,5 +410,6 @@
 		return true;
 
 	}
+	*/
 
  }

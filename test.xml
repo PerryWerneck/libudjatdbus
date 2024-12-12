@@ -15,17 +15,11 @@
 
 	</agent>
 
-	<!-- service type='dbus' node='/com/example/MyService'>
-		<interface name='com.example.MyInterface'>
-		<method name='echo'>
-			<input>
-				<arg name="in" type="s" />
-			</input>
-			<output>
-				<arg name="out" type="s" />
-			</output>
-		</method>
-	</service -->
+	<interface type='dbus' bus-name='starter' name='MyInterface' node='/com/example/MyService'>
+		<handler name='echo'>
+			<arg name="text" direction='both' type="string" />
+		</handler>
+	</interface>
 
 	<agent type='random' name='alerter' update-timer='10' on-demand='false'>
 
@@ -38,11 +32,6 @@
 		</alert -->
 
 	</agent>
-
-  <event-listener type='d-bus' dbus-message-type='method' dbus-interface='org.freedesktop.Notifications' dbus-member='Notify' >
-  
-  
-  </event-listener>
 
 </config>
 

@@ -25,7 +25,6 @@
  #include <udjat/defs.h>
  #include <string>
  #include <udjat/tools/xml.h>
- #include <udjat/tools/dbus/member.h>
  #include <list>
  #include <functional>
 
