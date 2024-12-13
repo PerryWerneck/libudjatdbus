@@ -129,6 +129,8 @@
 
 	void DBus::Service::start() {
 		DBus::Error err;
+		debug("-----------------------------------------");
+		Logger::String{"Listening dbus://",dest}.info(name());
 		dbus_bus_request_name(conn, dest, DBUS_NAME_FLAG_REPLACE_EXISTING, err);
 		err.verify();
 	}
@@ -172,6 +174,16 @@
 
 		} 
 
+		{
+			const char *intfname = dbus_message_get_interface(message);
+			for(Interface &interface : service->interfaces) {
+				debug("Checking '",interface.interface(),"' -> '",intfname,"'");
+				if(!strcasecmp(interface.interface(),intfname)) {
+					return interface.on_message(connct,message,*service);
+				} 
+			}
+		}
+
 		debug("Returning DBUS_HANDLER_RESULT_NOT_YET_HANDLED for ",dbus_message_get_interface(message)," ",dbus_message_get_member(message));
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
@@ -190,7 +202,66 @@
 	}
 
 	Udjat::Interface & DBus::Service::InterfaceFactory(const XML::Node &node) {
-		return interfaces.emplace_back(node);
+
+		String intfname;
+
+		for(const char *attrname : { "dbus-interface", "interface", "name" }) {
+			String attr{node,attrname};
+			if(!attr.empty()) {
+				intfname = attr;
+				break;
+			}
+
+		}
+
+		if(intfname.empty()) {
+			intfname = String{PRODUCT_ID,".",Application::Name().c_str()};
+		} else if(intfname[0] == '.') {
+			intfname = String{PRODUCT_ID,".",Application::Name().c_str(),intfname.c_str()};
+		} else if(!strchr(intfname.c_str(),'.')) {
+			intfname = String{PRODUCT_ID,".",Application::Name().c_str(),".",intfname.c_str()};
+		}
+
+		// Check if interface is already registered.
+		for(Interface &interface : interfaces) {
+			if(!strcasecmp(intfname.c_str(),interface.interface())) {
+				return interface;
+			}
+		}
+
+		// It's a new interface, insert it.
+		return interfaces.emplace_back(node,intfname.as_quark());
+	}
+
+	DBus::Service::Interface::Interface(const XML::Node &node, const char *in) 
+		: Udjat::Interface{node}, intfname{in} {
+		Logger::String("Registering interface ",intfname).trace();
+	}
+
+	DBus::Service::Interface::~Interface() {
+	}
+
+	DBusHandlerResult DBus::Service::Interface::on_message(DBusConnection *connct, DBusMessage *message, DBus::Service &service) {
+
+
+
+
+
+		//
+		// Not found, return error.
+		//
+		Logger::String{"Cant handle ",dbus_message_get_interface(message),".",dbus_message_get_member(message)}.warning(name());
+		DBusMessage *response = 
+			dbus_message_new_error(
+				message,
+				DBUS_ERROR_FAILED,
+				String{"Cant find member '",dbus_message_get_member(message),"'"}.c_str()
+			);
+
+		dbus_connection_send(connct, response, NULL);
+		dbus_message_unref(response);
+
+		return DBUS_HANDLER_RESULT_HANDLED;
 	}
 
  }

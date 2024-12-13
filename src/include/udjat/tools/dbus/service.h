@@ -69,11 +69,17 @@
 			Udjat::Interface & InterfaceFactory(const XML::Node &node) override;
 
 			class Interface : public Udjat::Interface {
-			public:
-				Interface(const XML::Node &node) : Udjat::Interface{node} {
-				}
+			private:
+				const char *intfname;
 
-				virtual ~Interface() {
+			public:
+				Interface(const XML::Node &node, const char *intfname);
+				virtual ~Interface();
+
+				DBusHandlerResult on_message(DBusConnection *connct, DBusMessage *message, DBus::Service &service);
+
+				inline const char * interface() const noexcept {
+					return intfname;
 				}
 
 			};

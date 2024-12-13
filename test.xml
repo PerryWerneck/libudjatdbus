@@ -15,8 +15,8 @@
 
 	</agent>
 
-	<interface type='dbus' name='MyInterface'>
-		<handler name='echo' type='method-call'>
+	<interface type='dbus' name='MyInterface' dbus-interface='br.eti.werneck.udjat.MyInterface'>
+		<handler name='echo' type='method-call' >
 			<arg name="text" direction='both' type="string" />
 		</handler>
 	</interface>
