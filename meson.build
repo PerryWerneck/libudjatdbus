@@ -121,8 +121,11 @@ lib_src = [
   'src/library/interface.cc',
   'src/library/member.cc',
   'src/library/message/message.cc',
+  'src/library/module.cc',
   'src/library/signal.cc',
   'src/library/value.cc',
+  'src/library/service.cc',
+  'src/library/exception.cc',
 ]
 
 module_src = [

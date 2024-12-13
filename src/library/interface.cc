@@ -21,13 +21,36 @@
  #include <udjat/defs.h>
  #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/string.h>
+ #include <stdexcept>
+
+ using namespace std;
 
  namespace Udjat {
 
-	Abstract::DBus::Interface::Interface(const char *n) : std::string{n}, type{"signal"} {
+	Abstract::DBus::Interface::Interface(const char *n, const char *t) : std::string{n}, type{t} {
 	}
 
-	Abstract::DBus::Interface::Interface(const XML::Node &node) : std::string{String{node,"dbus-interface"}}, type{"signal"} {
+	/// @brief Scan XML definition for interface name.
+	static const std::string NameFactory(const XML::Node &node) {
+
+		for(const char *attrname : { "interface-name", "name" }) {
+
+			String name{node,attrname};
+			if(!name.empty()) {
+				if(name[0] == '.') {
+					name = String{PRODUCT_ID,name.c_str()};
+				} else if(!strchr(name.c_str(),'.')) {
+					name = String{PRODUCT_ID,".",name.c_str()};
+				}
+				return name;
+			}
+
+		}
+
+		throw runtime_error("The d-bus interface name is empty or invalid");
+	}
+
+	Abstract::DBus::Interface::Interface(const XML::Node &node, const char *t) : std::string{NameFactory(node)}, type{t} {
 	}
 
 	Abstract::DBus::Interface::~Interface() {

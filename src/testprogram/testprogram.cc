@@ -25,6 +25,9 @@
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/application.h>
+ #include <udjat/tools/dbus/service.h>
+ #include <udjat/module/dbus.h>
  
  using namespace std;
  using namespace Udjat;
@@ -36,8 +39,25 @@
 	
 	return Testing::run(argc,argv,info,[](Application &){
 
-	 	udjat_module_init();
+		class Module : public DBus::Module, public DBus::Service {
+		public:
+			Module()
+				: DBus::Module{},
+					DBus::Service{
+						(const ModuleInfo &) *this,
+						Abstract::DBus::Connection::ConnectionFactory(XML::Node{}),
+						"dbus",
+						String{PRODUCT_ID,".",Application::Name().c_str()}.as_quark()
+					} { }
 
+			virtual ~Module() {
+			}
+
+		};
+
+		new Module();
+
+		/*
 		SystemBus::getInstance().get(
 			"org.freedesktop.systemd1",
 			"/org/freedesktop/systemd1",
@@ -105,6 +125,7 @@
 			return false;
 
 		});
+		*/
 
 	});
 

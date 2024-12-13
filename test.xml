@@ -15,8 +15,8 @@
 
 	</agent>
 
-	<interface type='dbus' bus-name='starter' name='MyInterface' node='/com/example/MyService'>
-		<handler name='echo'>
+	<interface type='dbus' name='MyInterface'>
+		<handler name='echo' type='method-call'>
 			<arg name="text" direction='both' type="string" />
 		</handler>
 	</interface>

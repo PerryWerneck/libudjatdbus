@@ -33,32 +33,11 @@
 
 	namespace DBus {
 
-		class Module : public Udjat::Module, protected Udjat::Interface::Factory {
-		protected:
-
-			class Interface : public Udjat::Interface, private Abstract::DBus::Interface {
-			private:
-				std::shared_ptr<Abstract::DBus::Connection> connection;
-
-				const char *name;
-				const char *node;
-
-				DBusHandlerResult filter(DBusMessage *message) const override;
-
-			public:
-				Interface(const XML::Node &node);
-				virtual ~Interface();
-
-			};
-
-			std::vector<Interface> interfaces;
-
+		class UDJAT_API Module : public Udjat::Module {
 		public:
 
 			Module();
 			virtual ~Module();
-
-			Udjat::Interface & InterfaceFactory(const XML::Node &node) override;
 
 		};
 	}

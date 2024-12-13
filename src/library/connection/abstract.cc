@@ -251,20 +251,6 @@
 					return rc;
 				}
 
-				/*
-				for(const auto &imemb : intf) {
-
-					if(imemb == type && imemb == member) {
-
-						debug("Processing ",interface,".",member);
-						Udjat::DBus::Message msg(message);
-						imemb.call(msg);
-
-					}
-
-				}
-				*/
-
 			}
 
 		}
@@ -287,7 +273,7 @@
 		dbus_connection_flush(conn);
 
 		if (dbus_error_is_set(&error)) {
-			Logger::String message{"Error '",error.message,"' adding interface"};
+			Logger::String message{"Error '",error.message,"' adding rule ",interface.rule().c_str()};
 			dbus_error_free(&error);
 			throw std::runtime_error(message);
 		}
@@ -314,6 +300,11 @@
 		lock_guard<mutex> lock(guard);
 		insert(intf);
 		interfaces.push_back(intf);
+	}
+
+	void Abstract::DBus::Connection::remove(Udjat::DBus::Interface &intf) {
+		lock_guard<mutex> lock(guard);
+		interfaces.remove(intf);
 	}
 
 	Udjat::DBus::Interface & Abstract::DBus::Connection::emplace_back(const char *intf) {

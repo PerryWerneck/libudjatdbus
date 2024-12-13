@@ -18,26 +18,26 @@
  */
 
  /**
-  * @brief Declare D-Bus connection.
+  * @brief Declare D-Bus service.
   */
 
  #pragma once
-
- /*
  
  #include <udjat/defs.h>
  #include <udjat/module/info.h>
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/defs.h>
+ #include <udjat/tools/interface.h>
  #include <udjat/tools/service.h>
  #include <udjat/tools/xml.h>
  #include <udjat/tools/string.h>
+ #include <vector>
 
  namespace Udjat {
 
 	namespace DBus {
 
-		class UDJAT_API Service : public Udjat::Service {
+		class UDJAT_API Service : public Udjat::Service, protected Udjat::Interface::Factory {
 		private:
 
 			/// @brief Connection to D-Bus.
@@ -49,29 +49,49 @@
 			/// @brief Message filter method.
 			static DBusHandlerResult on_message(DBusConnection *, DBusMessage *, DBus::Service *) noexcept;
 
-			Service(const ModuleInfo &module, DBusConnection * conn, const char *name, const char *destination);
-
 		protected:
 
 			/// @brief handle signals.
 			/// @return Status.
 			/// @retval true The signal was handled.
 			/// @retval false The signal was not handled.
-			virtual bool on_signal(Udjat::DBus::Message &request);
+			bool on_signal(Udjat::DBus::Message &request);
 
 			/// @brief handle methods.
 			/// @return Status.
 			/// @retval true The method was handled.
 			/// @retval false The method was not handled.
-			virtual bool on_method(Udjat::DBus::Message &request, Udjat::Value &response);
+			bool on_method(Udjat::DBus::Message &request, Udjat::Value &response);
 
 			/// @brief Get introspection
-			virtual bool introspect(Udjat::String &xmldata);
+			bool introspect(Udjat::String &xmldata);
+
+			Udjat::Interface & InterfaceFactory(const XML::Node &node) override;
+
+			class Interface : public Udjat::Interface {
+			public:
+				Interface(const XML::Node &node) : Udjat::Interface{node} {
+				}
+
+				virtual ~Interface() {
+				}
+
+			};
+
+			std::vector<Interface> interfaces;
 
 		public:
 
+			Service();
 			Service(const ModuleInfo &module, const char *name, const char *destination);
-			Service(const ModuleInfo &module, const XML::Node &node);
+			Service(const ModuleInfo &module, DBusConnection * conn, const char *name, const char *destination);
+
+			inline const char *name() const noexcept {
+				return service_name;
+			}
+
+			static const char * ServiceNameFactory(const XML::Node &node);
+
 			virtual ~Service();
 
 			void start() override;
@@ -80,7 +100,5 @@
 		};
 
 	}
-
-*/
 
  }

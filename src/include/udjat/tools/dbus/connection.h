@@ -103,6 +103,8 @@
 				void flush() noexcept;
 
 				void push_back(Udjat::DBus::Interface &interface);
+				void remove(Udjat::DBus::Interface &interface);
+				
 				void push_back(const XML::Node &node);
 
 				Udjat::DBus::Interface & emplace_back(const char *interface);

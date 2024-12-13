@@ -25,6 +25,7 @@
  #include <udjat/defs.h>
  #include <string>
  #include <udjat/tools/xml.h>
+ #include <udjat/tools/dbus/member.h>
  #include <list>
  #include <functional>
 
@@ -42,8 +43,8 @@
 
 				virtual DBusHandlerResult filter(DBusMessage *message) const = 0;
 
-				Interface(const char *name);
-				Interface(const XML::Node &node);
+				Interface(const char *name, const char *type = "signal");
+				Interface(const XML::Node &node, const char *type = "signal");
 				virtual ~Interface();
 
 				bool operator==(const char *intf) const noexcept;
@@ -67,10 +68,10 @@
 
 			virtual DBusHandlerResult filter(DBusMessage *message) const override;
 
-			Interface(const char *name) : Abstract::DBus::Interface{name} {
+			Interface(const char *name, const char *type = "signal") : Abstract::DBus::Interface{name,type} {
 			}
 
-			Interface(const XML::Node &node): Abstract::DBus::Interface{node} {
+			Interface(const XML::Node &node, const char *type = "signal"): Abstract::DBus::Interface{node,type} {
 			}
 
 			virtual ~Interface();

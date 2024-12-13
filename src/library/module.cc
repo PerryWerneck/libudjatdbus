@@ -32,45 +32,27 @@
  #include <udjat/module/dbus.h>
  #include <udjat/tools/interface.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/service.h>
  #include <dbus/dbus-protocol.h>
  #include <udjat/tools/string.h>
+ #include <udjat/tools/application.h>
  #include <vector>
  
  using namespace std;
 
  namespace Udjat {
 
- 	static const Udjat::ModuleInfo moduleinfo { "D-Bus" STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " module" };
+ 	static const Udjat::ModuleInfo moduleinfo { "dbus" STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " module" };
 
-	Udjat::DBus::Module::Module() : Udjat::Module{"d-bus",moduleinfo}, Udjat::Interface::Factory{"d-bus"} {
+	DBus::Service::Service() 
+		: DBus::Service::Service{moduleinfo,"dbus",String{PRODUCT_ID,".",Application::Name().c_str()}.as_quark()} {
 	}
 
-	Udjat::DBus::Module::~Module() {
+	DBus::Module::Module() : Udjat::Module{"dbus",moduleinfo} {
+		DBus::initialize();
 	}
 
-	Udjat::Interface & Udjat::DBus::Module::InterfaceFactory(const XML::Node &node) {
-		return interfaces.emplace_back(node);
-	}
-
-	static const char *NameFactory(const XML::Node &node) {
-		String name{node,"name"};
-		if(name.empty()) {
-			throw runtime_error("Required attribute name is empty or not found");
-		}
-
-		if(name[0] == '.') {
-			name = String{}
-		}
-
-	}
-
-	Udjat::DBus::Module::Interface::Interface(const XML::Node &n) 
-		: Udjat::Interface{n}, Abstract::DBus::Interface{n},
-			name{NameFactory(n)}, node{String{n,"node",""}.as_quark()} {
-
-	}
-
-	Udjat::DBus::Module::Interface::~Interface() {
+	DBus::Module::~Module() {
 	}
 
  }
