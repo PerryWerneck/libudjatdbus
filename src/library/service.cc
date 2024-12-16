@@ -33,6 +33,7 @@
  #include <stdexcept>
  #include <udjat/tools/intl.h>
  #include <udjat/tools/exception.h>
+ #include <udjat/tools/value.h>
 
  #include <udjat/tools/service.h>
  #include <udjat/tools/worker.h>
@@ -255,16 +256,139 @@
 		return emplace_back(node);
 	}
 
+	/// @brief Import value from iter to Udjat::Value
+	/// @param iter The iter pointing to input value.
+	/// @param value The request element.
+	static void import_value(int type, DBusMessageIter *iter, Udjat::Value &value) {
+
+		DBusBasicValue dbval;
+
+		switch(type) {
+		case DBUS_TYPE_INVALID:
+			throw runtime_error("Required argument not found");
+
+		case DBUS_TYPE_STRING:
+			dbus_message_iter_get_basic(iter,&dbval);
+			value.set(dbval.str,(Value::Type) value);
+			break;
+
+		case DBUS_TYPE_BOOLEAN:
+			dbus_message_iter_get_basic(iter,&dbval);
+			value.set(dbval.bool_val != 0);
+			break;
+
+		case DBUS_TYPE_INT16:
+			dbus_message_iter_get_basic(iter,&dbval);
+			value.set((int) dbval.i16);
+			break;
+
+		case DBUS_TYPE_INT32:
+			dbus_message_iter_get_basic(iter,&dbval);
+			value.set((int) dbval.i32);
+			break;
+
+		case DBUS_TYPE_INT64:
+			dbus_message_iter_get_basic(iter,&dbval);
+			value.set((int) dbval.i64);
+			break;
+
+		case DBUS_TYPE_UINT16:
+			dbus_message_iter_get_basic(iter,&dbval);
+			value.set((unsigned int) dbval.u16);
+			break;
+
+		case DBUS_TYPE_UINT32:
+			dbus_message_iter_get_basic(iter,&dbval);
+			value.set((unsigned int) dbval.u32);
+			break;
+
+		default:
+			throw runtime_error("Unexpected argument type");
+
+		}
+
+	}
+	
+	static DBusHandlerResult call(DBusConnection *connct, DBusMessage *message, Udjat::Interface::Handler &handler) noexcept {
+
+		DBusMessage *response = NULL;
+
+		try {
+
+			debug("Running method '",handler.name(),"'");
+
+			// Build request.
+			Udjat::Request request{dbus_message_get_path(message)};
+			{
+				DBusMessageIter iter;
+				if(dbus_message_iter_init(message,&iter)) {
+					handler.for_each([&](const Interface::Handler::Introspection &instrospection){
+						if(instrospection.direction & Interface::Handler::Introspection::Input) {
+							auto type = dbus_message_iter_get_arg_type(&iter);
+							if(type == DBUS_TYPE_INVALID) {
+								throw runtime_error(Logger::String{"Required argument '",instrospection.name,"' is missing"});
+							}
+							auto &value = request[instrospection.name];
+							value.clear(instrospection.type);
+							import_value(type,&iter,value);
+							dbus_message_iter_next(&iter);
+						}
+						return false;
+					});
+				}
+#ifdef DEBUG 
+				else {
+					debug("----> Request is empty");
+				}
+#endif // DEBUG
+			}
+
+			// Build response.
+			Udjat::Response response;
+
+
+			// Call handler.
+			int rc = handler.call(request,response);
+
+			throw runtime_error("Incomplete");
+
+		} catch(const std::exception &e) {
+			response = 
+				dbus_message_new_error(
+					message,
+					DBUS_ERROR_FAILED,
+					e.what()
+				);
+		} catch(...) {
+			response = 
+				dbus_message_new_error(
+					message,
+					DBUS_ERROR_FAILED,
+					"Unexpected error running handler"
+				);
+		}
+
+		dbus_connection_send(connct, response, NULL);
+		dbus_message_unref(response);
+
+		return DBUS_HANDLER_RESULT_HANDLED;
+
+	}
+
 	DBusHandlerResult DBus::Service::Interface::on_message(DBusConnection *connct, DBusMessage *message, DBus::Service &service) {
 
-
-
+		const char *name = dbus_message_get_member(message);
+		for(Udjat::Interface::Handler &handler : *this) {
+			if(handler == name) {
+				return call(connct,message,handler);
+			}
+		}
 
 
 		//
 		// Not found, return error.
 		//
-		Logger::String{"Cant handle ",dbus_message_get_interface(message),".",dbus_message_get_member(message)}.warning(name());
+		Logger::String{"Cant handle ",dbus_message_get_interface(message),".",name}.warning(this->name());
 		DBusMessage *response = 
 			dbus_message_new_error(
 				message,
