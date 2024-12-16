@@ -68,7 +68,7 @@
 
 			Udjat::Interface & InterfaceFactory(const XML::Node &node) override;
 
-			class Interface : public Udjat::Interface {
+			class Interface : public Udjat::Interface, public std::vector<Udjat::Interface::Handler> {
 			private:
 				const char *intfname;
 
@@ -77,6 +77,10 @@
 				virtual ~Interface();
 
 				DBusHandlerResult on_message(DBusConnection *connct, DBusMessage *message, DBus::Service &service);
+
+				Udjat::Interface::Handler & push_back(const XML::Node &node) override;
+
+				bool push_back(const XML::Node &node, std::shared_ptr<Action> action) override;
 
 				inline const char * interface() const noexcept {
 					return intfname;

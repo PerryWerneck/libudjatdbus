@@ -30,21 +30,26 @@
  #include <udjat/defs.h>
  #include <udjat/version.h>
  #include <dbus/dbus.h>
- #include <udjat/tools/dbus/defs.h>
- #include <udjat/tools/dbus/connection.h>
- #include <udjat/tools/dbus/message.h>
+ #include <stdexcept>
+ #include <udjat/tools/intl.h>
+ #include <udjat/tools/exception.h>
+
  #include <udjat/tools/service.h>
  #include <udjat/tools/worker.h>
  #include <udjat/tools/xml.h>
  #include <udjat/tools/string.h>
- #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/exception.h>
- #include <udjat/tools/dbus/exception.h>
  #include <udjat/tools/application.h>
- #include <stdexcept>
- #include <udjat/tools/intl.h>
- #include <udjat/tools/exception.h>
+ #include <udjat/tools/interface.h>
+
+ #include <udjat/tools/dbus/defs.h>
+ #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/dbus/service.h>
+ #include <udjat/tools/dbus/exception.h>
+
  #include <sstream>
+
  using namespace std;
 
  namespace Udjat {
@@ -239,6 +244,15 @@
 	}
 
 	DBus::Service::Interface::~Interface() {
+	}
+
+	bool DBus::Service::Interface::push_back(const XML::Node &node, std::shared_ptr<Action> action) {
+		push_back(node).push_back(action);
+		return true;
+	}
+
+	Udjat::Interface::Handler & DBus::Service::Interface::push_back(const XML::Node &node) {
+		return emplace_back(node);
 	}
 
 	DBusHandlerResult DBus::Service::Interface::on_message(DBusConnection *connct, DBusMessage *message, DBus::Service &service) {
