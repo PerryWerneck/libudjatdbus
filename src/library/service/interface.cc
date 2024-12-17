@@ -56,213 +56,6 @@
 
  namespace Udjat {
 
-	DBus::Service::Service(const ModuleInfo &module, DBusConnection *c, const char *name, const char *destination)
-		: Udjat::Service{name,module}, Udjat::Interface::Factory{name}, conn{c}, dest{destination} {
-
-		// Keep running if d-bus disconnect.
-		dbus_connection_set_exit_on_disconnect(conn, false);
-
-		try {
-
-			// Add message filter.
-			if (dbus_connection_add_filter(conn, (DBusHandleMessageFunction) on_message, this, NULL) == FALSE) {
-				throw std::runtime_error("Cant add filter to D-Bus connection");
-			}
-
-			if(Logger::enabled(Logger::Debug)) {
-
-				int fd = -1;
-				if(dbus_connection_get_socket(conn,&fd)) {
-					Logger::String("Allocating connection '",((unsigned long) this),"' with socket '",fd,"'").write(Logger::Debug,name);
-				} else {
-					Logger::String("Allocating connection '",((unsigned long) this),"'").write(Logger::Debug,name);
-				}
-
-			}
-
-			{
-				DBus::Error err;
-				dbus_bus_register(conn,err);
-				err.verify();
-			}
-
-
-		} catch(...) {
-
-			if(conn) {
-				Logger::String{"Closing private connection due to initialization error"}.error(name);
-				dbus_connection_unref(conn);
-				conn = NULL;
-			}
-
-			throw;
-
-		}
-
-	}
-
-	DBus::Service::Service(const ModuleInfo &module, const char *name, const char *destination)
-		: Service{module,Udjat::DBus::StarterBus::ConnectionFactory(),name,destination} {
-	}
-
-	/// @brief Scan XML definition for interface name.
-	const char * DBus::Service::ServiceNameFactory(const XML::Node &node) {
-
-		Application::Name appname;
-
-		for(const char *attrname : { "dbus-service-name", "dbus-name", "service-name", "name" }) {
-
-			String name{node,attrname};
-			if(name.empty() || !strcasecmp(name.c_str(),"dbus")) {
-				continue;
-			}
-
-			if(name[0] == '.') {
-				name = String{PRODUCT_ID,".",appname.c_str(),name.c_str()};
-			} else if(!strchr(name.c_str(),'.')) {
-				name = String{PRODUCT_ID,".",appname.c_str(),".",name.c_str()};
-			}
-			
-			return name.as_quark();
-
-		}
-
-		return String{PRODUCT_ID,".",appname.c_str()}.as_quark();
-	}
-
-	DBus::Service::~Service() {
-		dbus_connection_unref(conn);
-	}
-
-	void DBus::Service::start() {
-		DBus::Error err;
-		debug("-----------------------------------------");
-		Logger::String{"Listening dbus://",dest}.info(name());
-		dbus_bus_request_name(conn, dest, DBUS_NAME_FLAG_REPLACE_EXISTING, err);
-		err.verify();
-	}
-
-	void DBus::Service::stop() {
-		DBus::Error err;
-		dbus_bus_release_name(conn, dest, err);
-		err.verify();
-	}
-
-	DBusHandlerResult DBus::Service::on_message(DBusConnection *connct, DBusMessage *message, DBus::Service *service) noexcept {
-
-		try {
-
-			if(!dbus_message_has_destination(message,service->dest)) {
-				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-
-			} else if(dbus_message_is_method_call(message, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
-
-				// TODO: Implement introspection.
-				Udjat::String xmldata{
-					"<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" " \
-					"\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">" \
-					"<node name=\"",service->dest,"\">"
-				};
-
-				for(const auto &interface : service->interfaces) {
-					xmldata += "<interface name=\"";
-					xmldata += interface.interface();
-					xmldata += "\">";
-
-					for(const auto &handler : interface) {
-						xmldata += "<method name=\"";
-						xmldata += handler.name();
-						xmldata += "\">";
-
-						handler.for_each([&](const Interface::Handler::Introspection &introspection){
-
-							if(introspection.direction & Interface::Handler::Introspection::FromPath) {
-								return false;
-							}
-
-							static const char *text[] = {
-								"in",
-								"out"
-							};
-
-							static Interface::Handler::Introspection::Direction direction[] = {
-								Interface::Handler::Introspection::Input, 
-								Interface::Handler::Introspection::Output
-							};
-
-							for(size_t ix = 0; ix < 2;ix++) {
-								if(introspection.direction & direction[ix]) {
-									xmldata += "<arg name=\"";
-									xmldata += introspection.name;
-									xmldata += "\" type=\"";
-									
-									xmldata += "s"; /// FIXME!!!
-
-									xmldata += "\" direction=\"";
-									xmldata += text[ix];
-									xmldata += "\"/>";
-								}
-							}
-
-							return false;
-
-						});
-
-						xmldata += "</method>";
-					}
-
-					xmldata += "</interface>";
-				}
-
-				xmldata += "</node>";
-
-				debug(xmldata.c_str());
-
-				{
-					DBusMessage *reply = dbus_message_new_method_return(message);
-					const char * server_introspection_xml = xmldata.c_str();
-					dbus_message_append_args(reply,DBUS_TYPE_STRING, &server_introspection_xml,DBUS_TYPE_INVALID);
-					dbus_connection_send(connct, reply, NULL);
-					dbus_message_unref(reply);
-				}
-				
-				return DBUS_HANDLER_RESULT_HANDLED;
-
-//				Logger::String{"Introspection 'Introspect', wasnt implemented"}.write(Logger::Debug,service->name());
-//				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-
-			}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "Get")) {
-
-				// TODO: Implement introspection.
-				Logger::String{"Introspection 'Get', wasnt implemented"}.write(Logger::Debug,service->name());
-				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-
-			}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "GetAll")) {
-
-				// TODO: Implement introspection.
-				Logger::String{"Introspection 'GetAll' wasnt implemented"}.write(Logger::Debug,service->name());
-				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-
-			} else {
-
-				return service->interface(dbus_message_get_interface(message)).on_message(connct,message,*service);
-
-			}
-
-		} catch(const std::exception &e) {
-
-			Logger::String{e.what()}.error(service->name());
-
-		} catch(...) {
-
-			Logger::String{"Unexpected error processing message"}.error(service->name());
-
-		}
-		debug("Returning DBUS_HANDLER_RESULT_NOT_YET_HANDLED for ",dbus_message_get_interface(message)," ",dbus_message_get_member(message));
-		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-
-	}
-
 	DBus::Service::Interface & DBus::Service::interface(const char *intfname) {
 		for(Interface &interface : interfaces) {
 			debug("Checking '",interface.interface(),"' -> '",intfname,"'");
@@ -273,48 +66,57 @@
 		throw system_error(ENOENT,system_category(),String{"Cant find interface '",intfname,"'"});
 	}
 
-	bool DBus::Service::on_signal(Udjat::DBus::Message &) {
-		return false;
-	}
+	bool DBus::Service::Interface::introspect(Udjat::String &xmldata) const {
 
-	bool DBus::Service::on_method(Udjat::DBus::Message &request, Udjat::Value &response) {
+		xmldata += "<interface name=\"";
+		xmldata += interface();
+		xmldata += "\">";
 
-		debug("Method request: '",dbus_message_get_member(request),"'");
+		for(const auto &handler : *this) {
+			xmldata += "<method name=\"";
+			xmldata += handler.name();
+			xmldata += "\">";
 
-		throw DBus::Exception(request,DBUS_ERROR_UNKNOWN_INTERFACE,dbus_message_get_interface(request));
+			handler.for_each([&](const Interface::Handler::Introspection &introspection){
 
-	}
+				if(introspection.direction & Interface::Handler::Introspection::FromPath) {
+					return false;
+				}
 
-	Udjat::Interface & DBus::Service::InterfaceFactory(const XML::Node &node) {
+				static const char *text[] = {
+					"in",
+					"out"
+				};
 
-		String intfname;
+				static Interface::Handler::Introspection::Direction direction[] = {
+					Interface::Handler::Introspection::Input, 
+					Interface::Handler::Introspection::Output
+				};
 
-		for(const char *attrname : { "dbus-interface", "interface", "name" }) {
-			String attr{node,attrname};
-			if(!attr.empty()) {
-				intfname = attr;
-				break;
-			}
+				for(size_t ix = 0; ix < 2;ix++) {
+					if(introspection.direction & direction[ix]) {
+						xmldata += "<arg name=\"";
+						xmldata += introspection.name;
+						xmldata += "\" type=\"";
+						
+						xmldata += "s"; /// FIXME!!!
 
+						xmldata += "\" direction=\"";
+						xmldata += text[ix];
+						xmldata += "\"/>";
+					}
+				}
+
+				return false;
+
+			});
+
+			xmldata += "</method>";
 		}
 
-		if(intfname.empty()) {
-			intfname = String{PRODUCT_ID,".",Application::Name().c_str()};
-		} else if(intfname[0] == '.') {
-			intfname = String{PRODUCT_ID,".",Application::Name().c_str(),intfname.c_str()};
-		} else if(!strchr(intfname.c_str(),'.')) {
-			intfname = String{PRODUCT_ID,".",Application::Name().c_str(),".",intfname.c_str()};
-		}
+		xmldata += "</interface>";
 
-		// Check if interface is already registered.
-		for(Interface &interface : interfaces) {
-			if(!strcasecmp(intfname.c_str(),interface.interface())) {
-				return interface;
-			}
-		}
-
-		// It's a new interface, insert it.
-		return interfaces.emplace_back(node,intfname.as_quark());
+		return true;
 	}
 
 	DBus::Service::Interface::Interface(const XML::Node &node, const char *in) 

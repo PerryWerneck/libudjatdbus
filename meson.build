@@ -118,13 +118,14 @@ lib_src = [
   'src/library/connection/timeout.cc',
   'src/library/connection/user.cc',
   'src/library/connection/watch.cc',
+  'src/library/service/main.cc',
+  'src/library/service/interface.cc',
   'src/library/interface.cc',
   'src/library/member.cc',
   'src/library/message/message.cc',
   'src/library/module.cc',
   'src/library/signal.cc',
   'src/library/value.cc',
-  'src/library/service.cc',
   'src/library/exception.cc',
 ]
 
