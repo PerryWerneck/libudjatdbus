@@ -10,12 +10,3 @@ gdbus \
 	--object-path "/" \
 	--method br.eti.werneck.udjat.MyInterface.echo \
 	"Simple text"
-
-#dbus-send \
-#	--session \
-#	--dest=br.eti.werneck.udjat \
-#	--print-reply \
-#	"/" \
-#	br.eti.werneck.udjat.agent.get
-	
-

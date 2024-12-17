@@ -125,7 +125,6 @@ lib_src = [
   'src/library/message/message.cc',
   'src/library/module.cc',
   'src/library/signal.cc',
-  'src/library/value.cc',
   'src/library/exception.cc',
 ]
 

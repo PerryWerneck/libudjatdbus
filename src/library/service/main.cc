@@ -253,57 +253,5 @@
 		return interfaces.emplace_back(node,intfname.as_quark());
 	}
 
-	/// @brief Import value from iter to Udjat::Value
-	/// @param iter The iter pointing to input value.
-	/// @param value The request element.
-	static void import_value(int type, DBusMessageIter *iter, Udjat::Value &value) {
-
-		DBusBasicValue dbval;
-
-		switch(type) {
-		case DBUS_TYPE_INVALID:
-			throw runtime_error("Required argument not found");
-
-		case DBUS_TYPE_STRING:
-			dbus_message_iter_get_basic(iter,&dbval);
-			value.set(dbval.str,(Value::Type) value);
-			break;
-
-		case DBUS_TYPE_BOOLEAN:
-			dbus_message_iter_get_basic(iter,&dbval);
-			value.set(dbval.bool_val != 0);
-			break;
-
-		case DBUS_TYPE_INT16:
-			dbus_message_iter_get_basic(iter,&dbval);
-			value.set((int) dbval.i16);
-			break;
-
-		case DBUS_TYPE_INT32:
-			dbus_message_iter_get_basic(iter,&dbval);
-			value.set((int) dbval.i32);
-			break;
-
-		case DBUS_TYPE_INT64:
-			dbus_message_iter_get_basic(iter,&dbval);
-			value.set((int) dbval.i64);
-			break;
-
-		case DBUS_TYPE_UINT16:
-			dbus_message_iter_get_basic(iter,&dbval);
-			value.set((unsigned int) dbval.u16);
-			break;
-
-		case DBUS_TYPE_UINT32:
-			dbus_message_iter_get_basic(iter,&dbval);
-			value.set((unsigned int) dbval.u32);
-			break;
-
-		default:
-			throw runtime_error("Unexpected argument type");
-
-		}
-
-	}
 
  }
