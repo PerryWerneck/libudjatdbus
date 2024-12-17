@@ -150,50 +150,127 @@
 
 	DBusHandlerResult DBus::Service::on_message(DBusConnection *connct, DBusMessage *message, DBus::Service *service) noexcept {
 
-		if(!dbus_message_has_destination(message,service->dest)) {
-			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+		try {
 
-		} else if(dbus_message_is_method_call(message, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
+			if(!dbus_message_has_destination(message,service->dest)) {
+				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
-			// TODO: Implement introspection.
-			/*
-			Udjat::String xmldata{
-				"<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" " \
-				"\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n" \
-				"<node name=\"",service->dest,"\">\n"
- 			};
-			*/
+			} else if(dbus_message_is_method_call(message, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
 
-			Logger::String{"Introspection 'Introspect', wasnt implemented"}.write(Logger::Debug,service->name());
-			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+				// TODO: Implement introspection.
+				Udjat::String xmldata{
+					"<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" " \
+					"\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">" \
+					"<node name=\"",service->dest,"\">"
+				};
 
-		}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "Get")) {
+				for(const auto &interface : service->interfaces) {
+					xmldata += "<interface name=\"";
+					xmldata += interface.interface();
+					xmldata += "\">";
 
-			// TODO: Implement introspection.
-			Logger::String{"Introspection 'Get', wasnt implemented"}.write(Logger::Debug,service->name());
-			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+					for(const auto &handler : interface) {
+						xmldata += "<method name=\"";
+						xmldata += handler.name();
+						xmldata += "\">";
 
-		}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "GetAll")) {
+						handler.for_each([&](const Interface::Handler::Introspection &introspection){
 
-			// TODO: Implement introspection.
-			Logger::String{"Introspection 'GetAll' wasnt implemented"}.write(Logger::Debug,service->name());
-			return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+							if(introspection.direction & Interface::Handler::Introspection::FromPath) {
+								return false;
+							}
 
-		} 
+							static const char *text[] = {
+								"in",
+								"out"
+							};
 
-		{
-			const char *intfname = dbus_message_get_interface(message);
-			for(Interface &interface : service->interfaces) {
-				debug("Checking '",interface.interface(),"' -> '",intfname,"'");
-				if(!strcasecmp(interface.interface(),intfname)) {
-					return interface.on_message(connct,message,*service);
-				} 
+							static Interface::Handler::Introspection::Direction direction[] = {
+								Interface::Handler::Introspection::Input, 
+								Interface::Handler::Introspection::Output
+							};
+
+							for(size_t ix = 0; ix < 2;ix++) {
+								if(introspection.direction & direction[ix]) {
+									xmldata += "<arg name=\"";
+									xmldata += introspection.name;
+									xmldata += "\" type=\"";
+									
+									xmldata += "s"; /// FIXME!!!
+
+									xmldata += "\" direction=\"";
+									xmldata += text[ix];
+									xmldata += "\"/>";
+								}
+							}
+
+							return false;
+
+						});
+
+						xmldata += "</method>";
+					}
+
+					xmldata += "</interface>";
+				}
+
+				xmldata += "</node>";
+
+				debug(xmldata.c_str());
+
+				{
+					DBusMessage *reply = dbus_message_new_method_return(message);
+					const char * server_introspection_xml = xmldata.c_str();
+					dbus_message_append_args(reply,DBUS_TYPE_STRING, &server_introspection_xml,DBUS_TYPE_INVALID);
+					dbus_connection_send(connct, reply, NULL);
+					dbus_message_unref(reply);
+				}
+				
+				return DBUS_HANDLER_RESULT_HANDLED;
+
+//				Logger::String{"Introspection 'Introspect', wasnt implemented"}.write(Logger::Debug,service->name());
+//				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+			}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "Get")) {
+
+				// TODO: Implement introspection.
+				Logger::String{"Introspection 'Get', wasnt implemented"}.write(Logger::Debug,service->name());
+				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+			}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "GetAll")) {
+
+				// TODO: Implement introspection.
+				Logger::String{"Introspection 'GetAll' wasnt implemented"}.write(Logger::Debug,service->name());
+				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+			} else {
+
+				return service->interface(dbus_message_get_interface(message)).on_message(connct,message,*service);
+
 			}
-		}
 
+		} catch(const std::exception &e) {
+
+			Logger::String{e.what()}.error(service->name());
+
+		} catch(...) {
+
+			Logger::String{"Unexpected error processing message"}.error(service->name());
+
+		}
 		debug("Returning DBUS_HANDLER_RESULT_NOT_YET_HANDLED for ",dbus_message_get_interface(message)," ",dbus_message_get_member(message));
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
+	}
+
+	DBus::Service::Interface & DBus::Service::interface(const char *intfname) {
+		for(Interface &interface : interfaces) {
+			debug("Checking '",interface.interface(),"' -> '",intfname,"'");
+			if(!strcasecmp(interface.interface(),intfname)) {
+				return interface;
+			} 
+		}
+		throw system_error(ENOENT,system_category(),String{"Cant find interface '",intfname,"'"});
 	}
 
 	bool DBus::Service::on_signal(Udjat::DBus::Message &) {
