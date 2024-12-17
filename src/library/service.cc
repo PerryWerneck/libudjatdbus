@@ -42,6 +42,7 @@
  #include <udjat/tools/exception.h>
  #include <udjat/tools/application.h>
  #include <udjat/tools/interface.h>
+ #include <udjat/tools/timestamp.h>
 
  #include <udjat/tools/dbus/defs.h>
  #include <udjat/tools/dbus/connection.h>
@@ -308,7 +309,65 @@
 		}
 
 	}
-	
+
+	static void export_value(int type, DBusMessageIter *iter, Udjat::Value &value) {
+
+		DBusBasicValue dbval;
+
+		switch(type) {
+		case Value::String:
+		case Value::Icon:
+		case Value::Url:
+			{
+				string str = value.to_string();
+				dbval.str = (char *) str.c_str();
+				dbus_message_iter_append_basic(iter,DBUS_TYPE_STRING,&dbval.str);
+			}
+			break;
+
+		case Value::Timestamp:
+			{
+				time_t tm;
+				value.get(tm);
+				string str = TimeStamp{tm}.to_string(TIMESTAMP_FORMAT_JSON);
+				dbval.str = (char *) str.c_str();
+				dbus_message_iter_append_basic(iter,DBUS_TYPE_STRING,&dbval.str);
+			}
+			break;
+
+		case Value::Signed:
+			{
+				int val;
+				value.get(val);
+				dbval.i32 = (int32_t) val;
+				dbus_message_iter_append_basic(iter,DBUS_TYPE_INT32,&dbval.i32);
+			}
+			break;
+
+		case Value::Unsigned:
+			{
+				unsigned int val;
+				value.get(val);
+				dbval.u32 = (uint32_t) val;
+				dbus_message_iter_append_basic(iter,DBUS_TYPE_UINT32,&dbval.u32);
+			}
+			break;
+
+		case Value::Boolean:
+			{
+				unsigned int val;
+				value.get(val);
+				dbval.bool_val = (val != 0);
+				dbus_message_iter_append_basic(iter,DBUS_TYPE_BOOLEAN,&dbval.bool_val);
+			}
+			break;
+
+		default:
+			throw runtime_error("Unsupported output value type");
+		}
+
+	}
+
 	static DBusHandlerResult call(DBusConnection *connct, DBusMessage *message, Udjat::Interface::Handler &handler) noexcept {
 
 		DBusMessage *response = NULL;
@@ -342,12 +401,12 @@
 						return false;
 					});
 				} else {
-					handler.for_each([&](const Interface::Handler::Introspection &instrospection){
-						if(instrospection.direction & Interface::Handler::Introspection::Input) {
-							if(instrospection.direction & Interface::Handler::Introspection::FromPath) {
+					handler.for_each([&](const Interface::Handler::Introspection &introspection){
+						if(introspection.direction & Interface::Handler::Introspection::Input) {
+							if(introspection.direction & Interface::Handler::Introspection::FromPath) {
 								return true;
 							}
-							throw runtime_error(Logger::String{"Required argument '",instrospection.name,"' is missing"});
+							throw runtime_error(Logger::String{"Required argument '",introspection.name,"' is missing"});
 						}
 						return false;
 					});
@@ -355,16 +414,31 @@
 			}
 
 			// Build response.
-			Udjat::Response response;
+			Udjat::Response rsp;
 
 
 			// Call handler.
-			int rc = handler.call(request,response);
+			int rc = handler.call(request,rsp);
 			if(rc) {
 				throw runtime_error(Logger::String{"Action '",handler.name(),"' failed with rc=",rc});
 			}
 
-			throw runtime_error("Incomplete");
+			// Build response
+			response = dbus_message_new_method_return(message);
+			try {
+				DBusMessageIter iter;
+ 				dbus_message_iter_init_append(response, &iter);
+				handler.for_each([&](const Interface::Handler::Introspection &introspection){
+					if(introspection.direction & Interface::Handler::Introspection::Output) {
+						export_value(introspection.type,&iter,rsp[introspection.name]);
+					}
+					return false;
+				});
+			} catch(...) {
+				dbus_message_unref(response);
+				response = NULL;
+				throw;
+			}
 
 		} catch(const std::exception &e) {
 			response = 
