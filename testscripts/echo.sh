@@ -8,7 +8,8 @@ gdbus \
 	--session \
 	--dest "br.eti.werneck.udjat.dbustest" \
 	--object-path "/" \
-	--method br.eti.werneck.udjat.MyInterface.echo
+	--method br.eti.werneck.udjat.MyInterface.echo \
+	"Simple text"
 
 #dbus-send \
 #	--session \

@@ -323,6 +323,11 @@
 				DBusMessageIter iter;
 				if(dbus_message_iter_init(message,&iter)) {
 					handler.for_each([&](const Interface::Handler::Introspection &instrospection){
+
+						if(instrospection.direction & Interface::Handler::Introspection::FromPath) {
+							return false;
+						}
+
 						if(instrospection.direction & Interface::Handler::Introspection::Input) {
 							auto type = dbus_message_iter_get_arg_type(&iter);
 							if(type == DBUS_TYPE_INVALID) {
@@ -333,14 +338,20 @@
 							import_value(type,&iter,value);
 							dbus_message_iter_next(&iter);
 						}
+
+						return false;
+					});
+				} else {
+					handler.for_each([&](const Interface::Handler::Introspection &instrospection){
+						if(instrospection.direction & Interface::Handler::Introspection::Input) {
+							if(instrospection.direction & Interface::Handler::Introspection::FromPath) {
+								return true;
+							}
+							throw runtime_error(Logger::String{"Required argument '",instrospection.name,"' is missing"});
+						}
 						return false;
 					});
 				}
-#ifdef DEBUG 
-				else {
-					debug("----> Request is empty");
-				}
-#endif // DEBUG
 			}
 
 			// Build response.
@@ -349,6 +360,9 @@
 
 			// Call handler.
 			int rc = handler.call(request,response);
+			if(rc) {
+				throw runtime_error(Logger::String{"Action '",handler.name(),"' failed with rc=",rc});
+			}
 
 			throw runtime_error("Incomplete");
 
