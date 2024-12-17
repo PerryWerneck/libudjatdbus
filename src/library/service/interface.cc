@@ -88,7 +88,7 @@
 					"out"
 				};
 
-				static Interface::Handler::Introspection::Direction direction[] = {
+				static const Interface::Handler::Introspection::Direction direction[] = {
 					Interface::Handler::Introspection::Input, 
 					Interface::Handler::Introspection::Output
 				};
@@ -99,7 +99,7 @@
 						xmldata += introspection.name;
 						xmldata += "\" type=\"";
 						
-						xmldata += "s"; /// FIXME!!!
+						xmldata += "s"; /// FIXME: Use the correct data type from instrospection.type.
 
 						xmldata += "\" direction=\"";
 						xmldata += text[ix];
