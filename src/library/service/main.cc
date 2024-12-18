@@ -163,12 +163,14 @@
 
 			} else if(dbus_message_is_method_call(message, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
 
+				// https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.Introspectable.html
+
 				std::stringstream xmldata{
 					"<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" " \
 					"\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">" \
 				};
 
-				xmldata << "<node name=\"" << service->dest << "\">";
+				xmldata << "<node>";
 
 				for(const auto &interface : service->interfaces) {
 					interface.introspect(xmldata);
@@ -198,15 +200,80 @@
 
 			}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "Get")) {
 
-				// TODO: Implement introspection.
-				Logger::String{"Introspection 'Get', wasnt implemented"}.write(Logger::Debug,service->name());
-				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+				// https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.Properties.html
+				DBusMessageIter iter;
+				string error{"Invalid argument"};
+
+				if(dbus_message_iter_init(message,&iter)) {
+
+					string args[2];
+
+					for(size_t ix = 0; ix < 2; ix++) {
+						if(dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING) {
+							DBusBasicValue val;
+							dbus_message_iter_get_basic(&iter,&val);
+							args[ix] = val.str;
+							dbus_message_iter_next(&iter);
+						} else {
+							throw runtime_error("Invalid argument type");
+						}
+					}
+
+					// debug("Interface: ",args[0].c_str()," Property: ",args[0].c_str());
+					Interface &intf = service->interface(args[0].c_str());
+
+					Logger::String msg{"Property '",args[1].c_str(),"' is invalid for interface '",intf.name(),"'"};
+					msg.warning(service->name());
+					error = msg;
+
+				}
+				
+				DBusMessage *response = 
+					dbus_message_new_error(
+						message,
+						DBUS_ERROR_INVALID_ARGS,
+						error.c_str()
+					);
+
+				dbus_connection_send(connct, response, NULL);
+				dbus_message_unref(response);
+				dbus_connection_flush(connct);
+				return DBUS_HANDLER_RESULT_HANDLED;
 
 			}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "GetAll")) {
 
-				// TODO: Implement introspection.
-				Logger::String{"Introspection 'GetAll' wasnt implemented"}.write(Logger::Debug,service->name());
-				return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+				// https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.Properties.html
+				string error{"Invalid argument"};
+
+				DBusMessageIter iter;
+				if(dbus_message_iter_init(message,&iter) && dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING) {
+
+					DBusBasicValue val;
+					dbus_message_iter_get_basic(&iter,&val);
+					debug("-----------------> GetAll(",val.str,")");
+					Interface &intf = service->interface(val.str);
+
+					Logger::String msg{"Interface '",intf.name(),"' doesnt have properties"};
+					msg.trace(service->name());
+					error = msg;
+
+				} else {
+
+					throw runtime_error("Invalid argument");
+
+				}
+
+				DBusMessage *response = 
+					dbus_message_new_error(
+						message,
+						DBUS_ERROR_INVALID_ARGS,
+						error.c_str()
+					);
+
+				dbus_connection_send(connct, response, NULL);
+				dbus_message_unref(response);
+				dbus_connection_flush(connct);
+				return DBUS_HANDLER_RESULT_HANDLED;
 
 			} else {
 

@@ -21,6 +21,8 @@
 		</handler>
 	</interface>
 
+	<interface type='*' action-name='agent' dbus-interface='br.eti.werneck.udjat.MyInterface' />
+
 	<agent type='random' name='alerter' update-timer='10' on-demand='false'>
 
 		<!-- alert name='on-value' type='d-bus' trigger-event='value-change' dbus-path='${agent.path}' dbus-interface='br.eti.werneck.udjat' dbus-member='changed'>

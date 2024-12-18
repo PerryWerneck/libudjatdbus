@@ -103,17 +103,28 @@
 	}
 
 	Udjat::Interface::Handler & DBus::Service::Interface::push_back(const XML::Node &node) {
-		return emplace_back(node);
+		const char *name = "";
+		for(const char *attrname : { "dbus-name", "name", "action-name" }) {
+			String str{node,attrname,""};
+			if(!str.empty()) {
+				name = str.as_quark();
+				break;
+			}
+		}
+		if(!(name && *name)) {
+			throw runtime_error("Required handler name is missing or empty (hint: attributes dbus-name or name)");
+		}
+		return emplace_back(name,node);
 	}
 
 	/// @brief Import value from iter to Udjat::Value
 	/// @param iter The iter pointing to input value.
 	/// @param value The request element.
-	static void import_value(int type, DBusMessageIter *iter, Udjat::Value &value) {
+	static void import_value(DBusMessageIter *iter, Udjat::Value &value) {
 
 		DBusBasicValue dbval;
 
-		switch(type) {
+		switch(dbus_message_iter_get_arg_type(iter)) {
 		case DBUS_TYPE_INVALID:
 			throw runtime_error("Required argument not found");
 
@@ -240,7 +251,7 @@
 						if(in) {
 							auto &value = request[name];
 							value.clear(type);
-							import_value(type,&iter,value);
+							import_value(&iter,value);
 							dbus_message_iter_next(&iter);
 						}
 					});
@@ -256,11 +267,10 @@
 			// Build response.
 			Udjat::Response rsp;
 
-
 			// Call handler.
 			int rc = handler.call(request,rsp);
 			if(rc) {
-				throw runtime_error(Logger::String{"Action '",handler.name(),"' failed with rc=",rc});
+				throw runtime_error(Logger::String{"Handler '",handler.name(),"' failed with rc=",rc});
 			}
 
 			// Build response

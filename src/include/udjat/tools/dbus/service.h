@@ -58,12 +58,6 @@
 			/// @retval false The signal was not handled.
 			bool on_signal(Udjat::DBus::Message &request);
 
-			/// @brief handle methods.
-			/// @return Status.
-			/// @retval true The method was handled.
-			/// @retval false The method was not handled.
-			bool on_method(Udjat::DBus::Message &request, Udjat::Value &response);
-
 			Udjat::Interface & InterfaceFactory(const XML::Node &node) override;
 
 			class Interface : public Udjat::Interface, public std::vector<Udjat::Interface::Handler> {
