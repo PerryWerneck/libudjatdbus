@@ -66,57 +66,27 @@
 		throw system_error(ENOENT,system_category(),String{"Cant find interface '",intfname,"'"});
 	}
 
-	bool DBus::Service::Interface::introspect(Udjat::String &xmldata) const {
+	void DBus::Service::Interface::introspect(std::stringstream &xmldata) const {
 
-		xmldata += "<interface name=\"";
-		xmldata += interface();
-		xmldata += "\">";
+		xmldata << "<interface name=\"" << interface() << "\">";
 
 		for(const auto &handler : *this) {
-			xmldata += "<method name=\"";
-			xmldata += handler.name();
-			xmldata += "\">";
 
-			handler.for_each([&](const Interface::Handler::Introspection &introspection){
+			xmldata << "<method name=\"" << handler.name() << "\">";
 
-				if(introspection.direction & Interface::Handler::Introspection::FromPath) {
-					return false;
-				}
+			handler.introspect([&xmldata](const char *name, const Udjat::Value::Type type, bool in){
 
-				static const char *text[] = {
-					"in",
-					"out"
-				};
-
-				static const Interface::Handler::Introspection::Direction direction[] = {
-					Interface::Handler::Introspection::Input, 
-					Interface::Handler::Introspection::Output
-				};
-
-				for(size_t ix = 0; ix < 2;ix++) {
-					if(introspection.direction & direction[ix]) {
-						xmldata += "<arg name=\"";
-						xmldata += introspection.name;
-						xmldata += "\" type=\"";
-						
-						xmldata += "s"; /// FIXME: Use the correct data type from instrospection.type.
-
-						xmldata += "\" direction=\"";
-						xmldata += text[ix];
-						xmldata += "\"/>";
-					}
-				}
-
-				return false;
+				xmldata << "<arg name=\"" << name << "\" type=\"";
+				xmldata << "s"; /// FIXME: Use the correct data type from type.
+				xmldata << "\" direction=\"" << (in ? "in" : "out") << "\"/>";
 
 			});
 
-			xmldata += "</method>";
+			xmldata << "</method>";
 		}
 
-		xmldata += "</interface>";
+		xmldata << "</interface>";
 
-		return true;
 	}
 
 	DBus::Service::Interface::Interface(const XML::Node &node, const char *in) 
@@ -189,7 +159,7 @@
 
 	}
 
-	static void export_value(int type, DBusMessageIter *iter, Udjat::Value &value) {
+	static void export_value(int type, DBusMessageIter *iter, Udjat::Value &value, std::vector<String> &strings) {
 
 		DBusBasicValue dbval;
 
@@ -198,8 +168,8 @@
 		case Value::Icon:
 		case Value::Url:
 			{
-				string str = value.to_string();
-				dbval.str = (char *) str.c_str();
+				String &svalue = strings.emplace_back(value.to_string());
+				dbval.str = (char *) svalue.c_str();
 				dbus_message_iter_append_basic(iter,DBUS_TYPE_STRING,&dbval.str);
 			}
 			break;
@@ -208,8 +178,8 @@
 			{
 				time_t tm;
 				value.get(tm);
-				string str = TimeStamp{tm}.to_string(TIMESTAMP_FORMAT_JSON);
-				dbval.str = (char *) str.c_str();
+				String &svalue = strings.emplace_back(TimeStamp{tm}.to_string(TIMESTAMP_FORMAT_JSON));
+				dbval.str = (char *) svalue.c_str();
 				dbus_message_iter_append_basic(iter,DBUS_TYPE_STRING,&dbval.str);
 			}
 			break;
@@ -247,6 +217,12 @@
 
 	}
 
+	static void free_data_block(void *memory) {
+		std::vector<String> *strings = ((std::vector<String> *) memory); 
+		delete strings;
+		debug("Message data block was freed");
+	}
+
 	static DBusHandlerResult call(DBusConnection *connct, DBusMessage *message, Udjat::Interface::Handler &handler) noexcept {
 
 		DBusMessage *response = NULL;
@@ -260,34 +236,19 @@
 			{
 				DBusMessageIter iter;
 				if(dbus_message_iter_init(message,&iter)) {
-					handler.for_each([&](const Interface::Handler::Introspection &instrospection){
-
-						if(instrospection.direction & Interface::Handler::Introspection::FromPath) {
-							return false;
-						}
-
-						if(instrospection.direction & Interface::Handler::Introspection::Input) {
-							auto type = dbus_message_iter_get_arg_type(&iter);
-							if(type == DBUS_TYPE_INVALID) {
-								throw runtime_error(Logger::String{"Required argument '",instrospection.name,"' is missing"});
-							}
-							auto &value = request[instrospection.name];
-							value.clear(instrospection.type);
+					handler.introspect([&](const char *name, const Udjat::Value::Type type, bool in){
+						if(in) {
+							auto &value = request[name];
+							value.clear(type);
 							import_value(type,&iter,value);
 							dbus_message_iter_next(&iter);
 						}
-
-						return false;
 					});
 				} else {
-					handler.for_each([&](const Interface::Handler::Introspection &introspection){
-						if(introspection.direction & Interface::Handler::Introspection::Input) {
-							if(introspection.direction & Interface::Handler::Introspection::FromPath) {
-								return true;
-							}
-							throw runtime_error(Logger::String{"Required argument '",introspection.name,"' is missing"});
+					handler.introspect([&](const char *name, const Udjat::Value::Type type, bool in){
+						if(in) {
+							throw runtime_error(Logger::String{"Required argument '",name,"' is missing"});
 						}
-						return false;
 					});
 				}
 			}
@@ -304,15 +265,25 @@
 
 			// Build response
 			response = dbus_message_new_method_return(message);
+
+			static int data_slot = -1;
+			if(data_slot == -1) {
+				dbus_message_allocate_data_slot(&data_slot);
+				debug("------> Got data slot ",data_slot);
+			}
+
+			std::vector<String> *strings = new std::vector<String>();
+			dbus_message_set_data(response,data_slot,strings,free_data_block);
+
 			try {
 				DBusMessageIter iter;
  				dbus_message_iter_init_append(response, &iter);
-				handler.for_each([&](const Interface::Handler::Introspection &introspection){
-					if(introspection.direction & Interface::Handler::Introspection::Output) {
-						export_value(introspection.type,&iter,rsp[introspection.name]);
+				handler.introspect([&](const char *name, const Udjat::Value::Type type, bool in){
+					if(!in) {
+						export_value(type,&iter,rsp[name],*strings);
 					}
-					return false;
 				});
+
 			} catch(...) {
 				dbus_message_unref(response);
 				response = NULL;

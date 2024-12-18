@@ -32,6 +32,7 @@
  #include <udjat/tools/xml.h>
  #include <udjat/tools/string.h>
  #include <vector>
+ #include <sstream>  
 
  namespace Udjat {
 
@@ -63,9 +64,6 @@
 			/// @retval false The method was not handled.
 			bool on_method(Udjat::DBus::Message &request, Udjat::Value &response);
 
-			/// @brief Get introspection
-			// bool introspect(Udjat::String &xmldata);
-
 			Udjat::Interface & InterfaceFactory(const XML::Node &node) override;
 
 			class Interface : public Udjat::Interface, public std::vector<Udjat::Interface::Handler> {
@@ -80,7 +78,7 @@
 
 				Udjat::Interface::Handler & push_back(const XML::Node &node) override;
 
-				bool introspect(Udjat::String &xmldata) const;
+				void introspect(std::stringstream &xmldata) const;
 				bool push_back(const XML::Node &node, std::shared_ptr<Action> action) override;
 
 				inline const char * interface() const noexcept {
