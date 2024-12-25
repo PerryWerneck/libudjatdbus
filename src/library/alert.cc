@@ -20,12 +20,12 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/abstract/object.h>
+ #include <udjat/tools/dbus/connection.h>
  #include <udjat/alert.h>
  #include <udjat/alert/d-bus.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/string.h>
- #include <dbus/dbus-protocol.h>
- #include <dbus/dbus-message.h>
+ #include <dbus/dbus.h>
  #include <stdexcept>
 
  using namespace std;
@@ -166,36 +166,6 @@
 			throw runtime_error("Unsupported argument type");
 
 		}
-
-	}
-
-	static DBusBusType BusTypeFactory(const XML::Node &node) {
-
-		String type{node,"dbus-bus-name"};
-		if(type.empty()) {
-			type = String{node,"bus-name"};
-		}
-
-		if(type.empty()) {
-			throw runtime_error("Required attribute bus-name is missing");
-		}
-
-		static const struct {
-			DBusBusType type;
-			const char *name;
-		} busnames[] = {
-			{ DBUS_BUS_SYSTEM, "system"		},
-			{ DBUS_BUS_SESSION, "session"	},
-			{ DBUS_BUS_STARTER, "starter"	},
-		};
-
-		for(const auto &bus : busnames) {
-			if(!strcasecmp(type.c_str(),bus.name)) {
-				return bus.type;
-			}
-		}
-
-		throw runtime_error("Required attribute bus-name is invalid");
 
 	}
 
@@ -347,6 +317,26 @@
 		dbus_message_set_path(message,activation.path.c_str());
 		dbus_message_set_member(message,activation.member.c_str());
 
+		DBusMessageIter iter;
+		dbus_message_iter_init_append(message,&iter);
+		for(const auto &argument : arguments) {
+			dbus_message_iter_append_basic(&iter, argument.type, &argument.dbval);
+		}
+
+		try {
+
+			Abstract::DBus::Connection::factory(bustype)->call(message);
+			
+		} catch(...) {
+	
+			dbus_message_unref(message);
+			throw;
+
+		}
+
+		dbus_message_unref(message);
+
+		return 0;
 
 	}
 

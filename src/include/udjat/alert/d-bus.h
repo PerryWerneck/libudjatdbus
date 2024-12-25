@@ -25,8 +25,7 @@
 
  #include <udjat/defs.h>
  #include <udjat/alert.h>
- #include <dbus/dbus-shared.h>
- #include <dbus/dbus-types.h>
+ #include <dbus/dbus.h>
  #include <udjat/tools/abstract/object.h>
  #include <udjat/tools/xml.h>
  #include <udjat/tools/string.h>
@@ -43,7 +42,7 @@
 			int message_type;
 
 			/// @brief The bus type for alert.
-			DBusBusType bustype = DBUS_BUS_SESSION;
+			DBusBusType bustype = DBUS_BUS_STARTER;
 
 			/// @brief The path to the object emitting the alert.
 			const char *path = nullptr;
@@ -87,7 +86,7 @@
 			} activation;
 
 			void prepare();
-			
+
 			/// @brief Send message with arguments.
 			void send();
 

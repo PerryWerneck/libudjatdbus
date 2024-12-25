@@ -60,6 +60,7 @@
 				return &err;
 			}
 
+			/// @brief Throw exception if error is set.
 			void verify();
 
 		};
