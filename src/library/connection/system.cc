@@ -78,7 +78,7 @@
 
 	}
 
-	DBus::SystemBus::SystemBus() : Abstract::DBus::Connection{"SysBUS",SystemBus::ConnectionFactory()} {
+	DBus::SystemBus::SystemBus() : DBus::Connection{"SysBUS",SystemBus::ConnectionFactory()} {
 	}
 
 	DBus::SystemBus::~SystemBus() {
@@ -100,7 +100,7 @@
 
 	}
 
-	DBus::SystemBus & DBus::SystemBus::getInstance() {
+	DBus::Connection & DBus::SystemBus::getInstance() {
 		static DBus::SystemBus instance;
 		return instance;
 	}

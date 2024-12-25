@@ -54,11 +54,11 @@
 
 	}
 
-	static void trace_connection_free(const Abstract::DBus::Connection *connection) {
+	static void trace_connection_free(const DBus::Connection *connection) {
 		Logger::String("Named connection '",((unsigned long) connection),"' was released").trace("d-bus");
 	}
 
-	DBus::NamedBus::NamedBus(const char *name, DBusConnection * conn) : Abstract::DBus::Connection{name,conn} {
+	DBus::NamedBus::NamedBus(const char *name, DBusConnection * conn) : DBus::Connection{name,conn} {
 
 		if(Logger::enabled(Logger::Trace)) {
 			dbus_connection_set_data(conn,DataSlot::getInstance().value(),this,(DBusFreeFunction) trace_connection_free);

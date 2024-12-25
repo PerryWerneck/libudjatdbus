@@ -33,7 +33,7 @@
 
  extern "C" {
 
-	UDJAT_PRIVATE void handle_dispatch_status(DBusConnection *c, DBusDispatchStatus status, Udjat::Abstract::DBus::Connection *connection);
+	UDJAT_PRIVATE void handle_dispatch_status(DBusConnection *c, DBusDispatchStatus status, DBus::Connection *connection);
 
 	UDJAT_PRIVATE dbus_bool_t add_watch(DBusWatch *w, DBusConnection *connection);
 	UDJAT_PRIVATE void remove_watch(DBusWatch *w, DBusConnection *connection);

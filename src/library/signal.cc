@@ -71,7 +71,7 @@
 		UserBus{uid,sid}.signal(*this);
 	}
 
-	void DBus::Signal::emit(Abstract::DBus::Connection &connection) {
+	void DBus::Signal::emit(DBus::Connection &connection) {
 		connection.signal(*this);
 	}
 

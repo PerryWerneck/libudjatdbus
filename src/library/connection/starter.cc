@@ -78,7 +78,7 @@
 
 	}
 
-	DBus::StarterBus::StarterBus() : Abstract::DBus::Connection{"SysBUS",StarterBus::ConnectionFactory()} {
+	DBus::StarterBus::StarterBus() : DBus::Connection{"SysBUS",StarterBus::ConnectionFactory()} {
 	}
 
 	DBus::StarterBus::~StarterBus() {
@@ -99,60 +99,9 @@
 
 	}
 
-	DBus::StarterBus & DBus::StarterBus::getInstance() {
+	DBus::Connection & DBus::StarterBus::getInstance() {
 		static DBus::StarterBus instance;
 		return instance;
 	}
 
  }
-
-
-
-
-	/*
- #include <config.h>
- #include <udjat/defs.h>
- #include <dbus/dbus.h>
- #include <udjat/tools/dbus/connection.h>
-
- namespace Udjat {
-
-	static DBusConnection * StarterConnectionFactory() {
-
-		#error refactor
-
-		Udjat::DBus::initialize();
-
-		DBusError err;
-		dbus_error_init(&err);
-
-		DBusConnection * connct = dbus_bus_get(DBUS_BUS_STARTER, &err);
-		if(dbus_error_is_set(&err)) {
-			std::string message(err.message);
-			dbus_error_free(&err);
-			throw std::runtime_error(message);
-		}
-
-		return connct;
-
-	}
-
-	DBus::StarterBus::StarterBus() : Abstract::DBus::Connection{"StarterBUS",StarterConnectionFactory()} {
-		bind();
-		open();
-	}
-
-	DBus::StarterBus::~StarterBus() {
-		close();
-		unbind();
-		dbus_connection_unref(conn);
-	}
-
-	DBus::StarterBus & DBus::StarterBus::getInstance() {
-		static DBus::StarterBus instance;
-		return instance;
-	}
-
- }
-	*/
-

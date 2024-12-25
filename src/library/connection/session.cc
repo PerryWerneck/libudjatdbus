@@ -78,7 +78,7 @@
 
 	}
 
-	DBus::SessionBus::SessionBus() : Abstract::DBus::Connection{"SessionBUS",SessionBus::ConnectionFactory()} {
+	DBus::SessionBus::SessionBus() : DBus::Connection{"SessionBUS",SessionBus::ConnectionFactory()} {
 	}
 
 	DBus::SessionBus::~SessionBus() {
@@ -99,57 +99,10 @@
 
 	}
 
-	DBus::SessionBus & DBus::SessionBus::getInstance() {
+	DBus::Connection & DBus::SessionBus::getInstance() {
 		static DBus::SessionBus instance;
 		return instance;
 	}
 
  }
 
-  /*
- #include <config.h>
- #include <udjat/defs.h>
- #include <dbus/dbus.h>
- #include <udjat/tools/dbus/connection.h>
-
- namespace Udjat {
-
-	static DBusConnection * SessionConnectionFactory() {
-
-		#error refactor
-
-		Udjat::DBus::initialize();
-
-		DBusError err;
-		dbus_error_init(&err);
-
-		DBusConnection * connct = dbus_bus_get(DBUS_BUS_SESSION, &err);
-		if(dbus_error_is_set(&err)) {
-			std::string message(err.message);
-			dbus_error_free(&err);
-			throw std::runtime_error(message);
-		}
-
-		return connct;
-
-	}
-
-	DBus::SessionBus::SessionBus() : Abstract::DBus::Connection{"SessionBUS",SessionConnectionFactory()} {
-		bind();
-		open();
-	}
-
-	DBus::SessionBus::~SessionBus() {
-		close();
-		unbind();
-		dbus_connection_unref(conn);
-	}
-
-	DBus::SessionBus & DBus::SessionBus::getInstance() {
-		static DBus::SessionBus instance;
-		return instance;
-	}
-
- }
-
-*/
