@@ -34,7 +34,7 @@
 		DBusConnection * connection = nullptr;
 		const std::function<void(DBus::Message &)> call;
 
-		CallParameters(Abstract::DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c->connection()), call(f) {
+		CallParameters(DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c->connection()), call(f) {
 			Logger::trace() << "New call parameters " << hex << ((void *) this) << dec << endl;
 			dbus_connection_ref(connection);
 		}
@@ -132,7 +132,7 @@
 
 	}
 
-	void Abstract::DBus::Connection::call(DBusMessage * message) {
+	void DBus::Connection::call(DBusMessage * message) {
 
 		if(!conn) {
 			throw logic_error("Connection is not available");
@@ -163,7 +163,7 @@
 
 	}
 
-	void Abstract::DBus::Connection::call_and_wait(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call) {
+	void DBus::Connection::call_and_wait(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
 		if(!conn) {
 			throw logic_error("Connection is not available");
@@ -221,7 +221,7 @@
 		delete parameters;
 	}
 
-	void Abstract::DBus::Connection::call(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call) {
+	void DBus::Connection::call(DBusMessage * message, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
 		if(!conn) {
 			throw logic_error("Connection is not available");
@@ -264,7 +264,7 @@
 
 	}
 
-	void Abstract::DBus::Connection::get(const char *destination, const char *path, const char *interface, const char *property_name, const std::function<void(Udjat::DBus::Message & message)> &call) {
+	void DBus::Connection::get(const char *destination, const char *path, const char *interface, const char *property_name, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
 		if(!conn) {
 			throw logic_error("Connection is not available");
@@ -298,7 +298,7 @@
 
 	}
 
-	void Abstract::DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, const std::function<void(Udjat::DBus::Message & message)> &call) {
+	void DBus::Connection::call(const char *destination,const char *path, const char *interface, const char *member, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
 		if(!conn) {
 			throw logic_error("Connection is not available");
@@ -320,11 +320,11 @@
 
 	}
 
-	void Abstract::DBus::Connection::call(const Udjat::DBus::Message & request,const std::function<void(Udjat::DBus::Message & response)> &call) {
+	void DBus::Connection::call(const Udjat::DBus::Message & request,const std::function<void(Udjat::DBus::Message & response)> &call) {
 		this->call((DBusMessage *)request,call);
 	}
 
-	void Abstract::DBus::Connection::call_and_wait(const char *destination,const char *path, const char *interface, const char *member, const std::function<void(Udjat::DBus::Message & message)> &call) {
+	void DBus::Connection::call_and_wait(const char *destination,const char *path, const char *interface, const char *member, const std::function<void(Udjat::DBus::Message & message)> &call) {
 
 		if(!conn) {
 			throw logic_error("Connection is not available");
@@ -346,7 +346,7 @@
 
 	}
 
-	void Abstract::DBus::Connection::call_and_wait(const Udjat::DBus::Message & request,const std::function<void(Udjat::DBus::Message & response)> &call) {
+	void DBus::Connection::call_and_wait(const Udjat::DBus::Message & request,const std::function<void(Udjat::DBus::Message & response)> &call) {
 		this->call_and_wait((DBusMessage *)request,call);
 	}
 

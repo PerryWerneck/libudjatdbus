@@ -66,7 +66,7 @@
 			: DBus::Module{},
 				DBus::Service{
 					(const ModuleInfo &) *this,
-					Abstract::DBus::Connection::ConnectionFactory(node),
+					DBus::Connection::ConnectionFactory(node),
 					name,
 					srvname
 				} { }

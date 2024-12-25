@@ -325,7 +325,7 @@
 
 		try {
 
-			Abstract::DBus::Connection::factory(bustype)->call(message);
+			DBus::Connection::factory(bustype)->call(message);
 			
 		} catch(...) {
 	
