@@ -110,7 +110,7 @@
 
 		String name{node,"type"};
 		if(name.empty()) {
-			throw runtime_error("Required argument 'type' is missing or empty");
+			throw runtime_error(Logger::String{"Required argument 'type' is missing or empty on <",node.name(),">"});
 		}
 
 		for(size_t ix = 0; ix < (sizeof(typenames)/sizeof(typenames[0]));ix++) {
@@ -170,7 +170,7 @@
 	}
 
 	DBus::Alert::Alert(const XML::Node &node) 
-		: ::Udjat::Alert{node}, 
+		: Udjat::Alert{node}, 
 			message_type{dbus_message_type_from_string(String{node,"message-type","signal"}.c_str())},
 			bustype{BusTypeFactory(node)},
 			path{String{node,"path"}.as_quark()}, 
@@ -282,7 +282,8 @@
 					break;
 								
 				default:
-					throw runtime_error("Unsupported argument type");
+					Logger::String{"Unsupported argument type"}.error(name());
+					return false;
 
 				}
 
@@ -325,7 +326,7 @@
 
 		try {
 
-			DBus::Connection::factory(bustype)->call(message);
+			Connection::getInstance(bustype).call(message);
 			
 		} catch(...) {
 	

@@ -11,9 +11,9 @@
 	
 	<module name='information' required='no' />
 
-	<agent name='intvalue' type='integer' value='0'>
+	<!-- agent name='intvalue' type='integer' value='0'>
 
-	</agent>
+	</agent -->
 
 	<interface type='dbus' name='MyInterface' dbus-interface='br.eti.werneck.udjat.MyInterface'>
 		<handler name='echo' type='method-call' >

@@ -61,6 +61,7 @@
 
 		// Keep running if d-bus disconnect.
 		dbus_connection_set_exit_on_disconnect(conn, false);
+		dbus_connection_ref(conn);
 
 		try {
 
@@ -101,6 +102,10 @@
 
 	}
 
+	DBus::Service::~Service() {
+		dbus_connection_unref(conn);
+	}
+
 	DBus::Service::Service(const ModuleInfo &module, const char *name, const char *destination)
 		: Service{module,Udjat::DBus::StarterBus::ConnectionFactory(),name,destination} {
 	}
@@ -128,10 +133,6 @@
 		}
 
 		return String{PRODUCT_ID,".",appname.c_str()}.as_quark();
-	}
-
-	DBus::Service::~Service() {
-		dbus_connection_unref(conn);
 	}
 
 	void DBus::Service::start() {

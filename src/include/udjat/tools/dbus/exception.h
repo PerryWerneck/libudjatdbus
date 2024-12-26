@@ -56,7 +56,7 @@
 				dbus_error_free(&err);
 			}
 
-			operator DBusError *() {
+			inline operator DBusError *() noexcept {
 				return &err;
 			}
 

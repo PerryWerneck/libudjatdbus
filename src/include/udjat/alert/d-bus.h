@@ -35,7 +35,7 @@
 
 	namespace DBus {
 
-		class UDJAT_API Alert : public ::Udjat::Alert {
+		class UDJAT_API Alert : public Udjat::Alert {
 		private:
 
 			/// @brief The d-bus message type.
@@ -105,6 +105,8 @@
 
 	}
 
+ }
+ 
 /*
 	namespace DBus {
 

@@ -105,6 +105,10 @@
 				return conn;
 			}
 
+			inline operator DBusConnection *() const noexcept {
+				return conn;
+			}
+
 			virtual ~Connection();
 
 			void flush() noexcept;

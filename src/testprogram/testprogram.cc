@@ -45,7 +45,7 @@
 				: DBus::Module{},
 					DBus::Service{
 						(const ModuleInfo &) *this,
-						DBus::Connection::ConnectionFactory(XML::Node{}),
+						DBus::Connection::getInstance(DBUS_BUS_STARTER),
 						"dbus",
 						String{PRODUCT_ID,".",Application::Name().c_str()}.as_quark()
 					} { }
