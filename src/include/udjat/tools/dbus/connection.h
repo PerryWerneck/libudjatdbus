@@ -244,6 +244,12 @@
 		public:
 			UserBus(uid_t uid, const char *sid = "");
 
+			/// @brief Execute function as user's effective id, serialize to avoid conflicts.
+			static void call(uid_t uid, const std::function<void()> &exec);
+
+			/// @brief Execute function as user's effective id.
+			void call(const std::function<void()> &exec) const;
+
 		};
 
  	}

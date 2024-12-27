@@ -123,21 +123,11 @@
 				{
 					File::Text text(environ.fd());
 					for(const char *ptr = text.c_str(); *ptr; ptr += (strlen(ptr)+1)) {
+
 						if(strncmp(ptr,"DBUS_SESSION_BUS_ADDRESS",24) == 0 && ptr[24] == '=') {
 
 							// Found session address, try to open it.
-
-							// Get an static lock guard to avoid another change
-							static mutex guard;
-							lock_guard<mutex> lock(guard);
-
-							// Save application EUID and switch to required UID.
-							uid_t saved_uid = geteuid();
-							if(seteuid(uid) < 0) {
-
-								cerr << "dbus\tCan't set efective UID: " << strerror(errno) << endl;
-
-							} else {
+							DBus::UserBus::call(uid,[&]() -> void {
 
 								DBusError err;
 								dbus_error_init(&err);
@@ -164,10 +154,8 @@
 
 								}
 
-								// Restore to saved UID.
-								seteuid(saved_uid);
+							});
 
-							}
 							break;
 						}
 					}
@@ -234,6 +222,36 @@
 			throw;
 
 		}
+	}
+
+	void DBus::UserBus::call(const std::function<void()> &exec) const {
+		call(userid,exec);
+	}
+
+	void DBus::UserBus::call(uid_t uid, const std::function<void()> &exec) {
+		// TODO: https://stackoverflow.com/questions/1223600/change-uid-gid-only-of-one-thread-in-linux#:~:text=To%20change%20the%20uid%20only,sends%20to%20all%20threads)!&text=The%20Linux%2Dspecific%20setfsuid(),thread%20rather%20than%20per%2Dprocess.
+		// https://patchwork.kernel.org/project/linux-nfs/patch/1461677655-68294-3-git-send-email-kolga@netapp.com/
+		// sys_setresuid
+		
+		static mutex guard;
+		lock_guard<mutex> lock(guard);
+
+		uid_t saved_uid = geteuid();
+		if(seteuid(uid) < 0) {
+			throw std::system_error(errno, std::system_category(), "Cant set effective user id");
+		}
+
+		try {
+
+			exec();
+
+		} catch(...) {
+			seteuid(saved_uid);
+			throw;
+		}
+
+		seteuid(saved_uid);
+
 	}
 
  }
