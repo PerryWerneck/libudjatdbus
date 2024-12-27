@@ -29,7 +29,8 @@
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/module/dbus.h>
- 
+ #include <udjat/tools/logger.h>
+
  using namespace std;
  using namespace Udjat;
  using namespace Udjat::DBus;
@@ -58,7 +59,8 @@
 
 		new Module();
 
-		SystemBus::getInstance().call_and_wait(
+		// 2 asynchronous calls chained.
+		SystemBus::getInstance().call(
 			DBus::Message{
 				"org.freedesktop.login1",
 				"/org/freedesktop/login1",
@@ -66,12 +68,32 @@
 				"GetSession",
 				"2"
 			},
-			[&](DBus::Message & message) {
+			[](DBus::Message & message) -> void {
+
 				message.except();
-				string path;
-				message.pop(path);
-				debug("-------------------------------------------")
-				debug(path.c_str());
+				std::string session_path;
+				message.pop(session_path);
+				debug("Session-path=",session_path.c_str());
+
+				SystemBus::getInstance().call(
+					DBus::Message{
+						"org.freedesktop.login1",
+						session_path.c_str(),
+						"org.freedesktop.DBus.Properties",
+						"Get",
+						"org.freedesktop.login1.Session",
+						"LockedHint"
+					},
+					[](DBus::Message & message) -> void {
+
+						message.except();
+						bool locked;
+						message.pop(locked);
+						Logger::String{"Session is ",(locked ? "locked" : "unlocked")}.info();
+
+					}
+				);
+
 			}
 		);
 
