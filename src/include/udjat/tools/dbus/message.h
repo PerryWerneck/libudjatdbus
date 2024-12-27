@@ -99,6 +99,9 @@
 
 			bool next();
 
+			/// @brief Launch exception if this message has errors.
+			void except() const;
+
 			Message & pop(Udjat::Value &value);
 			Message & pop(std::string &value);
 			Message & pop(int &value);

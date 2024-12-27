@@ -25,6 +25,7 @@
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/module/dbus.h>
@@ -56,6 +57,23 @@
 		};
 
 		new Module();
+
+		SystemBus::getInstance().call_and_wait(
+			DBus::Message{
+				"org.freedesktop.login1",
+				"/org/freedesktop/login1",
+				"org.freedesktop.login1.Manager",
+				"GetSession",
+				"2"
+			},
+			[&](DBus::Message & message) {
+				message.except();
+				string path;
+				message.pop(path);
+				debug("-------------------------------------------")
+				debug(path.c_str());
+			}
+		);
 
 		/*
 		SystemBus::getInstance().get(

@@ -92,6 +92,12 @@
 		return dbus_message_iter_next(&message.iter);
 	}
 
+	void DBus::Message::except() const {
+		if(err.valid) {
+			throw runtime_error(err.message);
+		}
+	}
+
 	static void to_value(DBusMessageIter *iter, Udjat::Value &value) {
 
 		DBusBasicValue dval;
@@ -340,6 +346,11 @@
 
 		}
 
+		return *this;
+	}
+
+	DBus::Message & DBus::Message::push_back(const char *value) {
+		dbus_message_iter_append_basic(&message.iter, DBUS_TYPE_STRING, &value);
 		return *this;
 	}
 
