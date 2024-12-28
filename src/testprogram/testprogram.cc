@@ -142,30 +142,32 @@
 				}
 
 			});
+		*/
 
 		SessionBus::getInstance().subscribe(
 				"org.gnome.ScreenSaver",
 				"ActiveChanged",
 				[](DBus::Message &message) {
-
-					// Active state of gnome screensaver has changed, deal with it.
 					bool active;
 					message.pop(active);
-
 					Logger::String{"Gnome screensaver is now ",(active ? "active" : "inactive")}.info("d-bus");
-
 					return false;
+				}
+		);
 
+		SessionBus::getInstance().subscribe(
+				"org.gnome.ScreenSaver",
+				"WakeUpScreen",
+				[](DBus::Message &) {
+					Logger::String{"Gnome screen saver WakeUpScreen signal"}.trace();
+					return false;
 				}
 		);
 
 		SessionBus::getInstance().subscribe("com.example.signal","hello",[](DBus::Message &message){
-
 			cout << "Got signal hello with message '" << message << "'" << endl;
 			return false;
-
 		});
-		*/
 
 	});
 

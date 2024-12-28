@@ -156,14 +156,10 @@
 		flush();
 
 		// Remove interfaces.
-		interfaces.remove_if([this](Udjat::DBus::Interface &intf) {
-			remove(intf);
-			return true;
-		});
+		interfaces.clear();
 
 		// Remove filter
 		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) on_message, this);
-
 
 	}
 
@@ -278,11 +274,6 @@
 		interfaces.push_back(intf);
 	}
 
-	void DBus::Connection::remove(Udjat::DBus::Interface &intf) {
-		lock_guard<mutex> lock(guard);
-		interfaces.remove(intf);
-	}
-
 	Udjat::DBus::Interface & DBus::Connection::emplace_back(const char *intf) {
 
 		if(!(intf && *intf)) {
@@ -313,18 +304,21 @@
 		return emplace_back(interface).emplace_back(member,callback);
 	}
 
+	void DBus::Connection::remove(Udjat::DBus::Interface &intf) {
+		lock_guard<mutex> lock(guard);
+		interfaces.remove(intf);
+	}
+
 	void DBus::Connection::remove(const Udjat::DBus::Member &member) {
 
 		lock_guard<mutex> lock(guard);
 		interfaces.remove_if([this,&member](Udjat::DBus::Interface &interface){
 
-			interface.remove(member);
-
+			interface.remove(member);	
 			if(interface.empty()) {
-				remove(interface);
+				Logger::String{"Unwatching '",interface.c_str(),"'"}.trace(name());
 				return true;
 			}
-
 			return false;
 
 		});
