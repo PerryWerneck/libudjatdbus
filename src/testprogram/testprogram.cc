@@ -28,6 +28,7 @@
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus/service.h>
+ #include <udjat/tools/dbus/signal.h>
  #include <udjat/module/dbus.h>
  #include <udjat/tools/logger.h>
 
@@ -168,6 +169,18 @@
 			cout << "Got signal hello with message '" << message << "'" << endl;
 			return false;
 		});
+
+		// Check user bus
+		debug("------------------------------------------------------------");
+		UserBus{1000}.signal(
+			DBus::Signal{
+				"com.example.signal.user",
+				"hello",
+				"/userbus",
+				"userbus-message"
+			}
+		);
+		debug("------------------------------------------------------------");
 
 	});
 

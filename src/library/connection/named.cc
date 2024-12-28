@@ -54,14 +54,15 @@
 
 	}
 
-	static void trace_connection_free(const DBus::Connection *connection) {
-		Logger::String("Named connection '",((unsigned long) connection),"' was released").trace("d-bus");
+	static void trace_connection_free(char *name) {
+		Logger::String("DBus connection '",name,"' was released").trace("d-bus");
+		free(name);
 	}
 
 	DBus::NamedBus::NamedBus(const char *name, DBusConnection * conn) : DBus::Connection{name,conn} {
 
 		if(Logger::enabled(Logger::Trace)) {
-			dbus_connection_set_data(conn,DataSlot::getInstance().value(),this,(DBusFreeFunction) trace_connection_free);
+			dbus_connection_set_data(conn,DataSlot::getInstance().value(),(void *) strdup(name),(DBusFreeFunction) trace_connection_free);
 		}
 
 		mainloop_add(conn);
