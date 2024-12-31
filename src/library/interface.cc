@@ -31,7 +31,7 @@
 	}
 
 	/// @brief Scan XML definition for interface name.
-	static const std::string NameFactory(const XML::Node &node) {
+	String Abstract::DBus::Interface::NameFactory(const XML::Node &node) {
 
 		for(const char *attrname : { "interface-name", "name" }) {
 

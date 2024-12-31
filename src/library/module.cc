@@ -33,6 +33,7 @@
  #include <udjat/tools/interface.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/service.h>
+ #include <udjat/alert/d-bus.h>
  #include <dbus/dbus-protocol.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/application.h>

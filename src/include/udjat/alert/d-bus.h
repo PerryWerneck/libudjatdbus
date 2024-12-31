@@ -42,6 +42,15 @@
 			void reset(time_t next) noexcept override;
 
 		public:
+
+			class UDJAT_API Factory : public Udjat::Alert::Factory {
+			public:
+				Factory(const char *name = "dbus");
+				virtual ~Factory();
+				std::shared_ptr<Udjat::Alert> AlertFactory(const Abstract::Object &parent, const XML::Node &node) const override;
+
+			};
+
 			Alert(const XML::Node &node);
 			virtual ~Alert();
 

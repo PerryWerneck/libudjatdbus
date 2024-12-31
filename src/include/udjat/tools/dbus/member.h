@@ -26,6 +26,7 @@
  #pragma once
  #include <udjat/defs.h>
  #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/string.h>
  #include <string>
  #include <functional>
  #include <udjat/tools/xml.h>
@@ -42,6 +43,9 @@
 			int type;
 
 		public:
+
+			static Udjat::String NameFactory(const XML::Node &node);
+
 			Member(const char *name, const std::function<bool(Message & message)> &callback);
 			Member(const XML::Node &node,const std::function<bool(Message & message)> &callback);
 			~Member();

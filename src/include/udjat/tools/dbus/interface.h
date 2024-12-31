@@ -41,6 +41,11 @@
 
 			public:
 
+				/// @brief Get interface name from XML node.
+				/// @param node Node with interface definition.
+				/// @return The interface name.
+				static Udjat::String NameFactory(const XML::Node &node);
+
 				virtual DBusHandlerResult filter(DBusMessage *message) const = 0;
 
 				Interface(const char *name, const char *type = "signal");

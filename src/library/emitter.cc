@@ -20,6 +20,8 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/abstract/object.h>
+ #include <udjat/tools/dbus/interface.h>
+ #include <udjat/tools/dbus/member.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/emitter.h>
  #include <udjat/alert/d-bus.h>
@@ -173,8 +175,8 @@
 		: message_type{dbus_message_type_from_string(String{node,"message-type","signal"}.c_str())},
 			bustype{BusTypeFactory(node)},
 			path{String{node,"path"}.as_quark()}, 
-			iface{String{node,"interface"}.as_quark()}, 
-			member{String{node,"member"}.as_quark()} {
+			iface{Abstract::DBus::Interface::NameFactory(node).as_quark()}, 
+			member{DBus::Member::NameFactory(node).as_quark()} {
 
 		if(!(message_type == DBUS_MESSAGE_TYPE_SIGNAL || message_type == DBUS_MESSAGE_TYPE_METHOD_CALL)) {
 			throw runtime_error("Invalid message type");

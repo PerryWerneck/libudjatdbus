@@ -33,12 +33,30 @@
 
  namespace Udjat {
 
+	Udjat::String DBus::Member::NameFactory(const XML::Node &node) {
+		
+		static const char *attrnames[] = {
+			"dbus-member",
+			"member-name",
+			"member"
+		};
+
+		for(const char *attrname : attrnames) {
+			String str{node,attrname};
+			if(!str.empty()) {
+				return str;
+			}
+		}
+
+		throw runtime_error("Member name attribute is missing or invalid");
+	}
+
 	DBus::Member::Member(const char *name,const std::function<bool(Message & message)> &c)
 		: string{name}, callback{c}, type{DBUS_MESSAGE_TYPE_SIGNAL} {
 		Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
 	}
 
-	DBus::Member::Member(const XML::Node &node,const std::function<bool(Message & message)> &callback) : Member{String{node,"dbus-member"}.c_str(),callback} {
+	DBus::Member::Member(const XML::Node &node,const std::function<bool(Message & message)> &callback) : Member{NameFactory(node).c_str(),callback} {
 
 #if UDJAT_CHECK_VERSION(1,2,0)
 		const char *name = XML::StringFactory(node,"dbus-message-type");
@@ -47,6 +65,8 @@
 #endif
 
 		if(name && *name) {
+
+			// TODO: Refactor using d-bus standard methods.
 
 			int index = String{name}.select("signal","method",nullptr);
 			if(index < 0) {

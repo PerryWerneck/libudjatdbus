@@ -32,6 +32,16 @@
 
  namespace Udjat {
 
+	DBus::Alert::Factory::Factory(const char *name) : Udjat::Alert::Factory{name} {
+	}
+
+	DBus::Alert::Factory::~Factory() {		
+	}
+
+	std::shared_ptr<Udjat::Alert> DBus::Alert::Factory::AlertFactory(const Abstract::Object &, const XML::Node &node) const {
+		return make_shared<DBus::Alert>(node);
+	}
+
 	DBus::Alert::Alert(const XML::Node &node) : Udjat::Alert{node}, DBus::Emitter{node} {
 	}
 
@@ -48,6 +58,7 @@
 	bool DBus::Alert::activate() noexcept {
 
 		if(active()) {
+			errno = EALREADY;
 			return false;
 		}
 
