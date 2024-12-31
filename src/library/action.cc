@@ -17,39 +17,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /**
-  * @brief Declare d-bus alerts.
-  */
-
- #pragma once
-
+ #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/alert.h>
  #include <dbus/dbus.h>
- #include <udjat/tools/abstract/object.h>
- #include <udjat/tools/xml.h>
- #include <udjat/tools/string.h>
- #include <udjat/tools/dbus/emitter.h>
- #include <vector>
+ #include <stdexcept>
+
+ using namespace std;
 
  namespace Udjat {
 
-	namespace DBus {
-
-		class UDJAT_API Alert : public Udjat::Alert, private Emitter {
-		protected:
-			int emit() override;
-			void reset(time_t next) noexcept override;
-
-		public:
-			Alert(const XML::Node &node);
-			virtual ~Alert();
-
-			bool activate() noexcept override;
-			bool activate(const Abstract::Object &object) noexcept override;
-
-		};
-
-	}
 
  }

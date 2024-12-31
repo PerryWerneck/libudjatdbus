@@ -108,7 +108,6 @@ includes_dir = include_directories('src/include')
 # Sources
 #
 lib_src = [
-  'src/library/alert.cc',
   'src/library/connection/abstract.cc',
   'src/library/connection/call.cc',
   'src/library/connection/named.cc',
@@ -126,6 +125,9 @@ lib_src = [
   'src/library/module.cc',
   'src/library/signal.cc',
   'src/library/exception.cc',
+  'src/library/emitter.cc',
+  'src/library/alert.cc',
+  'src/library/action.cc',
 ]
 
 module_src = [
@@ -228,5 +230,6 @@ install_headers(
   'src/include/udjat/tools/dbus/member.h',
   'src/include/udjat/tools/dbus/message.h',
   'src/include/udjat/tools/dbus/signal.h',
+  'src/include/udjat/tools/dbus/emitter.h',
   subdir: 'udjat/tools/dbus'  
 )
