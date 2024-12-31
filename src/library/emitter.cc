@@ -334,6 +334,7 @@
 		try {
 
 			Connection::getInstance(bustype).call(message);
+
 			
 		} catch(...) {
 	

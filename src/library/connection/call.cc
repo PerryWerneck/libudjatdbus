@@ -22,6 +22,7 @@
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/dbus/exception.h>
 
  using namespace std;
 
@@ -138,28 +139,41 @@
 			throw logic_error("Connection is not available");
 		}
 
-		DBusError error;
-		dbus_error_init(&error);
+		DBus::Error error;
 
-		DBusMessage * response =
-			dbus_connection_send_with_reply_and_block(
+		switch(dbus_message_get_type(message)) {
+		case DBUS_MESSAGE_TYPE_METHOD_CALL:
+			{
+				debug("Sending method call...");
+				DBusMessage * response =
+					dbus_connection_send_with_reply_and_block(
+						conn,
+						message,
+						DBUS_TIMEOUT_USE_DEFAULT,
+						error
+					);
+
+				if(response) {
+					dbus_message_unref(response);
+				}
+			}
+			break;
+
+		case DBUS_MESSAGE_TYPE_SIGNAL:
+			debug("Sending signal...");
+			dbus_connection_send(
 				conn,
 				message,
-				DBUS_TIMEOUT_USE_DEFAULT,
-				&error
+				NULL
 			);
+			break;
 
-		if(response) {
-			dbus_message_unref(response);
-		}
-
-		if(dbus_error_is_set(&error)) {
-
-			string message{error.message};
-			dbus_error_free(&error);
-			throw runtime_error(message);
+		default:
+			throw runtime_error("Invalid output message type");
 
 		}
+
+		error.verify();
 
 	}
 
