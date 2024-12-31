@@ -67,19 +67,18 @@
 		if(name && *name) {
 
 			// TODO: Refactor using d-bus standard methods.
+			type = dbus_message_type_from_string(String{node,"message-type","signal"}.c_str());
 
-			int index = String{name}.select("signal","method",nullptr);
-			if(index < 0) {
-				throw runtime_error(Logger::String{"Unexpected message type: ",type});
+			if(!(type == DBUS_MESSAGE_TYPE_SIGNAL || type == DBUS_MESSAGE_TYPE_METHOD_CALL)) {
+				throw runtime_error("Unexpected d-bus message type");
 			}
 
-			static const int types[] = {DBUS_MESSAGE_TYPE_SIGNAL,DBUS_MESSAGE_TYPE_METHOD_CALL};
-			type = types[index % 1];
-
-			Logger::String{"Watching ",type," '",c_str(),"'"}.trace("d-bus");
+			Logger::String{"Watching ",c_str()," '",c_str(),"'"}.trace(node.name());
 
 		} else {
-			Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
+
+			Logger::String{"Watching '",c_str(),"'"}.trace(node.name());
+
 		}
 
 	}

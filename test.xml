@@ -25,7 +25,7 @@
 
 	<agent type='random' name='alerter' update-timer='10' on-demand='false'>
 
-		<alert name='on-value' type='dbus' trigger-event='value-change' dbus-path='${agent.path}' dbus-interface='br.eti.werneck.udjat.MyInterface' dbus-member='value-changed'>
+		<alert name='on-value' type='dbus' trigger-event='value-change' dbus-path='/' dbus-interface='br.eti.werneck.udjat.MyInterface' dbus-member='changed'>
 		
 			<argument type='int16' value='${agent.value}'/>
 			<argument type='string' value='${state.level}'/>

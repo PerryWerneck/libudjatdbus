@@ -174,9 +174,13 @@
 	DBus::Emitter::Emitter(const XML::Node &node) 
 		: message_type{dbus_message_type_from_string(String{node,"message-type","signal"}.c_str())},
 			bustype{BusTypeFactory(node)},
-			path{String{node,"path"}.as_quark()}, 
+			path{String{node,"dbus-path"}.as_quark()}, 
 			iface{Abstract::DBus::Interface::NameFactory(node).as_quark()}, 
 			member{DBus::Member::NameFactory(node).as_quark()} {
+
+		if(!(path && *path)) {
+			throw runtime_error("Required attribute 'dbus-path' is missing or empty");
+		}
 
 		if(!(message_type == DBUS_MESSAGE_TYPE_SIGNAL || message_type == DBUS_MESSAGE_TYPE_METHOD_CALL)) {
 			throw runtime_error("Invalid message type");
@@ -185,6 +189,18 @@
 		// Get inputs
 		for(auto child = node.child("argument"); child; child = child.next_sibling("argument")) {
 			inputs.emplace_back(child);
+		}
+
+	}
+
+	void DBus::Emitter::validate() const {
+
+		if(activation.iface.empty()) {
+			throw logic_error("Unable to emit d-bus message with empty interface name");
+		}
+
+		if(activation.path.empty()) {
+			throw logic_error("Unable to emit d-bus message with empty path");
 		}
 
 	}
@@ -202,6 +218,8 @@
 		activation.member = member;
 		activation.path = path;
 
+		validate();
+
 		// Load default inputs.
 		for(const auto &input : inputs) {
 			arguments.emplace_back(input.type,input.dbval);
@@ -211,9 +229,15 @@
 	void DBus::Emitter::prepare(const Abstract::Object &object) {
 
 		arguments.clear();
+		activation.iface = iface;
+		activation.member = member;
+		activation.path = path;
+
 		activation.iface.expand(object);
 		activation.member.expand(object);
 		activation.path.expand(object);
+
+		validate();
 
 		for(const auto &input : inputs) {
 
@@ -280,19 +304,25 @@
 
 	void DBus::Emitter::send() {
 
+		validate();
+
 		DBusMessage *message{dbus_message_new(message_type)};
 
 		Logger::String{
-			"Emitting dbus://",
-			activation.iface.c_str(),
-			" ",
-			activation.path.c_str(),
-			" ",
+			"Emitting ",
+			dbus_message_type_to_string(message_type)," ",
+			activation.iface.c_str()," ",
+			activation.path.c_str()," ",
 			activation.member.c_str()
 		}.trace();
 
+		debug("Interface name will bet set to '",activation.iface.c_str(),"'");
 		dbus_message_set_interface(message,activation.iface.c_str());
+
+		debug("Path will bet set to '",activation.path.c_str(),"'");
 		dbus_message_set_path(message,activation.path.c_str());
+
+		debug("Member will bet set to '",activation.member.c_str(),"'");
 		dbus_message_set_member(message,activation.member.c_str());
 
 		DBusMessageIter iter;

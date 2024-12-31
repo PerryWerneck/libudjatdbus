@@ -65,7 +65,8 @@
 		}
 
 		if(type.empty()) {
-			throw runtime_error("Required attribute bus-name is missing");
+			Logger::String{"Required attribute bus-name is missing on <",node.name(),">, using default"}.warning();
+			return DBUS_BUS_STARTER;
 		}
 
 		static const struct {

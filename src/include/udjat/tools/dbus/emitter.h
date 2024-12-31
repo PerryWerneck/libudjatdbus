@@ -85,6 +85,8 @@
 				String member;
 			} activation;
 
+			void validate() const;
+
 		protected:
 
 			void prepare();

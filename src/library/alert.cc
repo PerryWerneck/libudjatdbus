@@ -57,23 +57,50 @@
 
 	bool DBus::Alert::activate() noexcept {
 
-		if(active()) {
-			errno = EALREADY;
-			return false;
+		debug("Activating '",name(),"' without object");
+
+		try {
+
+			if(active()) {
+				errno = EALREADY;
+				return false;
+			}
+
+			prepare();
+			return ::Udjat::Alert::activate();
+
+		} catch(const std::exception &e) {
+
+			Logger::String{e.what()}.error(name());
+
 		}
 
-		prepare();
-		return ::Udjat::Alert::activate();
+		return false;
+
 	}
 
 	bool DBus::Alert::activate(const Abstract::Object &object) noexcept {
 
-		if(active()) {
-			return false;
+		debug("Activating '",name(),"' with object");
+
+		try {
+
+			if(active()) {
+				errno = EALREADY;
+				return false;
+			}
+
+			prepare(object);
+			return ::Udjat::Alert::activate();
+
+		} catch(const std::exception &e) {
+
+			Logger::String{e.what()}.error(name());
+
 		}
 
-		prepare(object);
-		return ::Udjat::Alert::activate();
+		return false;
+
 	}
 
 	int DBus::Alert::emit() {

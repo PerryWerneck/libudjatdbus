@@ -21,6 +21,7 @@
  #include <udjat/defs.h>
  #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/string.h>
+ #include <udjat/tools/logger.h>
  #include <stdexcept>
 
  using namespace std;
@@ -33,18 +34,39 @@
 	/// @brief Scan XML definition for interface name.
 	String Abstract::DBus::Interface::NameFactory(const XML::Node &node) {
 
-		for(const char *attrname : { "interface-name", "name" }) {
+		// First check for specific names
+		{
+			static const char *attrnames[] = {
+				"dbus-interface-name",
+				"dbus-interface",
+				"interface-name"
+			};
 
-			String name{node,attrname};
-			if(!name.empty()) {
-				if(name[0] == '.') {
-					name = String{PRODUCT_ID,name.c_str()};
-				} else if(!strchr(name.c_str(),'.')) {
-					name = String{PRODUCT_ID,".",name.c_str()};
+			for(const char *attrname : attrnames) {
+				String name{node,attrname};
+				if(!name.empty()) {
+					if(name[0] == '.') {
+						return String{PRODUCT_ID,name.c_str()};
+					}
+					return name;
 				}
-				return name;
 			}
+		}
 
+		// Then the generic ones
+		{
+			static const char *attrnames[] = {
+				"dbus-name",
+				"name"
+			};
+
+			for(const char *attrname : attrnames) {
+				String name{node,attrname};
+				if(!name.empty()) {
+					Logger::String{"Required interface name attribute is missing on <",node.name(),">, using default"}.warning();
+					return String{PRODUCT_ID,".",name.c_str()};
+				}
+			}
 		}
 
 		throw runtime_error("The d-bus interface name is empty or invalid");
