@@ -20,7 +20,4 @@
  #pragma once
 
  #include <udjat/defs.h>
- #include <udjat/tools/dbus/defs.h>
- #include <udjat/tools/dbus/connection.h>
-
 

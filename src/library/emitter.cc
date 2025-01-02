@@ -29,6 +29,7 @@
  #include <udjat/tools/string.h>
  #include <dbus/dbus.h>
  #include <stdexcept>
+ #include <udjat/tools/singleton.h>
 
  using namespace std;
 
@@ -124,7 +125,7 @@
 		throw runtime_error("Unsupported argument type");
 	}
 
-	DBus::Emitter::Input::Input(const XML::Node &node) : name{String{node,"name"}.as_quark()}, type{TypeFactory(node)} {
+	DBus::Emitter::Output::Output(const XML::Node &node) : name{String{node,"name"}.as_quark()}, type{TypeFactory(node)} {
 
 		memset(&dbval,0,sizeof(dbval));
 		switch(type) {
@@ -171,6 +172,8 @@
 
 	}
 
+	static Singleton::Container<DBus::Emitter> emitters;
+
 	DBus::Emitter::Emitter(const XML::Node &node) 
 		: message_type{dbus_message_type_from_string(String{node,"message-type","signal"}.c_str())},
 			bustype{BusTypeFactory(node)},
@@ -188,9 +191,19 @@
 
 		// Get inputs
 		for(auto child = node.child("argument"); child; child = child.next_sibling("argument")) {
-			inputs.emplace_back(child);
+			outputs.emplace_back(child);
 		}
 
+		emitters.getInstance().push_back(this);
+
+	}
+
+	DBus::Emitter::~Emitter() {
+		emitters.getInstance().remove(this);
+	} 
+
+	bool DBus::Emitter::for_each(const std::function<bool(const DBus::Emitter &emitter)> &method) {
+		return emitters.getInstance().for_each(method);
 	}
 
 	void DBus::Emitter::validate() const {
@@ -221,9 +234,28 @@
 		validate();
 
 		// Load default inputs.
-		for(const auto &input : inputs) {
-			arguments.emplace_back(input.type,input.dbval);
+		for(const auto &output : outputs) {
+			arguments.emplace_back(output.type,output.dbval);
 		}
+	}
+
+
+	void DBus::Emitter::introspect(std::iostream &xmldata) const {
+
+/*
+<signal name="StateChanged">
+  <arg name="state" type="i"/>
+  <arg name="error" type="s"/>
+</signal>stringstream
+*/
+		xmldata << "<signal name=\"" << member << "\">";
+
+		for(const auto &output : outputs) {
+			xmldata << "<arg name=\"" << output.name << "\" type=\"" << ((char) output.type) << "\"/>";
+		}
+
+		xmldata << "</signal>";
+
 	}
 
 	void DBus::Emitter::prepare(const Abstract::Object &object) {
@@ -239,13 +271,13 @@
 
 		validate();
 
-		for(const auto &input : inputs) {
+		for(const auto &output : outputs) {
 
 			string value;
 
-			if(object.getProperty(input.name,value)) {
+			if(object.getProperty(output.name,value)) {
 
-				Argument arg{input.type,value.c_str()};
+				Argument arg{output.type,value.c_str()};
 
 				switch(arg.type) {
 				case DBUS_TYPE_STRING:
@@ -293,8 +325,8 @@
 
 			} else {
 
-				Logger::String{"Using default value for argument '",input.name,"'"}.trace();
-				arguments.emplace_back(input.type,input.dbval);
+				Logger::String{"Using default value for argument '",output.name,"'"}.trace();
+				arguments.emplace_back(output.type,output.dbval);
 
 			}
 

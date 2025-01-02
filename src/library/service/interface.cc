@@ -49,6 +49,7 @@
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/dbus/exception.h>
+ #include <udjat/tools/dbus/emitter.h>
 
  #include <sstream>
 
@@ -66,7 +67,7 @@
 		throw system_error(ENOENT,system_category(),String{"Cant find interface '",intfname,"'"});
 	}
 
-	void DBus::Service::Interface::introspect(std::stringstream &xmldata) const {
+	void DBus::Service::Interface::introspect(std::iostream &xmldata) const {
 
 		xmldata << "<interface name=\"" << interface() << "\">";
 
@@ -75,7 +76,6 @@
 			xmldata << "<method name=\"" << handler.name() << "\">";
 
 			handler.introspect([&xmldata](const char *name, const Udjat::Value::Type type, bool in){
-
 				xmldata << "<arg name=\"" << name << "\" type=\"";
 				xmldata << "s"; /// FIXME: Use the correct data type from type.
 				xmldata << "\" direction=\"" << (in ? "in" : "out") << "\"/>";
@@ -84,6 +84,13 @@
 
 			xmldata << "</method>";
 		}
+
+		DBus::Emitter::for_each([&](const DBus::Emitter &emitter){
+			if(emitter == DBUS_MESSAGE_TYPE_SIGNAL && emitter == this->intfname) {
+				emitter.introspect(xmldata);
+			}
+			return false;
+		});
 
 		xmldata << "</interface>";
 

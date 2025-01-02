@@ -29,6 +29,7 @@
  #include <udjat/tools/string.h>
  #include <vector>
  #include <dbus/dbus.h>
+ #include <functional>
 
  namespace Udjat {
 
@@ -53,18 +54,18 @@
 			/// @brief The alert member.
 			const char *member = nullptr;
 
-			/// @brief D-Bus alert inputs.
-			struct Input {
+			typedef int DBusType;
+
+			/// @brief D-Bus message outputs.
+			struct Output {
 				const char *name;		///< @brief Argument name.
 				int type;				///< @brief D-Bus data type.
 				DBusBasicValue dbval;	///< @brief Default value.
-
-				Input(const XML::Node &node);
-
+				Output(const XML::Node &node);
 			};
-			std::vector<Input> inputs;
+			std::vector<Output> outputs;
 
-			/// @brief D-Bus message arguments.
+			/// @brief D-Bus message arguments (parsed).
 			struct Argument {
 				int type;				///< @brief D-Bus data type.
 				String value;			///< @brief Argument string.
@@ -100,6 +101,25 @@
 
 		public:
 			Emitter(const XML::Node &node);
+			virtual ~Emitter();
+
+			/// @brief Get the message type.
+			int type() const noexcept {
+				return message_type;
+			}
+
+			inline bool operator==(const char *name) const noexcept {
+				return strcmp(iface,name) == 0;
+			}
+
+			inline bool operator==(int type) const noexcept {
+				return message_type == type;
+			}
+
+			void introspect(std::iostream &xmldata) const;
+
+			/// @brief Iterate over all emitters.
+			static bool for_each(const std::function<bool(const Emitter &emitter)> &method);
 
 		};
 
