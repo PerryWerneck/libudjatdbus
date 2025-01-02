@@ -46,6 +46,11 @@
 
 	/// @brief busname.
 	String srvname{node,"dbus-service-name",""};
+	
+	if(srvname.empty()) {
+		srvname = String{node,"service-name",""};
+	}
+
 	if(srvname.empty() && node.attribute("enable-service").as_bool(false)) {
 		srvname = String{PRODUCT_ID,".",Application::Name().c_str()};
 	}

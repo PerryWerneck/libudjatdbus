@@ -127,6 +127,10 @@
 
 	DBus::Emitter::Output::Output(const XML::Node &node) : name{String{node,"name"}.as_quark()}, type{TypeFactory(node)} {
 
+		if(!(name && *name)) {
+			throw runtime_error("Required attribute 'name' is missing or empty");
+		}
+
 		memset(&dbval,0,sizeof(dbval));
 		switch(type) {
 		case DBUS_TYPE_STRING:
@@ -240,7 +244,7 @@
 	}
 
 
-	void DBus::Emitter::introspect(std::iostream &xmldata) const {
+	void DBus::Emitter::introspect(std::stringstream &xmldata) const {
 
 /*
 <signal name="StateChanged">

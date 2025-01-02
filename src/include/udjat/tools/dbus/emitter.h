@@ -30,6 +30,7 @@
  #include <vector>
  #include <dbus/dbus.h>
  #include <functional>
+ #include <sstream>
 
  namespace Udjat {
 
@@ -116,7 +117,7 @@
 				return message_type == type;
 			}
 
-			void introspect(std::iostream &xmldata) const;
+			void introspect(std::stringstream &xmldata) const;
 
 			/// @brief Iterate over all emitters.
 			static bool for_each(const std::function<bool(const Emitter &emitter)> &method);

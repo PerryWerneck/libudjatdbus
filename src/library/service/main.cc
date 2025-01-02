@@ -166,13 +166,13 @@
 
 				// https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.Introspectable.html
 
-				std::stringstream xmldata{
+				std::stringstream xmldata;
+				
+				xmldata << \
 					"<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" " \
-					"\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">" \
-				};
+					"\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\"><node>";
 
-				xmldata << "<node>";
-
+				debug("Introspecting service ",service->name()," with ",service->interfaces.size()," interfaces");
 				for(const auto &interface : service->interfaces) {
 					interface.introspect(xmldata);
 				}
@@ -187,6 +187,7 @@
 					}
 
 					string *xml = new string(xmldata.str().c_str());
+					debug("Introspection data:\n",xml->c_str(),"\n");
 
 					DBusMessage *reply = dbus_message_new_method_return(message);
 					dbus_message_set_data(reply,data_slot,xml,free_data_block);

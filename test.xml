@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-
 <config>
 
 	<module name='civetweb' required='no'>
@@ -11,9 +10,9 @@
 	
 	<module name='information' required='no' />
 
-	<!-- agent name='intvalue' type='integer' value='0'>
+	<agent name='intvalue' type='integer' value='0'>
 
-	</agent -->
+	</agent>
 
 	<interface type='dbus' name='MyInterface' dbus-interface='br.eti.werneck.udjat.MyInterface'>
 		<handler name='echo' type='method-call' >
@@ -27,9 +26,9 @@
 
 		<alert name='on-value' type='dbus' trigger-event='value-change' dbus-path='/' dbus-interface='br.eti.werneck.udjat.MyInterface' dbus-member='changed'>
 		
-			<argument type='int16' value='${agent.value}'/>
-			<argument type='string' value='${state.level}'/>
-			<argument type='string' value='${state.summary}'/>
+			<argument name='value' type='int16' value='${agent.value}' />
+			<argument name='level' type='string' value='${state.level}' />
+			<argument name='summary' type='string' value='${state.summary}' />
 				
 		</alert>
 

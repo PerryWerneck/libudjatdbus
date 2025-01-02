@@ -18,7 +18,7 @@
  */
 
  #include <config.h>
- #include "private.h"
+ #include <udjat/defs.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/xml.h>
  #include <udjat/tools/dbus/connection.h>

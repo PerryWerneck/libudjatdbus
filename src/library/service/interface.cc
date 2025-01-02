@@ -67,11 +67,14 @@
 		throw system_error(ENOENT,system_category(),String{"Cant find interface '",intfname,"'"});
 	}
 
-	void DBus::Service::Interface::introspect(std::iostream &xmldata) const {
+	void DBus::Service::Interface::introspect(std::stringstream &xmldata) const {
 
+		debug("Introspecting interface ",interface());
 		xmldata << "<interface name=\"" << interface() << "\">";
 
 		for(const auto &handler : *this) {
+
+			debug("Introspecting handler ",handler.name());
 
 			xmldata << "<method name=\"" << handler.name() << "\">";
 
