@@ -12,18 +12,14 @@
 # license that conforms to the Open Source Definition (Version 1.9)
 # published by the Open Source Initiative.
 
-# Please submit bugfixes or comments via https://github.com/PerryWerneck/libudjadbus/issues
+# Please submit bugfixes or comments via https://github.com/PerryWerneck/libudjatdbus/issues
 #
 
 %define module_name dbus
 
-%define product_name %(pkg-config --variable=product_name libudjat)
-%define product_version %(pkg-config --variable=product_version libudjat)
-%define module_path %(pkg-config --variable=module_path libudjat)
-
-Summary:		DBus client/server library for %{product_name}  
+Summary:		DBus client/server library for %{udjat_product_name}  
 Name:			libudjat%{module_name}
-Version: 2.0.1
+Version:		2.0.0
 Release:		0
 License:		LGPL-3.0
 Source:			%{name}-%{version}.tar.xz
@@ -33,70 +29,36 @@ URL:			https://github.com/PerryWerneck/libudjat%{module_name}
 Group:			Development/Libraries/C and C++
 BuildRoot:		/var/tmp/%{name}-%{version}
 
-BuildRequires:	binutils
-BuildRequires:	coreutils
-
-%if "%{_vendor}" == "debbuild"
-BuildRequires:  meson-deb-macros
-BuildRequires:	libdbus-1-dev
-BuildRequires:	libudjat-dev
-%else
 BuildRequires:	gcc-c++ >= 5
 BuildRequires:	pkgconfig(dbus-1)
-BuildRequires:	pkgconfig(libudjat)
-%endif
+BuildRequires:	pkgconfig(libudjat) >= 2.0
+BuildRequires:	pkgconfig(systemd)
 
-%if 0%{?suse_version} == 01500
-BuildRequires:  meson = 0.61.4
-%else
-BuildRequires:  meson
-%endif
+BuildRequires:	meson >= 0.61.4
 
 %description
-DBus client/server library for %{product_name}
+DBus client/server library for %{udjat_product_name}
 
-C++ DBus client and server classes for use with lib%{product_name}
+C++ DBus client and server classes for use with lib%{udjat_product_name}
 
-#---[ Library ]-------------------------------------------------------------------------------------------------------
+%package -n %{udjat_library}
+Summary: DBus client/server library for %{udjat_product_name}
 
-%define MAJOR_VERSION %(echo %{version} | cut -d. -f1)
-%define MINOR_VERSION %(echo %{version} | cut -d. -f2 | cut -d+ -f1)
-%define _libvrs %{MAJOR_VERSION}_%{MINOR_VERSION}
+%description -n %{udjat_library}
+DBus client/server library for %{udjat_product_name}
 
-%package -n %{name}%{_libvrs}
-Summary: DBus client/server library for %{product_name}
-
-%description -n %{name}%{_libvrs}
-DBus client/server library for %{product_name}
-
-C++ DBus client/service classes for use with lib%{product_name}
-
-#---[ Development ]---------------------------------------------------------------------------------------------------
+C++ DBus client/service classes for use with lib%{udjat_product_name}
 
 %package devel
 Summary: Development files for %{name}
-Requires: %{name}%{_libvrs} = %{version}
-
-%if "%{_vendor}" == "debbuild"
-Provides:	%{name}-dev
-Provides:	pkgconfig(%{name})
-Provides:	pkgconfig(%{name}-static)
-%endif
+%udjat_devel_requires
 
 %description devel
-DBus client/server library for %{product_name}
+DBus client/server library for %{udjat_product_name}
 
-C++ DBus client/server classes for use with lib%{product_name}
+C++ DBus client/server classes for use with lib%{udjat_product_name}
 
-#---[ Module ]--------------------------------------------------------------------------------------------------------
-
-%package -n %{product_name}-module-%{module_name}
-Summary: DBus module for %{name}
-
-%description -n %{product_name}-module-%{module_name}
-%{product_name} module with http client support.
-
-#---[ Build & Install ]-----------------------------------------------------------------------------------------------
+%udjat_module_package -n %{module_name}
 
 %prep
 %autosetup
@@ -108,12 +70,9 @@ Summary: DBus module for %{name}
 %install
 %meson_install
 
-%files -n %{name}%{_libvrs}
+%files -n %{udjat_library}
 %defattr(-,root,root)
-%{_libdir}/%{name}.so.%{MAJOR_VERSION}.%{MINOR_VERSION}
-
-%files -n %{product_name}-module-%{module_name}
-%{module_path}/*.so
+%{_libdir}/%{name}.so.%{udjat_major}.%{udjat_minor}
 
 %files devel
 %defattr(-,root,root)
@@ -123,14 +82,15 @@ Summary: DBus module for %{name}
 %{_libdir}/pkgconfig/*.pc
 
 %dir %{_includedir}/udjat/tools/dbus
+%{_includedir}/udjat/tools/*.h
 %{_includedir}/udjat/tools/dbus/*.h
 
 %dir %{_includedir}/udjat/alert
 %{_includedir}/udjat/alert/*.h
 
-%post -n %{name}%{_libvrs} -p /sbin/ldconfig
+%post -n %{udjat_library} -p /sbin/ldconfig
 
-%postun -n %{name}%{_libvrs} -p /sbin/ldconfig
+%postun -n %{udjat_library} -p /sbin/ldconfig
 
 %changelog
 

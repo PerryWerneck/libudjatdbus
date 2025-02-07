@@ -254,6 +254,7 @@
 
 			// Build request.
 			Udjat::Request request{dbus_message_get_path(message)};
+			
 			{
 				DBusMessageIter iter;
 				if(dbus_message_iter_init(message,&iter)) {

@@ -1,0 +1,35 @@
+Source: libudjatdbus
+Section: unknown
+Priority: optional
+Maintainer: Perry Werneck <perry.werneck@gmail.com>
+Build-Depends: debhelper (>= 7), meson, pkg-config, libudjat2-dev, libdbus-1-dev
+
+Package: libudjatdbus
+Architecture: any
+Section: libs
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Provides: libudjatdbus (= ${binary:Version})
+Description: Udjat core library.
+ Udjat core library.
+
+Package: udjat-module-dbus
+Architecture: any
+Section: libs
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Udjat core library.
+ Udjat core library.
+
+Package: libudjatdbus-dev
+Architecture: any
+Provides: libudjatdbus-dev (= ${binary:Version})
+Section: libdevel
+Depends: ${misc:Depends}, libdbus-1-dev, libudjat-dev, libudjatdbus (= ${binary:Version})
+Description: Libudjat development files.
+ Development headers for libudjatdbus
+
+Package: libudjatdbus-dbg
+Architecture: any
+Depends: libudjatdbus (= ${binary:Version})
+Description: Debugging symbols for libudjatdbus
+ This package contains the debugging symbols for libudjatdbus.
+

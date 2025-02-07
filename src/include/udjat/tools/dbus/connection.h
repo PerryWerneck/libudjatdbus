@@ -245,11 +245,11 @@
 			UserBus(uid_t uid, const char *sid = "");
 
 			/// @brief Execute function as user's effective id, serialize to avoid conflicts.
-			static void exec(uid_t uid, const std::function<void()> &func);
+			static int exec(uid_t uid, const std::function<int()> &func);
 
 			/// @brief Execute function as user's effective id.
-			inline void exec(const std::function<void()> &func) const {
-				exec(userid,func);
+			inline int exec(const std::function<int()> &func) const {
+				return exec(userid,func);
 			};
 
 		};
