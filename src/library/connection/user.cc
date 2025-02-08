@@ -233,28 +233,52 @@
 		// TODO: https://stackoverflow.com/questions/1223600/change-uid-gid-only-of-one-thread-in-linux#:~:text=To%20change%20the%20uid%20only,sends%20to%20all%20threads)!&text=The%20Linux%2Dspecific%20setfsuid(),thread%20rather%20than%20per%2Dprocess.
 		// https://patchwork.kernel.org/project/linux-nfs/patch/1461677655-68294-3-git-send-email-kolga@netapp.com/
 		// sys_setresuid
-		
+
+		debug(__FUNCTION__,"(",uid,")");
+
 		static mutex guard;
 		lock_guard<mutex> lock(guard);
 
-		uid_t saved_uid = geteuid();
-		if(seteuid(uid) < 0) {
-			throw std::system_error(errno, std::system_category(), "Cant set effective user id");
+		uid_t real, effective, saved;
+
+		if(getresuid(&real,&effective,&saved) < 0) {
+			throw std::system_error(errno, std::system_category(), "Cant get process user ids");
 		}
+
+		debug("real=",real," effective=",effective," saved=",saved);
+
+		if(setresuid(uid, uid, saved) < 0) {
+			throw std::system_error(errno, std::system_category(), "Cant set process user ids");
+		}
+
+		Logger::String{"Context changed to user '",getuid(),"'."}.write(Logger::Debug);
 
 		int rc = -1;
 		try {
 
+			debug("geteuid() = ",geteuid(), " getuid()=",getuid());
 			rc = func();
+
+		} catch(const std::exception &e) {
+
+			Logger::String{"Exception while running as user(",getuid(),"), returning to user(",saved,"): ",e.what()}.trace();
+			setresuid(real, effective, 0);
+			throw;
 
 		} catch(...) {
 
-			seteuid(saved_uid);
+			Logger::String{"Unexpected exception while running as user(",getuid(),"), returning to user(", saved,")"}.write(Logger::Debug);
+			setresuid(real, effective, 0);
 			throw;
 		}
 
-		seteuid(saved_uid);
+		Logger::String{"Context restored to user '",uid,"'."}.write(Logger::Debug);
 
+		if(setresuid(real, effective, 0) < 0) {
+			throw std::system_error(errno, std::system_category(), "Cant restore process user ids");
+		}
+
+		debug("rc=",rc);
 		return rc;
 
 	}

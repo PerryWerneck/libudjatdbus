@@ -71,6 +71,7 @@ compiler_flags = [
   '-fPIC',
   '-DHAVE_CONFIG_H=1',
   '-DBUILD_DATE='+time_epoch,
+  '-DLOG_DOMAIN="d-bus"',
 ]
 
 if enable_debug
