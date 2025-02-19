@@ -33,7 +33,7 @@
  #include <unistd.h>
  #include <sys/types.h>
  #include <sys/stat.h>
- #include <udjat/tools/file.h>
+ #include <udjat/tools/file/text.h>
  #include <pwd.h>
 
  #ifdef HAVE_SYSTEMD
@@ -239,43 +239,25 @@
 		static mutex guard;
 		lock_guard<mutex> lock(guard);
 
-		uid_t real, effective, saved;
-
-		if(getresuid(&real,&effective,&saved) < 0) {
-			throw std::system_error(errno, std::system_category(), "Cant get process user ids");
+		// Save application EUID and switch to required UID.
+		uid_t saved_uid = geteuid();
+		if(seteuid(uid) < 0) {
+			throw std::system_error(errno, std::system_category(), "Unable to set effective user id");
 		}
-
-		debug("real=",real," effective=",effective," saved=",saved);
-
-		if(setresuid(uid, uid, saved) < 0) {
-			throw std::system_error(errno, std::system_category(), "Cant set process user ids");
-		}
-
-		Logger::String{"Context changed to user '",getuid(),"'."}.write(Logger::Debug);
 
 		int rc = -1;
 		try {
 
-			debug("geteuid() = ",geteuid(), " getuid()=",getuid());
 			rc = func();
-
-		} catch(const std::exception &e) {
-
-			Logger::String{"Exception while running as user(",getuid(),"), returning to user(",saved,"): ",e.what()}.trace();
-			setresuid(real, effective, 0);
-			throw;
 
 		} catch(...) {
 
-			Logger::String{"Unexpected exception while running as user(",getuid(),"), returning to user(", saved,")"}.write(Logger::Debug);
-			setresuid(real, effective, 0);
+			seteuid(saved_uid);
 			throw;
 		}
 
-		Logger::String{"Context restored to user '",uid,"'."}.write(Logger::Debug);
-
-		if(setresuid(real, effective, 0) < 0) {
-			throw std::system_error(errno, std::system_category(), "Cant restore process user ids");
+		if(seteuid(saved_uid) < 0) {
+			throw std::system_error(errno, std::system_category(), "Unable to restore effective user id");
 		}
 
 		debug("rc=",rc);
