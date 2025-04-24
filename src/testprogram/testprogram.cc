@@ -60,6 +60,11 @@
 
 		new Module();
 
+		Logger::String{
+			"NetworkManager is ",
+			(const char *) (SystemBus::getInstance().has_name_owner("org.freedesktop.NetworkManager") ? "running" : "not running")
+		}.info();
+
 		// 2 asynchronous calls chained.
 		SystemBus::getInstance().call(
 			DBus::Message{
