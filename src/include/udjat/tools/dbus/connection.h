@@ -101,7 +101,7 @@
 				return object_name.c_str();
 			}
 
-			bool has_name_owner(const char *name) const;
+			bool name_has_owner(const char *name) const;
 
 			inline DBusConnection * connection() const noexcept {
 				return conn;

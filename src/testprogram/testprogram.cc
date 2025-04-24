@@ -62,7 +62,7 @@
 
 		Logger::String{
 			"NetworkManager is ",
-			(const char *) (SystemBus::getInstance().has_name_owner("org.freedesktop.NetworkManager") ? "running" : "not running")
+			(const char *) (SystemBus::getInstance().name_has_owner("org.freedesktop.NetworkManager") ? "running" : "not running")
 		}.info();
 
 		// 2 asynchronous calls chained.

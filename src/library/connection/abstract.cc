@@ -231,13 +231,13 @@
 
 	}
 
-	bool DBus::Connection::has_name_owner(const char *name) const {
+	bool DBus::Connection::name_has_owner(const char *name) const {
 
 		DBus::Error error;
 		dbus_bool_t rc = dbus_bus_name_has_owner(conn, name, error);
 		error.verify();
 		return rc;
-		
+
 	};
 
 	void DBus::Connection::flush() noexcept {
