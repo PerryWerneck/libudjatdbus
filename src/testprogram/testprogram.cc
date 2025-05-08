@@ -31,6 +31,7 @@
  #include <udjat/tools/dbus/signal.h>
  #include <udjat/module/dbus.h>
  #include <udjat/tools/logger.h>
+ #include <udjat/version.h>
 
  using namespace std;
  using namespace Udjat;
@@ -50,7 +51,7 @@
 						(const ModuleInfo &) *this,
 						DBus::Connection::getInstance(DBUS_BUS_STARTER),
 						"dbus",
-						String{PRODUCT_ID,".",Application::Name().c_str()}.as_quark()
+						String{UDJAT_PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()
 					} { }
 
 			virtual ~Module() {

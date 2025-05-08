@@ -97,8 +97,6 @@ app_conf.set('PACKAGE_VERSION_MAJOR', pkg_major_version)
 app_conf.set('PACKAGE_VERSION_MINOR', pkg_minor_version)
 app_conf.set('PACKAGE_VERSION_MICRO', pkg_micro_version)
 
-app_conf.set_quoted('PRODUCT_ID', libudjat.get_variable('product_id'))
-
 if cxx.compiles('#include <unistd.h>', name : 'unistd.h')
   app_conf.set('HAVE_UNISTD_H', 1)
 endif

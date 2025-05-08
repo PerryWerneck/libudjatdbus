@@ -37,6 +37,7 @@
  #include <dbus/dbus-protocol.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/application.h>
+ #include <udjat/version.h>
  #include <vector>
  
  using namespace std;
@@ -46,7 +47,7 @@
  	static const Udjat::ModuleInfo moduleinfo { "dbus" STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " module" };
 
 	DBus::Service::Service() 
-		: DBus::Service::Service{moduleinfo,"dbus",String{PRODUCT_ID,".",Application::Name().c_str()}.as_quark()} {
+		: DBus::Service::Service{moduleinfo,"dbus",String{UDJAT_PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()} {
 	}
 
 	DBus::Module::Module() : Udjat::Module{"dbus",moduleinfo} {
