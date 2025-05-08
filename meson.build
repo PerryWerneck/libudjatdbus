@@ -66,7 +66,6 @@ endif
 
 compiler_flags = [
   '-ggdb3',
-  '-ffat-lto-objects',
   '-fvisibility=hidden',
   '-fPIC',
   '-DHAVE_CONFIG_H=1',
@@ -173,6 +172,7 @@ dynamic = shared_library(
   meson.project_name(), 
   config_src + lib_src,
   install: true,
+  cpp_args: [ '-ffat-lto-objects' ],
   version : libversion,
   soversion : libversion,
   gnu_symbol_visibility: 'hidden',
@@ -183,6 +183,7 @@ dynamic = shared_library(
 static_library(
   meson.project_name(), 
   config_src + lib_src,
+  cpp_args: [ '-DSTATIC_LIBRARY', '-fno-lto' ],
   install: true,
   dependencies: lib_deps,
   include_directories: includes_dir
