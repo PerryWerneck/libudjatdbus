@@ -111,11 +111,11 @@
 		case DBUS_TYPE_ARRAY:
 			// TODO: Convert to Value::Array
 			// Reference: https://android.googlesource.com/platform/frameworks/base/+/a45746e/core/jni/android_bluetooth_common.cpp
-			throw runtime_error("Unsupported DBUS_TYPE_ARRAY value");
+			throw system_error(ENOTSUP,system_category(),"Unsupported DBUS_TYPE_ARRAY value");
 
 		case DBUS_TYPE_DICT_ENTRY:
 			// TODO: Convert to Value::Object
-			throw runtime_error("Unsupported DBUS_TYPE_DICT_ENTRY value");
+			throw system_error(ENOTSUP,system_category(),"Unsupported DBUS_TYPE_DICT_ENTRY value");
 
 		case DBUS_TYPE_VARIANT:
 			{
@@ -123,6 +123,7 @@
 				dbus_message_iter_recurse(iter, &sub);
 				to_value(&sub,value);
 			}
+			break;
 
 		case DBUS_TYPE_STRING:
 		case DBUS_TYPE_OBJECT_PATH:
@@ -146,7 +147,7 @@
 			break;
 
 		default:
-			throw runtime_error("Unexpected d-bus value");
+			throw system_error(EINVAL,system_category(),"Unexpected d-bus value");
 
 		}
 
