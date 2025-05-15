@@ -224,6 +224,11 @@ install_headers(
 )
 
 install_headers(
+  'src/include/udjat/module/dbus.h',
+  subdir: 'udjat/module'  
+)
+
+install_headers(
   'src/include/udjat/tools/dbus/connection.h',
   'src/include/udjat/tools/dbus/defs.h',
   'src/include/udjat/tools/dbus/interface.h',
