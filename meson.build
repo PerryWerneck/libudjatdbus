@@ -204,11 +204,11 @@ module = shared_library(
 )
 
 executable(
-  'dbustest',
+  meson.project_name(),
   config_src + test_src,
   install: false,
   link_with : [ dynamic, module ],
-  link_args: [ '-l:libudjat-testing.a' ],
+#  link_args: [ '-l:libudjat-testing.a' ],
   dependencies: [ libudjat, dbus ],
   include_directories: includes_dir
 )
