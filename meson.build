@@ -208,7 +208,7 @@ executable(
   config_src + test_src,
   install: false,
   link_with : [ dynamic, module ],
-#  link_args: [ '-l:libudjat-testing.a' ],
+  link_args: [ '-l:libudjat-loader.a' ],
   dependencies: [ libudjat, dbus ],
   include_directories: includes_dir
 )
