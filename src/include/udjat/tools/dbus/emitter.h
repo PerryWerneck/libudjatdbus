@@ -75,8 +75,12 @@
 				Argument(int t, const char *s) : type{t}, value{s} {
 				}
 
+#if __cplusplus >= 201703L			
 				Argument(int t, const DBusBasicValue &v) : type{t}, dbval{v} {
 				}
+#else
+				Argument(int t, const DBusBasicValue &v);
+#endif
 
 			};
 			std::vector<Argument> arguments;

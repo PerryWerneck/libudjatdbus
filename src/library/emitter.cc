@@ -125,6 +125,12 @@
 		throw runtime_error("Unsupported argument type");
 	}
 
+#if __cplusplus < 201703L			
+	DBus::Emitter::Argument::Argument(int t, const DBusBasicValue &v) : type{t} {
+		dbval = v;
+	}
+#endif
+
 	DBus::Emitter::Output::Output(const XML::Node &node) : name{String{node,"name"}.as_quark()}, type{TypeFactory(node)} {
 
 		if(!(name && *name)) {
