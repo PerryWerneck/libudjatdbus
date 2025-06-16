@@ -27,7 +27,6 @@
 	return loader(argc,argv);
  }
 
-
  /*
  #include <config.h>
  #include <udjat/defs.h>

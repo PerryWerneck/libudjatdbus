@@ -122,6 +122,7 @@
 
 			Interface & emplace_back(const char *interface);
 
+#if __cplusplus >= 201703L			
 			inline auto begin() const {
 				return interfaces.begin();
 			}
@@ -129,6 +130,15 @@
 			inline auto end() const {
 				return interfaces.end();
 			}
+#else
+			inline std::list<Interface>::const_iterator begin() const {
+				return interfaces.begin();
+			}
+
+			inline std::list<Interface>::const_iterator end() const {
+				return interfaces.end();
+			}
+#endif
 
 			/// @brief Emit signal.
 			void signal(const Signal &sig);
