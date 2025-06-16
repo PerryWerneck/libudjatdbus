@@ -299,7 +299,12 @@
 			}
 		}
 
+#if __cplusplus >= 201703
 		Udjat::DBus::Interface & interface = interfaces.emplace_back(intf);
+#else
+		interfaces.emplace_back(intf);
+		Udjat::DBus::Interface & interface = interfaces.back();
+#endif
 		insert(interface);
 
 		return interface;

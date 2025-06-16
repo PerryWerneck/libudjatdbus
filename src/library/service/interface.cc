@@ -124,7 +124,12 @@
 		if(!(name && *name)) {
 			throw runtime_error("Required handler name is missing or empty (hint: attributes dbus-name or name)");
 		}
+#if __cplusplus >= 201703
 		return emplace_back(name,node);
+#else
+		emplace_back(name,node);
+		return back();
+#endif
 	}
 
 	/// @brief Import value from iter to Udjat::Value
@@ -189,7 +194,12 @@
 		case Value::Icon:
 		case Value::Url:
 			{
+#if __cplusplus >= 201703
 				String &svalue = strings.emplace_back(value.to_string());
+#else
+				strings.emplace_back(value.to_string());
+				String &svalue = strings.back();
+#endif
 				dbval.str = (char *) svalue.c_str();
 				dbus_message_iter_append_basic(iter,DBUS_TYPE_STRING,&dbval.str);
 			}
@@ -199,7 +209,12 @@
 			{
 				time_t tm;
 				value.get(tm);
+#if __cplusplus >= 201703
 				String &svalue = strings.emplace_back(TimeStamp{tm}.to_string(TIMESTAMP_FORMAT_JSON));
+#else
+				strings.emplace_back(TimeStamp{tm}.to_string(TIMESTAMP_FORMAT_JSON));
+				String &svalue = strings.back();
+#endif
 				dbval.str = (char *) svalue.c_str();
 				dbus_message_iter_append_basic(iter,DBUS_TYPE_STRING,&dbval.str);
 			}

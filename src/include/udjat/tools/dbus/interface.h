@@ -90,6 +90,7 @@
 
 			void remove(const Udjat::DBus::Member &member);
 
+#if __cplusplus >= 201703
 			inline auto begin() const noexcept {
 				return members.begin();
 			}
@@ -97,6 +98,15 @@
 			inline auto end() const noexcept {
 				return members.end();
 			}
+#else
+			inline std::list<Udjat::DBus::Member>::const_iterator begin() const noexcept {
+				return members.begin();
+			}
+
+			inline std::list<Udjat::DBus::Member>::const_iterator end() const noexcept {
+				return members.end();
+			}
+#endif
 
 		};
 

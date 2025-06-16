@@ -330,7 +330,12 @@
 		}
 
 		// It's a new interface, insert it.
+#if __cplusplus >= 201703	
 		return interfaces.emplace_back(node,intfname.as_quark());
+#else
+		interfaces.emplace_back(node,intfname.as_quark());
+		return interfaces.back();
+#endif
 	}
 
 

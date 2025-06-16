@@ -91,11 +91,21 @@
 	}
 
 	Udjat::DBus::Member & DBus::Interface::push_back(const XML::Node &node,const std::function<bool(Udjat::DBus::Message & message)> &callback) {
+#if __cplusplus >= 201703	
 		return members.emplace_back(node,callback);
+#else
+		members.emplace_back(node,callback);
+		return members.back();
+#endif
 	}
 
 	Udjat::DBus::Member & DBus::Interface::emplace_back(const char *member, const std::function<bool(Udjat::DBus::Message & message)> &callback) {
+#if __cplusplus >= 201703	
 		return members.emplace_back(member,callback);
+#else
+		members.emplace_back(member,callback);
+		return members.back();
+#endif
 	}
 
 	void DBus::Interface::remove(const Udjat::DBus::Member &member) {
