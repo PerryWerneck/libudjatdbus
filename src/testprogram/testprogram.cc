@@ -20,11 +20,37 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/loader.h>
+ #include <udjat/version.h>
+
+ #include <udjat/module/dbus.h>
+ #include <udjat/tools/dbus/service.h>
+ #include <udjat/tools/dbus/connection.h>
  
  using namespace Udjat;
 
  int main(int argc, char **argv) {
-	return loader(argc,argv);
+	return loader(argc,argv, [](Application &app) {
+
+		class Module : public DBus::Module, public DBus::Service {
+		public:
+			Module()
+				: DBus::Module{},
+					DBus::Service{
+						(const ModuleInfo &) *this,
+						DBus::Connection::getInstance(DBUS_BUS_STARTER),
+						"dbus",
+						String{UDJAT_PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()
+					} { }
+
+			virtual ~Module() {
+			}
+
+		};
+
+		new Module();
+
+	});
+
  }
 
  /*
