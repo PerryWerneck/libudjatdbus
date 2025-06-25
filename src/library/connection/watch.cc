@@ -123,6 +123,10 @@
 
  }
 
+ void wake_up(DBusConnection *) {
+	MainLoop::getInstance().wakeup();
+ }
+
  void Context::handle_event(const MainLoop::Handler::Event events) {
 
 #ifdef DEBUG
@@ -211,6 +215,13 @@
 	) {
 		throw runtime_error("dbus_connection_set_timeout_functions has failed");
 	}
+
+	dbus_connection_set_wakeup_main_function(
+		conn,
+		(DBusWakeupMainFunction) wake_up,
+		conn,
+		NULL
+	);
 
  }
 

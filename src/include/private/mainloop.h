@@ -38,6 +38,7 @@
 	UDJAT_PRIVATE dbus_bool_t add_watch(DBusWatch *w, DBusConnection *connection);
 	UDJAT_PRIVATE void remove_watch(DBusWatch *w, DBusConnection *connection);
 	UDJAT_PRIVATE void toggle_watch(DBusWatch *w, DBusConnection *connection);
+	UDJAT_PRIVATE void wake_up(DBusConnection *connection);
 
 	UDJAT_PRIVATE dbus_bool_t add_timeout(DBusTimeout *t, DBusConnection *connection);
 	UDJAT_PRIVATE void remove_timeout(DBusTimeout *t, DBusConnection *connection);
