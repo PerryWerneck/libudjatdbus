@@ -168,6 +168,7 @@ config_src = [
       configuration : app_conf
   )
 ]
+
 dynamic = shared_library(
   meson.project_name(), 
   config_src + lib_src,
@@ -180,13 +181,22 @@ dynamic = shared_library(
   include_directories: includes_dir
 )
 
-static_library(
-  meson.project_name(), 
-  config_src + lib_src,
-  cpp_args: [ '-DSTATIC_LIBRARY', '-fno-lto' ],
-  install: true,
+static_library = declare_dependency(
+  link_with: static_library(
+    meson.project_name(), 
+    config_src + lib_src,
+    cpp_args: [ '-DSTATIC_LIBRARY', '-fno-lto' ],
+    install: true,
+    dependencies: lib_deps,
+    include_directories: includes_dir
+  ),
+  include_directories: includes_dir,
   dependencies: lib_deps,
-  include_directories: includes_dir
+)
+
+dynamic_library = declare_dependency(
+  link_with: dynamic,
+  include_directories: includes_dir,
 )
 
 # https://mesonbuild.com/Reference-manual_functions.html#shared_library

@@ -191,8 +191,8 @@
 			return get_string(&sub);
 		}
 
-		char str[] = {(char) type,'\0'};
-		debug("Iterator type is '",str,"'");
+		// char str[] = {(char) type,'\0'};
+		// debug("Iterator type is '",str,"'");
 
 		switch(type) {
 		case DBUS_TYPE_STRING:
