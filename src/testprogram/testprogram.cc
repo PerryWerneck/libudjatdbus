@@ -20,7 +20,6 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/loader.h>
- #include <udjat/version.h>
 
  #include <udjat/module/dbus.h>
  #include <udjat/tools/dbus/service.h>
@@ -39,7 +38,7 @@
 						(const ModuleInfo &) *this,
 						DBus::Connection::getInstance(DBUS_BUS_STARTER),
 						"dbus",
-						String{UDJAT_PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()
+						String{PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()
 					} { }
 
 			virtual ~Module() {
@@ -68,7 +67,6 @@
  #include <udjat/tools/dbus/signal.h>
  #include <udjat/module/dbus.h>
  #include <udjat/tools/logger.h>
- #include <udjat/version.h>
 
  using namespace std;
  using namespace Udjat;
@@ -88,7 +86,7 @@
 						(const ModuleInfo &) *this,
 						DBus::Connection::getInstance(DBUS_BUS_STARTER),
 						"dbus",
-						String{UDJAT_PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()
+						String{PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()
 					} { }
 
 			virtual ~Module() {
@@ -234,7 +232,6 @@
  #include <udjat/tools/application.h>
  #include <udjat/module.h>
  #include <unistd.h>
- #include <udjat/version.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/message.h>

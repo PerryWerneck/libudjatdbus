@@ -26,7 +26,6 @@
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/application.h>
- #include <udjat/version.h>
 
  using namespace Udjat;
  
@@ -53,7 +52,7 @@
 	}
 
 	if(srvname.empty() && node.attribute("enable-service").as_bool(false)) {
-		srvname = String{UDJAT_PRODUCT_DOMAIN,".",Application::Name().c_str()};
+		srvname = String{PRODUCT_DOMAIN,".",Application::Name().c_str()};
 	}
 
 	if(srvname.empty()) {

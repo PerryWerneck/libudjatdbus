@@ -23,7 +23,6 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/version.h>
  #include <dbus/dbus.h>
  #include <string>
  #include <mutex>

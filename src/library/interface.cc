@@ -22,7 +22,6 @@
  #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/logger.h>
- #include <udjat/version.h>
  #include <stdexcept>
 
  using namespace std;
@@ -47,7 +46,7 @@
 				String name{node,attrname};
 				if(!name.empty()) {
 					if(name[0] == '.') {
-						return String{UDJAT_PRODUCT_DOMAIN,name.c_str()};
+						return String{PRODUCT_DOMAIN,name.c_str()};
 					}
 					return name;
 				}
@@ -65,7 +64,7 @@
 				String name{node,attrname};
 				if(!name.empty()) {
 					Logger::String{"Required interface name attribute is missing on <",node.name(),">, using default"}.warning();
-					return String{UDJAT_PRODUCT_DOMAIN,".",name.c_str()};
+					return String{PRODUCT_DOMAIN,".",name.c_str()};
 				}
 			}
 		}

@@ -28,7 +28,6 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/version.h>
  #include <dbus/dbus.h>
  #include <stdexcept>
  #include <udjat/tools/intl.h>
@@ -122,16 +121,16 @@
 			}
 
 			if(name[0] == '.') {
-				name = String{UDJAT_PRODUCT_DOMAIN,".",appname.c_str(),name.c_str()};
+				name = String{PRODUCT_DOMAIN,".",appname.c_str(),name.c_str()};
 			} else if(!strchr(name.c_str(),'.')) {
-				name = String{UDJAT_PRODUCT_DOMAIN,".",appname.c_str(),".",name.c_str()};
+				name = String{PRODUCT_DOMAIN,".",appname.c_str(),".",name.c_str()};
 			}
 			
 			return name.as_quark();
 
 		}
 
-		return String{UDJAT_PRODUCT_DOMAIN,".",appname.c_str()}.as_quark();
+		return String{PRODUCT_DOMAIN,".",appname.c_str()}.as_quark();
 	}
 
 	void DBus::Service::start() {
@@ -314,11 +313,11 @@
 		}
 
 		if(intfname.empty()) {
-			intfname = String{UDJAT_PRODUCT_DOMAIN,".",Application::Name().c_str()};
+			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str()};
 		} else if(intfname[0] == '.') {
-			intfname = String{UDJAT_PRODUCT_DOMAIN,".",Application::Name().c_str(),intfname.c_str()};
+			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str(),intfname.c_str()};
 		} else if(!strchr(intfname.c_str(),'.')) {
-			intfname = String{UDJAT_PRODUCT_DOMAIN,".",Application::Name().c_str(),".",intfname.c_str()};
+			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str(),".",intfname.c_str()};
 		}
 
 		// Check if interface is already registered.
