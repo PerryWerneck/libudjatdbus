@@ -1,4 +1,19 @@
 -------------------------------------------------------------------
+Sat Jul 05 01:59:03 UTC 2025 - perry.werneck@gmail.com
+
+- Update to version 2.0.2+git20250704:
+  * Updating to latest libudjat
+  * Removing udjat/version.h
+  * Adjustments to use as subproject.
+  * Adding mainloop wake-up requester.
+  * Updating to latest libudjat.
+  * Debugging legacy builds.
+  * Adding control files for legacy build.
+  * Adding files to enable legacy builds.
+  * Debugging legacy builds.
+  * Debugging legacy builds.
+
+-------------------------------------------------------------------
 Sat Feb 03 03:59:33 UTC 2024 - perry.werneck@gmail.com
 
 - Update to version 2.0+git20240202:
