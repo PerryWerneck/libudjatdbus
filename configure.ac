@@ -1,4 +1,3 @@
-
 dnl Process this file with autoconf to produce a configure script.
 
 dnl The minimum version of autoconf required.
@@ -6,7 +5,7 @@ AC_PREREQ(2.59)
 
 dnl Initialise automake with the package name, version and
 dnl bug-reporting address.
-AC_INIT([udjat-module-dbus], [2.0], [perry.werneck@gmail.com],[udjat-module-dbus],[https://github.com/PerryWerneck/udjat-module-dbus])
+AC_INIT([udjat-module-dbus], [2.0.2], [perry.werneck@gmail.com],[udjat-module-dbus],[https://github.com/PerryWerneck/udjat-module-http])
 
 dnl Place auxilliary scripts here.
 AC_CONFIG_AUX_DIR([scripts])
@@ -79,11 +78,7 @@ case "$host" in
 		AC_SUBST(EXEEXT)
 		AC_SUBST(OSNAME,linux)
 		AC_SUBST(SONAME,libudjatdbus.so.$app_vrs_major.$app_vrs_minor)
-		AC_CONFIG_FILES(sdk/linux/dynamic.pc)
-		AC_CONFIG_FILES(sdk/linux/static.pc)
 		
-		PKG_CHECK_MODULES( [SYSTEMD], [libsystemd], AC_DEFINE(HAVE_SYSTEMD,[],[Do we have systemd?]), AC_MSG_NOTICE([libsystemd not present.]) )
-
 esac
 
 AC_SUBST(SYSTEMD_LIBS)
@@ -117,7 +112,11 @@ AS_IF([test x"AS_VAR_GET(CACHEVAR)" = xyes],
 AS_VAR_POPDEF([CACHEVAR])dnl
 ])dnl AX_CHECK_COMPILE_FLAGS
 
-AX_CHECK_COMPILE_FLAG([-std=c++17], [CPPFLAGS="$CPPFLAGS -std=c++17"], [AC_MSG_ERROR(["C++ 17 is required"])])
+AX_CHECK_COMPILE_FLAG([-std=c++1z], [CPPFLAGS="$CPPFLAGS -std=c++1z"], [app_cv_c17=no])
+
+if test "$app_cv_c17" == "no"; then
+	AX_CHECK_COMPILE_FLAG([-std=c++11], [CPPFLAGS="$CPPFLAGS -std=c++11 -DLEGACY_BUILD=1"], [app_cv_c11=no])
+fi
 
 dnl ---------------------------------------------------------------------------
 dnl Set the ELF symbol visibility support
@@ -180,15 +179,19 @@ app_cv_product=`pkg-config --variable=product_name libudjat`
 AC_DEFINE_UNQUOTED(PRODUCT_NAME, $app_cv_product, [The product name])
 AC_SUBST(PRODUCT_NAME,$app_cv_product)
 
+app_cv_product_id=`pkg-config --variable=product_id libudjat`
+AC_DEFINE_UNQUOTED(PRODUCT_ID, $app_cv_product_id, [The product id])
+AC_SUBST(PRODUCT_NAME,$app_cv_product_id)
+
 app_cv_module_path=`pkg-config --variable=module_path libudjat`
 AC_DEFINE_UNQUOTED(MODULE_PATH, $app_cv_module_path, [The path for module installation])
 AC_SUBST(MODULE_PATH,$app_cv_module_path)
 
 dnl ---------------------------------------------------------------------------
-dnl Check for libdbus
+dnl Check for DBUS
 dnl ---------------------------------------------------------------------------
 
-PKG_CHECK_MODULES( [DBUS], [dbus-1], AC_DEFINE(HAVE_DBUS,[],[Do we have d-bus?]), AC_MSG_ERROR([ No DBUS support.]) )
+PKG_CHECK_MODULES(DBUS, dbus-1, AC_DEFINE(HAVE_DBUS,[],[Do we have libdbus?]), AC_MSG_ERROR([ No DBUS support.]) )
 AC_SUBST(DBUS_LIBS)
 AC_SUBST(DBUS_CFLAGS)
 
@@ -207,10 +210,11 @@ dnl ---------------------------------------------------------------------------
 
 AC_SUBST(BASEDIR,$ac_pwd)
 AC_CONFIG_FILES(Makefile)
+AC_CONFIG_FILES(static.pc)
+AC_CONFIG_FILES(dynamic.pc)
 
 dnl ---------------------------------------------------------------------------
 dnl Output the generated config.status script.
 dnl ---------------------------------------------------------------------------
 
 AC_OUTPUT
-

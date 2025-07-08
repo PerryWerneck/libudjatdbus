@@ -31,34 +31,66 @@
 
  namespace Udjat {
 
+	namespace Abstract {
+
+		namespace DBus {
+
+			class UDJAT_API Interface : public std::string {
+			protected:
+				const char *type;
+
+			public:
+
+				/// @brief Get interface name from XML node.
+				/// @param node Node with interface definition.
+				/// @return The interface name.
+				static Udjat::String NameFactory(const XML::Node &node);
+
+				virtual DBusHandlerResult filter(DBusMessage *message) const = 0;
+
+				Interface(const char *name, const char *type = "signal");
+				Interface(const XML::Node &node, const char *type = "signal");
+				virtual ~Interface();
+
+				bool operator==(const char *intf) const noexcept;
+
+				/// @brief Get textual form of match rule for this interface.
+				const std::string rule() const;
+
+			};
+
+		}
+
+	}
+
 	namespace DBus {
 
-		class UDJAT_API Interface : public std::string {
+		class UDJAT_API Interface : public Abstract::DBus::Interface {
 		private:
-
-			const char *type;
 			std::list<Udjat::DBus::Member> members;
 
 		public:
-			Interface(const char *name);
-			Interface(const XML::Node &node);
 
-			~Interface();
+			virtual DBusHandlerResult filter(DBusMessage *message) const override;
 
-			bool operator==(const char *intf) const noexcept;
+			Interface(const char *name, const char *type = "signal") : Abstract::DBus::Interface{name,type} {
+			}
+
+			Interface(const XML::Node &node, const char *type = "signal"): Abstract::DBus::Interface{node,type} {
+			}
+
+			virtual ~Interface();
 
 			inline bool empty() const noexcept {
 				return members.empty();
 			}
 
-			Udjat::DBus::Member & push_back(const XML::Node &node,const std::function<void(Message & message)> &callback);
-			Udjat::DBus::Member & emplace_back(const char *member, const std::function<void(Message & message)> &callback);
+			Udjat::DBus::Member & push_back(const XML::Node &node,const std::function<bool(Message & message)> &callback);
+			Udjat::DBus::Member & emplace_back(const char *member, const std::function<bool(Message & message)> &callback);
 
 			void remove(const Udjat::DBus::Member &member);
 
-			/// @brief Get textual form of match rule for this interface.
-			const std::string rule() const;
-
+#if __cplusplus >= 201703
 			inline auto begin() const noexcept {
 				return members.begin();
 			}
@@ -66,6 +98,15 @@
 			inline auto end() const noexcept {
 				return members.end();
 			}
+#else
+			inline std::list<Udjat::DBus::Member>::const_iterator begin() const noexcept {
+				return members.begin();
+			}
+
+			inline std::list<Udjat::DBus::Member>::const_iterator end() const noexcept {
+				return members.end();
+			}
+#endif
 
 		};
 

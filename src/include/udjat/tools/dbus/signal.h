@@ -77,7 +77,7 @@
 			void starter();
 
 			/// @brief Emit signal to the connection.
-			void emit(Abstract::DBus::Connection &connection);
+			void emit(DBus::Connection &connection);
 
 			/// @brief Emit signal directly to selected user bus.
 			void user(uid_t uid, const char *sid = "");
@@ -106,3 +106,7 @@
 
  }
 
+ template <typename T>
+ inline Udjat::DBus::Signal & operator<<(Udjat::DBus::Signal &signal, const T value) {
+	return signal.push_back(value);
+ }

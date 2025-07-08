@@ -18,24 +18,54 @@
  */
 
  /**
-  * @brief Common definitions for D-Bus library.
+  * @brief Declare D-Bus Exception.
   */
 
- #pragma once
 
  #pragma once
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
+ #include <stdexcept>
 
  namespace Udjat {
 
- 	namespace DBus {
+	namespace DBus {
 
-		class Message;
-		class Interface;
-		class Signal;
-		class Member;
+		class UDJAT_API Exception : public std::runtime_error {
+		private:
+			DBusMessage *error_message;
 
- 	}
+		public:
+			Exception(DBusMessage *message, const char *error_name, const char *error_text = nullptr);
+			~Exception();
 
+			void send(DBusConnection *connct) const noexcept;
+
+		};
+
+		class UDJAT_API Error {
+		private:
+			DBusError err;
+
+		public:
+			Error() {
+				dbus_error_init(&err);
+			}
+
+			~Error() {
+				dbus_error_free(&err);
+			}
+
+			inline operator DBusError *() noexcept {
+				return &err;
+			}
+
+			/// @brief Throw exception if error is set.
+			void verify();
+
+		};
+
+	}
  }
+
+

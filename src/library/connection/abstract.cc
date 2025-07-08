@@ -26,253 +26,200 @@
  #include <dbus/dbus.h>
  #include <string>
  #include <mutex>
+ #include <memory>
+ 
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/signal.h>
+ #include <udjat/tools/dbus/exception.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/mainloop.h>
- #include <private/mainloop.h>
  #include <udjat/tools/string.h>
-
+ 
+ #include <private/mainloop.h>
+ 
  using namespace std;
 
  namespace Udjat {
 
-	class DataSlot {
-	private:
-		dbus_int32_t slot = -1; // The passed-in slot must be initialized to -1, and is filled in with the slot ID
-		DataSlot() {
-			dbus_connection_allocate_data_slot(&slot);
-			Logger::String{"Got slot '",slot,"' for connection watchdog"}.trace("d-bus");
-		}
+	std::mutex DBus::Connection::guard;
 
-	public:
-
-		~DataSlot() {
-			dbus_connection_free_data_slot(&slot);
-		}
-
-		static DataSlot & getInstance() {
-			static DataSlot instance;
-			return instance;
-		}
-
-		inline dbus_int32_t value() const noexcept {
-			return slot;
-		}
-
-	};
-
-	std::mutex Abstract::DBus::Connection::guard;
-
-	static void trace_connection_free(const Abstract::DBus::Connection *connection) {
-		Logger::String("Connection '",((unsigned long) connection),"' was released").trace("d-bus");
-	}
-
-	DBusConnection * Abstract::DBus::Connection::SharedConnectionFactory(DBusBusType type) {
-
-		DBusError err;
-		dbus_error_init(&err);
-
-		DBusConnection * connct = dbus_bus_get(type, &err);
-		if(dbus_error_is_set(&err)) {
-			std::string message(err.message);
-			dbus_error_free(&err);
-			throw std::runtime_error(message);
-		}
-
-		return connct;
-
-	}
-
-	Abstract::DBus::Connection::Connection(const char *name, DBusConnection *c) : object_name{name}, conn{c} {
-
+	bool DBus::initialize() {
 		static bool initialized = false;
 		if(!initialized) {
-
 			initialized = true;
-
-			// Initialize d-bus threads.
-			Logger::String("Initializing d-bus thread system").trace("d-bus");
+			Logger::String("Initializing d-bus thread system").trace();
 			dbus_threads_init_default();
+			return true;
+		}
+		return false;
+	}
 
+	DBusBusType UDJAT_API DBus::BusTypeFactory(const XML::Node &node) {
+
+		String type{node,"dbus-bus-name"};
+		if(type.empty()) {
+			type = String{node,"bus-name"};
 		}
 
+		if(type.empty()) {
+			Logger::String{"Required attribute bus-name is missing on <",node.name(),">, using default"}.warning();
+			return DBUS_BUS_STARTER;
+		}
+
+		static const struct {
+			DBusBusType type;
+			const char *name;
+		} busnames[] = {
+			{ DBUS_BUS_SYSTEM, "system"		},
+			{ DBUS_BUS_SESSION, "session"	},
+			{ DBUS_BUS_STARTER, "starter"	},
+		};
+
+		for(const auto &bus : busnames) {
+			if(!strcasecmp(type.c_str(),bus.name)) {
+				return bus.type;
+			}
+		}
+
+		throw runtime_error("Required attribute bus-name is invalid");
+
 	}
 
-	Abstract::DBus::Connection::~Connection() {
+	DBus::Connection & DBus::Connection::getInstance(const XML::Node &node) {
+		return getInstance(DBus::BusTypeFactory(node));
 	}
 
-	void Abstract::DBus::Connection::open() {
+	DBus::Connection & DBus::Connection::getInstance(DBusBusType bustype) {
+
+		switch(bustype) {
+		case DBUS_BUS_SYSTEM:
+			return DBus::SystemBus::getInstance();
+
+		case DBUS_BUS_SESSION:
+			return DBus::SessionBus::getInstance();
+
+		case DBUS_BUS_STARTER:
+			return DBus::StarterBus::getInstance();
+		}
+
+		throw system_error(EINVAL,system_category(),"Invalid bus type");
+
+	}
+
+	DBus::Connection::Connection(const char *name, DBusConnection *c) : object_name{name}, conn{c} {
 
 		lock_guard<mutex> lock(guard);
+
+		initialize();
 
 		// Keep running if d-bus disconnect.
 		dbus_connection_set_exit_on_disconnect(conn, false);
 
-		// Add message filter.
-		if (dbus_connection_add_filter(conn, (DBusHandleMessageFunction) filter, this, NULL) == FALSE) {
-			throw std::runtime_error("Cant add filter to D-Bus connection");
-		}
+		try {
 
-		// Initialize Main loop.
-		MainLoop::getInstance();
-
-		// Set watch functions.
-		if(!dbus_connection_set_watch_functions(
-			conn,
-			(DBusAddWatchFunction) add_watch,
-			(DBusRemoveWatchFunction) remove_watch,
-			(DBusWatchToggledFunction) toggle_watch,
-			this,
-			nullptr)
-		) {
-			throw runtime_error("dbus_connection_set_watch_functions has failed");
-		}
-
-		// Set timeout functions.
-		if(!dbus_connection_set_timeout_functions(
-			conn,
-			(DBusAddTimeoutFunction) add_timeout,
-			(DBusRemoveTimeoutFunction) remove_timeout,
-			(DBusTimeoutToggledFunction) toggle_timeout,
-			this,
-			nullptr)
-		) {
-			throw runtime_error("dbus_connection_set_timeout_functions has failed");
-		}
-
-
-		if(Logger::enabled(Logger::Trace)) {
-
-			dbus_connection_set_data(conn,DataSlot::getInstance().value(),this,(DBusFreeFunction) trace_connection_free);
-
-			int fd = -1;
-			if(dbus_connection_get_socket(conn,&fd)) {
-				Logger::String("Allocating connection '",((unsigned long) this),"' with socket '",fd,"'").trace(name());
-			} else {
-				Logger::String("Allocating connection '",((unsigned long) this),"'").trace(name());
+			// Add message filter.
+			if (dbus_connection_add_filter(conn, (DBusHandleMessageFunction) on_message, this, NULL) == FALSE) {
+				throw std::runtime_error("Cant add filter to D-Bus connection");
 			}
 
+			if(Logger::enabled(Logger::Debug)) {
+
+				int fd = -1;
+				if(dbus_connection_get_socket(conn,&fd)) {
+					Logger::String("Allocating connection '",((unsigned long) this),"' with socket '",fd,"'").write(Logger::Debug,name);
+				} else {
+					Logger::String("Allocating connection '",((unsigned long) this),"'").write(Logger::Debug,name);
+				}
+
+			}
+
+		} catch(...) {
+
+			if(conn) {
+				Logger::String{"Closing private connection due to initialization error"}.error(name);
+				dbus_connection_unref(conn);
+				conn = NULL;
+			}
+
+			throw;
+
 		}
 
 	}
 
-	void Abstract::DBus::Connection::bus_register() {
-
-		DBusError err;
-		dbus_error_init(&err);
-
-		dbus_bus_register(conn,&err);
-		if(dbus_error_is_set(&err)) {
-			std::string message(err.message);
-			dbus_error_free(&err);
-			throw std::runtime_error(message);
-		}
-
-	}
-
-	void Abstract::DBus::Connection::close() {
+	void DBus::Connection::clear() {
 
 		lock_guard<mutex> lock(guard);
-
-        if(Logger::enabled(Logger::Trace)) {
-			int fd = -1;
-			if(dbus_connection_get_socket(conn,&fd)) {
-				Logger::String("Dealocating connection '",((unsigned long) this),"' from socket '",fd,"'").trace(name());
-			} else {
-				Logger::String("Dealocating connection '",((unsigned long) this),"'").trace(name());
-			}
-        }
 
 		flush();
 
 		// Remove interfaces.
-		interfaces.remove_if([this](Udjat::DBus::Interface &intf) {
-			remove(intf);
-			return true;
-		});
+		interfaces.clear();
 
 		// Remove filter
-		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) filter, this);
-
-		Logger::String{"Restoring d-bus watchers"}.trace(name());
-
-		if(!dbus_connection_set_watch_functions(
-			conn,
-			(DBusAddWatchFunction) NULL,
-			(DBusRemoveWatchFunction) NULL,
-			(DBusWatchToggledFunction) NULL,
-			this,
-			nullptr)
-		) {
-			Logger::String{"dbus_connection_set_watch_functions failed"}.error(name());
-		}
-
-		if(!dbus_connection_set_timeout_functions(
-			conn,
-			(DBusAddTimeoutFunction) NULL,
-			(DBusRemoveTimeoutFunction) NULL,
-			(DBusTimeoutToggledFunction) NULL,
-			NULL,
-			nullptr)
-		) {
-			Logger::String{"dbus_connection_set_timeout_functions failed"}.error(name());
-		}
+		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) on_message, this);
 
 	}
 
-	DBusHandlerResult Abstract::DBus::Connection::filter(DBusConnection *, DBusMessage *message, Abstract::DBus::Connection *connection) noexcept {
+	DBus::Connection::~Connection() {
+		// Release connection
+		dbus_connection_unref(conn);
+	}
 
-		debug(__FUNCTION__);
+	void DBus::Connection::bus_register() {
 
-		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_SIGNAL) {
-			return connection->on_signal(message);
+		DBus::Error err;
+		dbus_bus_register(conn,err);
+		err.verify();
+
+	}
+
+	DBusHandlerResult DBus::Connection::on_message(DBusConnection *, DBusMessage *message, DBus::Connection *connection) noexcept {
+
+		lock_guard<mutex> lock(connection->guard);
+
+		try {
+
+			return connection->filter(message);
+
+		} catch(const std::exception &e) {
+
+			Logger::String{
+				dbus_message_get_interface(message),
+				".",
+				dbus_message_get_member(message),
+				": ",
+				e.what()
+			}.error(connection->name());
+
+		} catch(...) {
+
+			Logger::String{
+				dbus_message_get_interface(message),
+				".",
+				dbus_message_get_member(message),
+				": Unexpected error",
+			}.error(connection->name());
+
 		}
-
-		// TODO: Filter method calls.
 
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
 	}
 
-	DBusHandlerResult Abstract::DBus::Connection::on_signal(DBusMessage *message) noexcept {
 
-		lock_guard<mutex> lock(guard);
+	DBusHandlerResult DBus::Connection::filter(DBusMessage *message) {
 
 		const char *interface = dbus_message_get_interface(message);
-		const char *member = dbus_message_get_member(message);
-
-		if(Logger::enabled(Logger::Trace)) {
-			Logger::String{"Signal ", interface," ",member}.trace(name());
-		}
-
 		for(const auto &intf : interfaces) {
 
 			if(intf == interface) {
 
-				for(const auto &imemb : intf) {
-
-					if(imemb == member) {
-
-						try {
-
-							debug("Processing ",interface,".",member);
-							Udjat::DBus::Message msg(message);
-							imemb.call(msg);
-
-						} catch(const std::exception &e) {
-
-							Logger::String{interface,".",member,": ",e.what()}.error(name());
-
-						} catch(...) {
-
-							Logger::String{interface,".",member,": Unexpecter error"}.error(name());
-
-						}
-
-					}
-
+				DBusHandlerResult rc = intf.filter(message);
+				if(rc != DBUS_HANDLER_RESULT_NOT_YET_HANDLED) {
+					return rc;
 				}
 
 			}
@@ -283,11 +230,20 @@
 
 	}
 
-	void Abstract::DBus::Connection::flush() noexcept {
+	bool DBus::Connection::name_has_owner(const char *name) const {
+
+		DBus::Error error;
+		dbus_bool_t rc = dbus_bus_name_has_owner(conn, name, error);
+		error.verify();
+		return rc;
+
+	};
+
+	void DBus::Connection::flush() noexcept {
 		dbus_connection_flush(conn);
 	}
 
-	void Abstract::DBus::Connection::insert(const Udjat::DBus::Interface &interface) {
+	void DBus::Connection::insert(const Udjat::DBus::Interface &interface) {
 
 		Logger::String{"Connecting to '",interface.rule().c_str(),"'"}.trace(name());
 
@@ -298,14 +254,14 @@
 		dbus_connection_flush(conn);
 
 		if (dbus_error_is_set(&error)) {
-			Logger::String message{"Error '",error.message,"' adding interface"};
+			Logger::String message{"Error '",error.message,"' adding rule ",interface.rule().c_str()};
 			dbus_error_free(&error);
 			throw std::runtime_error(message);
 		}
 
 	}
 
-	void Abstract::DBus::Connection::remove(const Udjat::DBus::Interface &interface) {
+	void DBus::Connection::remove(const Udjat::DBus::Interface &interface) {
 
 		Logger::String{"Disconnecting from '",interface.rule().c_str(),"'"}.trace(name());
 
@@ -321,13 +277,13 @@
 
 	}
 
-	void Abstract::DBus::Connection::push_back(Udjat::DBus::Interface &intf) {
+	void DBus::Connection::push_back(Udjat::DBus::Interface &intf) {
 		lock_guard<mutex> lock(guard);
 		insert(intf);
 		interfaces.push_back(intf);
 	}
 
-	Udjat::DBus::Interface & Abstract::DBus::Connection::emplace_back(const char *intf) {
+	Udjat::DBus::Interface & DBus::Connection::emplace_back(const char *intf) {
 
 		if(!(intf && *intf)) {
 			throw system_error(EINVAL,system_category(),"A dbus interface name is required");
@@ -337,45 +293,53 @@
 
 		for(auto &inserted : interfaces) {
 			if(!strcasecmp(inserted.c_str(),intf)) {
-				Logger::String{"Already watching '",intf,"'"}.trace(name());
+				Logger::String{"Already watching '",intf,"'"}.write(Logger::Debug,name());
 				return inserted;
 			}
 		}
 
+#if __cplusplus >= 201703
 		Udjat::DBus::Interface & interface = interfaces.emplace_back(intf);
+#else
+		interfaces.emplace_back(intf);
+		Udjat::DBus::Interface & interface = interfaces.back();
+#endif
 		insert(interface);
 
 		return interface;
 	}
 
-	void Abstract::DBus::Connection::push_back(const XML::Node &node) {
+	void DBus::Connection::push_back(const XML::Node &node) {
 		Udjat::DBus::Interface intf{node};
 		return push_back(intf);
 	}
 
-	Udjat::DBus::Member & Abstract::DBus::Connection::subscribe(const char *interface, const char *member, const std::function<void(Udjat::DBus::Message &message)> &callback) {
+	Udjat::DBus::Member & DBus::Connection::subscribe(const char *interface, const char *member, const std::function<bool(Udjat::DBus::Message &message)> &callback) {
 		return emplace_back(interface).emplace_back(member,callback);
 	}
 
-	void Abstract::DBus::Connection::remove(const Udjat::DBus::Member &member) {
+	void DBus::Connection::remove(Udjat::DBus::Interface &intf) {
+		lock_guard<mutex> lock(guard);
+		interfaces.remove(intf);
+	}
+
+	void DBus::Connection::remove(const Udjat::DBus::Member &member) {
 
 		lock_guard<mutex> lock(guard);
 		interfaces.remove_if([this,&member](Udjat::DBus::Interface &interface){
 
-			interface.remove(member);
-
+			interface.remove(member);	
 			if(interface.empty()) {
-				remove(interface);
+				Logger::String{"Unwatching '",interface.c_str(),"'"}.trace(name());
 				return true;
 			}
-
 			return false;
 
 		});
 
 	}
 
-	void Abstract::DBus::Connection::signal(const Udjat::DBus::Signal &sig) {
+	void DBus::Connection::signal(const Udjat::DBus::Signal &sig) {
 
 		lock_guard<mutex> lock(guard);
 
@@ -385,6 +349,23 @@
 		if(!rc) {
 			throw runtime_error("Can't send D-Bus signal");
 		}
+
+	}
+
+	int DBus::Connection::request_name(const char *name) {
+
+		DBus::Error err;
+
+		int reqstatus = dbus_bus_request_name(
+			conn,
+			name,
+			DBUS_NAME_FLAG_REPLACE_EXISTING,
+			err
+		);
+
+		err.verify();
+
+		return reqstatus;
 
 	}
 

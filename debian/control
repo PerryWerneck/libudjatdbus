@@ -1,35 +1,35 @@
-Source: udjat-module-dbus
+Source: libudjatdbus
 Section: unknown
 Priority: optional
 Maintainer: Perry Werneck <perry.werneck@gmail.com>
-Build-Depends: debhelper (>= 7), autotools-dev, autoconf, automake, pkg-config, gettext, libdbus-1-dev, libpugixml-dev, libudjat-dev
+Build-Depends: debhelper (>= 7), meson, pkg-config, libudjat2-dev, libdbus-1-dev
 
 Package: libudjatdbus
 Architecture: any
 Section: libs
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Provides: libudjatdbus (= ${binary:Version}), libudjatdbus (= 1.1)
+Provides: libudjatdbus (= ${binary:Version})
 Description: Udjat core library.
- D-Bus library for Udjat.
+ Udjat core library.
 
-Package: udjat-dbus-module
+Package: udjat-module-dbus
 Architecture: any
 Section: libs
-Depends: ${misc:Depends}, libudjatdbus (= ${binary:Version})
-Description: libudjat development files.
- Udjat D-Bus module
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Udjat core library.
+ Udjat core library.
 
 Package: libudjatdbus-dev
 Architecture: any
 Provides: libudjatdbus-dev (= ${binary:Version})
 Section: libdevel
-Depends: ${misc:Depends}, pkg-config, libudjatdbus (= ${binary:Version})
-Description: libudjat development files.
- Development files for D-Bus udjat library
+Depends: ${misc:Depends}, libdbus-1-dev, libudjat-dev, libudjatdbus (= ${binary:Version})
+Description: Libudjat development files.
+ Development headers for libudjatdbus
 
 Package: libudjatdbus-dbg
 Architecture: any
-Depends: libudjat (= ${binary:Version})
-Description: Debugging symbols for libudjat
+Depends: libudjatdbus (= ${binary:Version})
+Description: Debugging symbols for libudjatdbus
  This package contains the debugging symbols for libudjatdbus.
 

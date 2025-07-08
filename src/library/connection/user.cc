@@ -25,6 +25,7 @@
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/exception.h>
  #include <udjat/tools/logger.h>
  #include <dirent.h>
  #include <string>
@@ -32,7 +33,7 @@
  #include <unistd.h>
  #include <sys/types.h>
  #include <sys/stat.h>
- #include <udjat/tools/file.h>
+ #include <udjat/tools/file/text.h>
  #include <pwd.h>
 
  #ifdef HAVE_SYSTEMD
@@ -43,12 +44,11 @@
 
  namespace Udjat {
 
-	static DBusConnection * UserConnectionFactory(uid_t uid, const char *sid) {
+	static string busname(uid_t uid){
+
+		string name;
 
 		/// @brief File on /proc/[PID]/environ
-
-		Logger::String{"Opening connection to user '",uid,"'"}.trace("d-bus");
-
 		class Environ {
 		private:
 			int descriptor = -1;
@@ -81,100 +81,100 @@
 
 		};
 
-		DBusConnection *connection = nullptr;
+		// Scan user environments.
+		DBus::UserBus::exec(uid,[&]() -> int {
 
-		// https://stackoverflow.com/questions/6496847/access-another-users-d-bus-session
-		DIR * dir = opendir("/proc");
-        if(!dir) {
-			throw std::system_error(errno, std::system_category());
-        }
+			// https://stackoverflow.com/questions/6496847/access-another-users-d-bus-session
+			DIR * dir = opendir("/proc");
+			if(!dir) {
+				throw std::system_error(errno, std::system_category());
+			}
 
-        try {
+			try {
 
-			struct dirent *ent;
-			while((ent=readdir(dir))!=NULL && !connection) {
+				struct dirent *ent;
+				while((ent=readdir(dir))!=NULL && name.empty()) {
 
-				Environ environ(dir,ent->d_name);
+					Environ environ(dir,ent->d_name);
 
-				if(!environ || environ.uid() != uid) {
-					continue;
-				}
-
-				// Check session id.
-#ifdef HAVE_SYSTEMD
-				if(sid && *sid) {
-					char *sname = nullptr;
-
-					// Reject pids without session.
-					if(sd_pid_get_session(atoi(ent->d_name), &sname) == -ENODATA)
-						continue;
-
-					// Test if it's the required session.
-					if(strcmp(sid,sname)) {
-						free(sname);
+					if(!environ || environ.uid() != uid) {
 						continue;
 					}
 
-					free(sname);
-				}
+					// Check session id.
+#ifdef HAVE_SYSTEMD
+					if(sid && *sid) {
+						char *sname = nullptr;
+
+						// Reject pids without session.
+						if(sd_pid_get_session(atoi(ent->d_name), &sname) == -ENODATA)
+							continue;
+
+						// Test if it's the required session.
+						if(strcmp(sid,sname)) {
+							free(sname);
+							continue;
+						}
+
+						free(sname);
+					}
 #endif // HAVE_SYSTEMD
 
-				// It's an user environment, scan it.
-				{
+					// It's an user environment, scan it.
 					File::Text text(environ.fd());
 					for(const char *ptr = text.c_str(); *ptr; ptr += (strlen(ptr)+1)) {
 						if(strncmp(ptr,"DBUS_SESSION_BUS_ADDRESS",24) == 0 && ptr[24] == '=') {
-
-							// Found session address, try to open it.
-
-							// Get an static lock guard to avoid another change
-							static mutex guard;
-							lock_guard<mutex> lock(guard);
-
-							// Save application EUID and switch to required UID.
-							uid_t saved_uid = geteuid();
-							if(seteuid(uid) < 0) {
-
-								cerr << "dbus\tCan't set efective UID: " << strerror(errno) << endl;
-
-							} else {
-
-								DBusError err;
-								dbus_error_init(&err);
-
-								ptr += 25;
-
-								connection = dbus_connection_open_private(ptr, &err);
-								if(dbus_error_is_set(&err)) {
-									clog << "dbus\tError '" << err.message << "' opening BUS " << ptr << endl;
-									dbus_error_free(&err);
-									connection = nullptr;
-								}
-#ifdef DEBUG
-								else {
-									cout << "dbus\tGot user connection on " << ptr << endl;
-								}
-#endif // DEBUG
-
-								// Restore to saved UID.
-								seteuid(saved_uid);
-
-							}
+							name = (ptr+25);
 							break;
 						}
 					}
 				}
 
+			} catch(...) {
+
+				closedir(dir);
+				throw;
+
 			}
 
-        } catch(...) {
-
 			closedir(dir);
-			throw;
 
-        }
+			return 0;
+		});
 
-		closedir(dir);
+		return name;
+	}
+
+	static DBusConnection * UserConnectionFactory(uid_t uid, const char *sid) {
+
+		string name = busname(uid);
+		if(name.empty()) {
+			throw system_error(ENOENT,system_category(),String{"Unable to find D-Bus session name for user ",uid,"."});
+		}
+
+		Logger::String{"Opening connection to user '",uid,"' on ",name.c_str()}.trace("d-bus");
+
+		DBusConnection *connection = nullptr;
+
+		// Found session address, try to open it.
+		DBus::UserBus::exec(uid,[&]() -> int {
+
+			DBus::Error err;
+
+			connection = dbus_bus_get_private(DBUS_BUS_SESSION, err);
+
+			err.verify();
+
+			int fd = -1;
+			if(dbus_connection_get_socket(connection,&fd)) {
+				Logger::String("Got connection to user '",uid,"' with socket '",fd,"'").trace("d-bus");
+			} else {
+				Logger::String("Got connection to user '",uid,"'").trace("d-bus");
+			}
+
+			return 0;
+
+		});
 
         if(!connection) {
 			throw system_error(ENOENT,system_category(),"Unable to find D-Bus session for requested user");
@@ -207,15 +207,62 @@
 
 	}
 
-	DBus::UserBus::UserBus(uid_t uid, const char *sid) : Abstract::DBus::Connection{get_username(uid).c_str(),UserConnectionFactory(uid,sid)}, userid{uid} {
-		open();
-		bus_register();
+	DBus::UserBus::UserBus(uid_t uid, const char *sid) : NamedBus{get_username(uid).c_str(),UserConnectionFactory(uid,sid)}, userid{uid} {
+
+		try {
+
+			bus_register();
+
+		} catch(...) {
+
+			if(conn) {
+				Logger::String{"Closing connection to '",uid,"' due to initialization error"}.error("d-bus");
+				dbus_connection_flush(conn);
+				dbus_connection_close(conn);
+				dbus_connection_unref(conn);
+				conn = NULL;
+			}
+
+			throw;
+
+		}
 	}
 
-	DBus::UserBus::~UserBus() {
-		close();
-		dbus_connection_close(conn);
-		dbus_connection_unref(conn);
+	int DBus::UserBus::exec(uid_t uid, const std::function<int()> &func) {
+
+		// TODO: https://stackoverflow.com/questions/1223600/change-uid-gid-only-of-one-thread-in-linux#:~:text=To%20change%20the%20uid%20only,sends%20to%20all%20threads)!&text=The%20Linux%2Dspecific%20setfsuid(),thread%20rather%20than%20per%2Dprocess.
+		// https://patchwork.kernel.org/project/linux-nfs/patch/1461677655-68294-3-git-send-email-kolga@netapp.com/
+		// sys_setresuid
+
+		debug(__FUNCTION__,"(",uid,")");
+
+		static mutex guard;
+		lock_guard<mutex> lock(guard);
+
+		// Save application EUID and switch to required UID.
+		uid_t saved_uid = geteuid();
+		if(seteuid(uid) < 0) {
+			throw std::system_error(errno, std::system_category(), "Unable to set effective user id");
+		}
+
+		int rc = -1;
+		try {
+
+			rc = func();
+
+		} catch(...) {
+
+			seteuid(saved_uid);
+			throw;
+		}
+
+		if(seteuid(saved_uid) < 0) {
+			throw std::system_error(errno, std::system_category(), "Unable to restore effective user id");
+		}
+
+		debug("rc=",rc);
+		return rc;
+
 	}
 
  }

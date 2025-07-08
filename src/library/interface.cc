@@ -21,32 +21,90 @@
  #include <udjat/defs.h>
  #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/string.h>
+ #include <udjat/tools/logger.h>
+ #include <stdexcept>
+
+ using namespace std;
 
  namespace Udjat {
 
-	DBus::Interface::Interface(const char *n) : std::string{n}, type{"signal"} {
+	Abstract::DBus::Interface::Interface(const char *n, const char *t) : std::string{n}, type{t} {
 	}
 
-	DBus::Interface::Interface(const XML::Node &node) : std::string{String{node,"dbus-interface"}}, type{"signal"} {
+	/// @brief Scan XML definition for interface name.
+	String Abstract::DBus::Interface::NameFactory(const XML::Node &node) {
+
+		// First check for specific names
+		{
+			static const char *attrnames[] = {
+				"dbus-interface-name",
+				"dbus-interface",
+				"interface-name"
+			};
+
+			for(const char *attrname : attrnames) {
+				String name{node,attrname};
+				if(!name.empty()) {
+					if(name[0] == '.') {
+						return String{PRODUCT_DOMAIN,name.c_str()};
+					}
+					return name;
+				}
+			}
+		}
+
+		// Then the generic ones
+		{
+			static const char *attrnames[] = {
+				"dbus-name",
+				"name"
+			};
+
+			for(const char *attrname : attrnames) {
+				String name{node,attrname};
+				if(!name.empty()) {
+					Logger::String{"Required interface name attribute is missing on <",node.name(),">, using default"}.warning();
+					return String{PRODUCT_DOMAIN,".",name.c_str()};
+				}
+			}
+		}
+
+		throw runtime_error("The d-bus interface name is empty or invalid");
+	}
+
+	Abstract::DBus::Interface::Interface(const XML::Node &node, const char *t) : std::string{NameFactory(node)}, type{t} {
+	}
+
+	Abstract::DBus::Interface::~Interface() {
 	}
 
 	DBus::Interface::~Interface() {
 	}
 
-	const std::string DBus::Interface::rule() const {
+	const std::string Abstract::DBus::Interface::rule() const {
 		return String{"type='",type,"',interface='",c_str(),"'"};
 	}
 
-	bool DBus::Interface::operator==(const char *intf) const noexcept {
+	bool Abstract::DBus::Interface::operator==(const char *intf) const noexcept {
 		return strcasecmp(intf,c_str()) == 0;
 	}
 
-	Udjat::DBus::Member & DBus::Interface::push_back(const XML::Node &node,const std::function<void(Udjat::DBus::Message & message)> &callback) {
+	Udjat::DBus::Member & DBus::Interface::push_back(const XML::Node &node,const std::function<bool(Udjat::DBus::Message & message)> &callback) {
+#if __cplusplus >= 201703	
 		return members.emplace_back(node,callback);
+#else
+		members.emplace_back(node,callback);
+		return members.back();
+#endif
 	}
 
-	Udjat::DBus::Member & DBus::Interface::emplace_back(const char *member, const std::function<void(Udjat::DBus::Message & message)> &callback) {
+	Udjat::DBus::Member & DBus::Interface::emplace_back(const char *member, const std::function<bool(Udjat::DBus::Message & message)> &callback) {
+#if __cplusplus >= 201703	
 		return members.emplace_back(member,callback);
+#else
+		members.emplace_back(member,callback);
+		return members.back();
+#endif
 	}
 
 	void DBus::Interface::remove(const Udjat::DBus::Member &member) {
@@ -54,6 +112,24 @@
 			return &m == &member;
 		});
 	}
+
+	DBusHandlerResult DBus::Interface::filter(DBusMessage *message) const {
+
+		int type = dbus_message_get_type(message);
+		const char *name = dbus_message_get_member(message);
+
+		for(auto &member : members) {
+
+			if(member == type && member == name) {
+				Udjat::DBus::Message msg(message);
+				member.call(msg);
+			}
+
+		}
+
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	}
+
 
  }
 

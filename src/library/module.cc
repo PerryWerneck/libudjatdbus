@@ -18,47 +18,42 @@
  */
 
  /**
-  * @brief Declare d-bus alerts.
+  * @brief Implement D-Bus module & Interface factory.
   */
 
- #pragma once
+ // References:
+ //
+ // https://github.com/fbuihuu/samples-dbus/blob/master/dbus-server.c
+ //
 
+ #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/alert.h>
- #include <dbus/dbus.h>
- #include <udjat/tools/abstract/object.h>
- #include <udjat/tools/xml.h>
+ #include <udjat/module/abstract.h>
+ #include <udjat/module/dbus.h>
+ #include <udjat/tools/interface.h>
+ #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/service.h>
+ #include <udjat/alert/d-bus.h>
+ #include <dbus/dbus-protocol.h>
  #include <udjat/tools/string.h>
- #include <udjat/tools/dbus/emitter.h>
+ #include <udjat/tools/application.h>
  #include <vector>
+ 
+ using namespace std;
 
  namespace Udjat {
 
-	namespace DBus {
+ 	static const Udjat::ModuleInfo moduleinfo { "dbus" STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " module" };
 
-		class UDJAT_API Alert : public Udjat::Alert, private Emitter {
-		protected:
-			int emit() override;
-			void reset(time_t next) noexcept override;
+	DBus::Service::Service() 
+		: DBus::Service::Service{moduleinfo,"dbus",String{PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()} {
+	}
 
-		public:
+	DBus::Module::Module() : Udjat::Module{"dbus",moduleinfo} {
+		DBus::initialize();
+	}
 
-			class UDJAT_API Factory : public Udjat::Alert::Factory {
-			public:
-				Factory(const char *name = "dbus");
-				virtual ~Factory();
-				std::shared_ptr<Udjat::Alert> AlertFactory(const Abstract::Object &parent, const XML::Node &node) const override;
-
-			};
-
-			Alert(const XML::Node &node);
-			virtual ~Alert();
-
-			bool activate() noexcept override;
-			bool activate(const Abstract::Object &object) noexcept override;
-
-		};
-
+	DBus::Module::~Module() {
 	}
 
  }

@@ -18,24 +18,38 @@
  */
 
  /**
-  * @brief Common definitions for D-Bus library.
+  * @brief Declares singleton for data slot.
   */
 
  #pragma once
 
- #pragma once
+ #include <config.h>
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
+ #include <udjat/tools/logger.h>
 
- namespace Udjat {
+ class DataSlot {
+ private:
+	dbus_int32_t slot = -1; // The passed-in slot must be initialized to -1, and is filled in with the slot ID
+	DataSlot() {
+		dbus_connection_allocate_data_slot(&slot);
+		Udjat::Logger::String{"Got slot '",slot,"' for connection watchdog"}.write(Udjat::Logger::Debug,"d-bus");
+	}
 
- 	namespace DBus {
+ public:
 
-		class Message;
-		class Interface;
-		class Signal;
-		class Member;
+	~DataSlot() {
+		dbus_connection_free_data_slot(&slot);
+	}
 
- 	}
+	static DataSlot & getInstance() {
+		static DataSlot instance;
+		return instance;
+	}
 
- }
+	inline dbus_int32_t value() const noexcept {
+		return slot;
+	}
+
+ };
+

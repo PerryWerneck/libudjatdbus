@@ -40,11 +40,11 @@
 
  };
 
- dbus_bool_t add_timeout(DBusTimeout *t, Abstract::DBus::Connection *connection) {
+ dbus_bool_t add_timeout(DBusTimeout *t, DBusConnection *connection) {
 
 	TimeoutContext *ctx = new TimeoutContext();
 
-	ctx->conn		= connection->connection();
+	ctx->conn		= connection;
 	ctx->timeout	= t;
 	ctx->reset(dbus_timeout_get_interval(t));
 
@@ -57,7 +57,7 @@
 	return TRUE;
  }
 
- void remove_timeout(DBusTimeout *t, Abstract::DBus::Connection *) {
+ void remove_timeout(DBusTimeout *t, DBusConnection *) {
 
 	TimeoutContext *ctx = (TimeoutContext *) dbus_timeout_get_data(t);
 
@@ -66,7 +66,7 @@
 	}
  }
 
- void toggle_timeout(DBusTimeout *t, Abstract::DBus::Connection *) {
+ void toggle_timeout(DBusTimeout *t, DBusConnection *) {
 
 	TimeoutContext *ctx = (TimeoutContext *) dbus_timeout_get_data(t);
 

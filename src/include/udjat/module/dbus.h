@@ -18,24 +18,28 @@
  */
 
  /**
-  * @brief Common definitions for D-Bus library.
+  * @brief Declare D-Bus module.
   */
 
  #pragma once
 
- #pragma once
  #include <udjat/defs.h>
- #include <dbus/dbus.h>
+ #include <udjat/module/abstract.h>
+ #include <udjat/tools/interface.h>
+ #include <udjat/alert/d-bus.h>
+ #include <vector>
 
  namespace Udjat {
 
- 	namespace DBus {
+	namespace DBus {
 
-		class Message;
-		class Interface;
-		class Signal;
-		class Member;
+		class UDJAT_API Module : public Udjat::Module, private DBus::Alert::Factory {
+		public:
 
- 	}
+			Module();
+			virtual ~Module();
+
+		};
+	}
 
  }

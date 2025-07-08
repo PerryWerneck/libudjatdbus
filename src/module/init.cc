@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2021 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -19,32 +19,22 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/module.h>
- #include <udjat/moduleinfo.h>
- #include <udjat/factory.h>
- #include <dbus/dbus-protocol.h>
- #include <udjat/alert/d-bus.h>
- #include <memory>
+ #include <udjat/tools/dbus/connection.h>
+ #include <udjat/module/abstract.h>
+ #include <udjat/tools/xml.h>
+ #include <udjat/module/dbus.h>
+ #include <udjat/tools/dbus/service.h>
+ #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/application.h>
 
- using namespace std;
  using namespace Udjat;
-
- static const Udjat::ModuleInfo moduleinfo { "D-Bus" STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " module" };
-
- /// @brief Register udjat module.
+ 
  Udjat::Module * udjat_module_init() {
 
-	class Module : public Udjat::Module, Udjat::Factory {
+	class Module : public DBus::Module, private DBus::Service {
 	public:
-
-		Module() : Udjat::Module("d-bus",moduleinfo), Udjat::Factory("d-bus",moduleinfo) {
-		};
-
+		Module() = default;
 		virtual ~Module() {
-		};
-
-		std::shared_ptr<Abstract::Alert> AlertFactory(const Abstract::Object &parent, const pugi::xml_node &node) const override {
-			return make_shared<Udjat::DBus::Alert>(parent,node);
 		}
 
 	};
@@ -52,4 +42,45 @@
 	return new Module();
  }
 
+ Udjat::Module * udjat_module_init_from_xml(const XML::Node &node) {
 
+	/// @brief busname.
+	String srvname{node,"dbus-service-name",""};
+	
+	if(srvname.empty()) {
+		srvname = String{node,"service-name",""};
+	}
+
+	if(srvname.empty() && node.attribute("enable-service").as_bool(false)) {
+		srvname = String{PRODUCT_DOMAIN,".",Application::Name().c_str()};
+	}
+
+	if(srvname.empty()) {
+		// No service name, just start module.
+		return new DBus::Module();
+	}
+
+	/// @brief Service name.
+	String name{node,"name","dbus"};
+
+	Logger::String{"Initializing d-bus service '",srvname.c_str(),"'"}.trace(name.c_str());
+
+	class Module : public DBus::Module, public DBus::Service {
+	public:
+		Module(const XML::Node &node, const char *name, const char *srvname)
+			: DBus::Module{},
+				DBus::Service{
+					(const ModuleInfo &) *this,
+					(DBusConnection *) DBus::Connection::getInstance(node),
+					name,
+					srvname
+				} { }
+
+		virtual ~Module() {
+		}
+
+	};
+
+	return new Module(node,name.as_quark(),srvname.as_quark());
+
+ }

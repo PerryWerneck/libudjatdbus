@@ -17,25 +17,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /**
-  * @brief Common definitions for D-Bus library.
-  */
-
- #pragma once
-
- #pragma once
+ #include <config.h>
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
+ #include <stdexcept>
+
+ using namespace std;
 
  namespace Udjat {
 
- 	namespace DBus {
-
-		class Message;
-		class Interface;
-		class Signal;
-		class Member;
-
- 	}
 
  }

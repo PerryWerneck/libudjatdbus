@@ -26,6 +26,7 @@
  #pragma once
  #include <udjat/defs.h>
  #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/string.h>
  #include <string>
  #include <functional>
  #include <udjat/tools/xml.h>
@@ -36,14 +37,24 @@
 
 		class UDJAT_API Member : public std::string {
 		private:
-			std::function<void(Message & message)> callback;	// Cant be reference!!
+			std::function<bool(Message & message)> callback;
+
+		protected:
+			int type;
 
 		public:
-			Member(const char *name,const std::function<void(Message & message)> &callback);
-			Member(const XML::Node &node,const std::function<void(Message & message)> &callback);
+
+			static Udjat::String NameFactory(const XML::Node &node);
+
+			Member(const char *name, const std::function<bool(Message & message)> &callback);
+			Member(const XML::Node &node,const std::function<bool(Message & message)> &callback);
 			~Member();
 
 			bool operator==(const char *name) const noexcept;
+
+			inline bool operator==(const int t) const noexcept {
+				return type == t;
+			}
 
 			inline void call(Message &message) const {
 				callback(message);
