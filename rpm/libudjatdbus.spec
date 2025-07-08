@@ -19,7 +19,7 @@
 
 Summary:		DBus client/server library for %{udjat_product_name}  
 Name:			libudjat%{module_name}
-Version: 2.0.2
+Version:		2.0.0
 Release:		0
 License:		LGPL-3.0
 Source:			%{name}-%{version}.tar.xz
@@ -33,8 +33,8 @@ BuildRequires:	gcc-c++ >= 5
 BuildRequires:	pkgconfig(dbus-1)
 BuildRequires:	pkgconfig(libudjat) >= 2.0
 BuildRequires:	pkgconfig(systemd)
-
-BuildRequires:	meson >= 0.61.4
+BuildRequires:	udjat-rpm-macros
+BuildRequires:	meson
 
 %description
 DBus client/server library for %{udjat_product_name}
@@ -72,7 +72,7 @@ C++ DBus client/server classes for use with lib%{udjat_product_name}
 
 %files -n %{udjat_library}
 %defattr(-,root,root)
-%{_libdir}/%{name}.so.%{udjat_major}.%{udjat_minor}
+%{_libdir}/%{name}.so.%{udjat_package_major}.%{udjat_package_minor}
 
 %files devel
 %defattr(-,root,root)
@@ -84,6 +84,7 @@ C++ DBus client/server classes for use with lib%{udjat_product_name}
 %dir %{_includedir}/udjat/tools/dbus
 %{_includedir}/udjat/tools/*.h
 %{_includedir}/udjat/tools/dbus/*.h
+%{_includedir}/udjat/module/*.h
 
 %dir %{_includedir}/udjat/alert
 %{_includedir}/udjat/alert/*.h
