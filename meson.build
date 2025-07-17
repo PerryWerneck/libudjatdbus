@@ -46,8 +46,17 @@ libversion = '@0@.@1@'.format(pkg_major_version,pkg_minor_version)
 #
 # Required libraries
 #
-libudjat = dependency('libudjat')
-dbus = dependency('dbus-1')
+libudjat = dependency(
+  'libudjat',
+  required: true, 
+  version: '>=2.0.0'
+)
+
+dbus = dependency(
+  'dbus-1',
+  required: true
+)
+
 lib_deps = [
   libudjat,
   dbus,

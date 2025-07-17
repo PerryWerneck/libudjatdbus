@@ -55,3 +55,4 @@ po
 ABOUT-NLS
 
 .vscode
+config.h.in
