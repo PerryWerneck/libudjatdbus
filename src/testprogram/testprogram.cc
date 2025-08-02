@@ -28,7 +28,7 @@
  using namespace Udjat;
 
  int main(int argc, char **argv) {
-	return loader(argc,argv, [](Application &app) {
+	return loader(argc,argv, [](Application &app) -> int {
 
 		class Module : public DBus::Module, public DBus::Service {
 		public:
@@ -47,6 +47,8 @@
 		};
 
 		new Module();
+
+		return 0;
 
 	});
 
