@@ -33,8 +33,8 @@
  using namespace Udjat::DBus;
  using namespace std;
 
+ #ifdef DEBUG 
  UDJAT_API int run_unit_test(const char *name) {
-#ifdef DEBUG 
 
 	Logger::String{"Running unit test: ",name}.info();
 
@@ -62,6 +62,6 @@
 
 
 
-#endif // DEBUG
 	return 0;
  }
+ #endif // DEBUG
