@@ -185,6 +185,29 @@
 		return type;
 	}
 
+	int DBus::Message::get(DBusBasicValue &value) {
+
+		if(message.valid) {
+			int type = dbus_message_iter_get_arg_type(&message.iter);
+
+			if(type == DBUS_TYPE_VARIANT) {
+				DBusMessageIter sub;
+				dbus_message_iter_recurse(&message.iter, &sub);
+				type = to_value(&sub,value);
+				dbus_message_iter_next(&message.iter);
+				return type;
+			}
+
+			dbus_message_iter_get_basic(&message.iter,&value);
+			message.valid = dbus_message_iter_next(&message.iter);
+
+			return type;
+		}
+
+		return DBUS_TYPE_INVALID;
+	}
+
+
 	static Udjat::String get_string(DBusMessageIter *iter) {
 
 		DBusBasicValue dval;
@@ -224,7 +247,7 @@
 	DBus::Message & DBus::Message::pop(int &value) {
 
 		DBusBasicValue dval;
-		switch(to_value(&message.iter,dval)) {
+		switch(get(dval)) {
 		case DBUS_TYPE_STRING:
 			value = atoi(dval.str);
 			break;
@@ -261,7 +284,7 @@
 	DBus::Message & DBus::Message::pop(unsigned int &value) {
 
 		DBusBasicValue dval;
-		switch(to_value(&message.iter,dval)) {
+		switch(get(dval)) {
 		case DBUS_TYPE_STRING:
 			value = (unsigned int) atoi(dval.str);
 			break;
@@ -298,7 +321,7 @@
 	DBus::Message & DBus::Message::pop(bool &value) {
 
 		DBusBasicValue dval;
-		switch(to_value(&message.iter,dval)) {
+		switch(get(dval)) {
 		case DBUS_TYPE_STRING:
 			value = String{dval.str}.as_bool();
 			break;
@@ -335,7 +358,7 @@
 	DBus::Message & DBus::Message::pop(double &value) {
 
 		DBusBasicValue dval;
-		switch(to_value(&message.iter,dval)) {
+		switch(get(dval)) {
 		case DBUS_TYPE_STRING:
 			value = atof(dval.str);
 			break;

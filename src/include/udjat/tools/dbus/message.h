@@ -62,6 +62,8 @@
 				return add(Fargs...);
 			}
 
+			int get(DBusBasicValue &value);
+
 		public:
 			Message(const Message &message) = delete;
 			Message(const Message *message) = delete;
@@ -90,6 +92,14 @@
 
 			inline operator bool() const {
 				return !err.valid;
+			}
+
+			inline bool empty() const {
+				return !message.valid;
+			}
+
+			inline bool valid() const {
+				return message.valid;
 			}
 
 			DBusMessageIter * getIter();
