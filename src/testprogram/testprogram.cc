@@ -28,6 +28,7 @@
  using namespace Udjat;
 
  int main(int argc, char **argv) {
+	
 	return loader(argc,argv, [](Application &app) -> int {
 
 		class Module : public DBus::Module, public DBus::Service {

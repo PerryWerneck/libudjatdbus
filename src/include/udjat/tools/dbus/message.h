@@ -37,6 +37,7 @@
 		protected:
 
 			struct {
+				bool valid = false;		/// @brief True if the iter is valid.
 				DBusMessage *value = nullptr;
 				DBusMessageIter iter;
 			} message;

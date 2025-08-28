@@ -190,7 +190,7 @@
  void mainloop_add(DBusConnection *conn) {
 
 	// Initialize Main loop.
-	if(MainLoop::getInstance().type() == MainLoop::Type::Glib) {
+	if(MainLoop::getInstance().type() == MainLoop::Type::GLib) {
 
 		Logger::String{"Glib main loop integration is incomplete!"}.warning();
 
@@ -235,7 +235,7 @@
 
  void mainloop_remove(DBusConnection *conn) {
 
-	if(MainLoop::getInstance().type() != MainLoop::Type::Glib) {
+	if(MainLoop::getInstance().type() != MainLoop::Type::GLib) {
 
 		if(!dbus_connection_set_watch_functions(
 			conn,

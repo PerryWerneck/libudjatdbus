@@ -29,20 +29,23 @@
 
 	DBus::Message::Message(const char *destination, const char *path, const char *iface, const char *method) {
 		message.value = dbus_message_new_method_call(destination, path, iface, method);
+		message.valid = true;
 		dbus_message_iter_init_append(message.value, &message.iter);
 	}
 
 	DBus::Message::Message(const DBusError &error) {
-		this->message.value = nullptr;
-		this->err.valid = true;
-		this->err.name = error.name;
-		this->err.message = error.message;
+		message.value = nullptr;
+		message.valid = false;
+		err.valid = true;
+		err.name = error.name;
+		err.message = error.message;
 	}
 
 	DBus::Message::Message(DBusMessage *message) {
 
 		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_ERROR) {
 
+			this->message.valid = false;
 			err.valid = true;
 			err.name = dbus_message_get_error_name(message);
 
@@ -65,7 +68,7 @@
 
 			this->message.value = message;
 			dbus_message_ref(message);
-			dbus_message_iter_init(this->message.value, &this->message.iter);
+			this->message.valid = dbus_message_iter_init(this->message.value, &this->message.iter);
 
 		}
 
@@ -88,6 +91,8 @@
 	bool DBus::Message::next() {
 		if(err.valid) {
 			throw runtime_error(err.message);
+		} else if(!message.valid) {
+			return false;
 		}
 		return dbus_message_iter_next(&message.iter);
 	}
@@ -190,9 +195,6 @@
 			dbus_message_iter_recurse(iter, &sub);
 			return get_string(&sub);
 		}
-
-		// char str[] = {(char) type,'\0'};
-		// debug("Iterator type is '",str,"'");
 
 		switch(type) {
 		case DBUS_TYPE_STRING:

@@ -136,6 +136,7 @@ lib_src = [
   'src/library/emitter.cc',
   'src/library/alert.cc',
   'src/library/action.cc',
+  'src/library/testprogram.cc',
 ]
 
 module_src = [
