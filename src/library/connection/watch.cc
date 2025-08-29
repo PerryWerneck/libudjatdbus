@@ -19,6 +19,7 @@
 
  #include <udjat/defs.h>
  #include <private/mainloop.h>
+ #include <udjat/module/abstract.h>
  #include <udjat/tools/mainloop.h>
  #include <udjat/tools/handler.h>
  #include <udjat/tools/logger.h>
@@ -190,77 +191,64 @@
  void mainloop_add(DBusConnection *conn) {
 
 	// Initialize Main loop.
-	if(MainLoop::getInstance().type() == MainLoop::Type::GLib) {
+	MainLoop::getInstance().type();
 
-		Logger::String{"Glib main loop integration is incomplete!"}.warning();
-
-		// dbus_connection_setup_with_g_main(conn, NULL);		
-
-	} else {
-
-		// Set watch functions.
-		if(!dbus_connection_set_watch_functions(
-			conn,
-			(DBusAddWatchFunction) add_watch,
-			(DBusRemoveWatchFunction) remove_watch,
-			(DBusWatchToggledFunction) toggle_watch,
-			conn,
-			nullptr)
-		) {
-			throw runtime_error("dbus_connection_set_watch_functions has failed");
-		}
-
-		// Set timeout functions.
-		if(!dbus_connection_set_timeout_functions(
-			conn,
-			(DBusAddTimeoutFunction) add_timeout,
-			(DBusRemoveTimeoutFunction) remove_timeout,
-			(DBusTimeoutToggledFunction) toggle_timeout,
-			conn,
-			nullptr)
-		) {
-			throw runtime_error("dbus_connection_set_timeout_functions has failed");
-		}
-
-		dbus_connection_set_wakeup_main_function(
-			conn,
-			(DBusWakeupMainFunction) wake_up,
-			conn,
-			NULL
-		);
-
+	// Set watch functions.
+	if(!dbus_connection_set_watch_functions(
+		conn,
+		(DBusAddWatchFunction) add_watch,
+		(DBusRemoveWatchFunction) remove_watch,
+		(DBusWatchToggledFunction) toggle_watch,
+		conn,
+		nullptr)
+	) {
+		throw runtime_error("dbus_connection_set_watch_functions has failed");
 	}
+
+	// Set timeout functions.
+	if(!dbus_connection_set_timeout_functions(
+		conn,
+		(DBusAddTimeoutFunction) add_timeout,
+		(DBusRemoveTimeoutFunction) remove_timeout,
+		(DBusTimeoutToggledFunction) toggle_timeout,
+		conn,
+		nullptr)
+	) {
+		throw runtime_error("dbus_connection_set_timeout_functions has failed");
+	}
+
+	dbus_connection_set_wakeup_main_function(
+		conn,
+		(DBusWakeupMainFunction) wake_up,
+		conn,
+		NULL
+	);
 
  }
 
  void mainloop_remove(DBusConnection *conn) {
 
-	if(MainLoop::getInstance().type() != MainLoop::Type::GLib) {
-
-		if(!dbus_connection_set_watch_functions(
-			conn,
-			(DBusAddWatchFunction) NULL,
-			(DBusRemoveWatchFunction) NULL,
-			(DBusWatchToggledFunction) NULL,
-			NULL,
-			nullptr)
-		) {
-			Logger::String{"dbus_connection_set_watch_functions failed"}.error("d-bus");
-		}
-
-		if(!dbus_connection_set_timeout_functions(
-			conn,
-			(DBusAddTimeoutFunction) NULL,
-			(DBusRemoveTimeoutFunction) NULL,
-			(DBusTimeoutToggledFunction) NULL,
-			NULL,
-			nullptr)
-		) {
-			Logger::String{"dbus_connection_set_timeout_functions failed"}.error("d-bus");
-		}
-
+	if(!dbus_connection_set_watch_functions(
+		conn,
+		(DBusAddWatchFunction) NULL,
+		(DBusRemoveWatchFunction) NULL,
+		(DBusWatchToggledFunction) NULL,
+		NULL,
+		nullptr)
+	) {
+		Logger::String{"dbus_connection_set_watch_functions failed"}.error("d-bus");
 	}
 
+	if(!dbus_connection_set_timeout_functions(
+		conn,
+		(DBusAddTimeoutFunction) NULL,
+		(DBusRemoveTimeoutFunction) NULL,
+		(DBusTimeoutToggledFunction) NULL,
+		NULL,
+		nullptr)
+	) {
+		Logger::String{"dbus_connection_set_timeout_functions failed"}.error("d-bus");
+	}
 
  }
 
