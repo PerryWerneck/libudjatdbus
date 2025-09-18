@@ -232,11 +232,18 @@
 	}
 
 	Udjat::String DBus::Message::to_string() {
+		if(!message.valid) {
+			return "";
+		}
 		return get_string(&message.iter);
 	}
 
 
 	DBus::Message & DBus::Message::pop(std::string &value) {
+
+		if(!message.valid) {
+			throw runtime_error("Empty message");
+		}
 
 		value = get_string(&message.iter);
 		dbus_message_iter_next(&message.iter);
