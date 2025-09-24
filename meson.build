@@ -49,7 +49,8 @@ libversion = '@0@.@1@'.format(pkg_major_version,pkg_minor_version)
 libudjat = dependency(
   'libudjat',
   required: true, 
-  version: '>=2.0.0'
+  version: '>=2.0.0',
+  fallback: ['libudjat', 'static_library'],
 )
 
 dbus = dependency(
@@ -159,7 +160,8 @@ pkg = import('pkgconfig')
 pkg.generate(
   name: 'lib' + meson.project_name(),
   description: project_description,
-  requires: [ 'dbus-1', 'libudjat' ],
+  requires: [ 'libudjat' ],
+  requires_private: [ 'dbus-1' ],
   libraries: [ '-l' + meson.project_name() ]
 )
 
