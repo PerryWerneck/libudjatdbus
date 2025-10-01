@@ -108,8 +108,9 @@
 		DBusBasicValue dval;
 
 		value.clear();
+		auto type = dbus_message_iter_get_arg_type(iter);
 
-		switch(dbus_message_iter_get_arg_type(iter)) {
+		switch(type) {
 		case DBUS_TYPE_INVALID:
 			throw runtime_error("Invalid d-bus value");
 
@@ -152,7 +153,7 @@
 			break;
 
 		default:
-			throw system_error(EINVAL,system_category(),"Unexpected d-bus value");
+			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"'"});
 
 		}
 
@@ -254,7 +255,9 @@
 	DBus::Message & DBus::Message::pop(int &value) {
 
 		DBusBasicValue dval;
-		switch(get(dval)) {
+		int type = get(dval);
+
+		switch(type) {
 		case DBUS_TYPE_STRING:
 			value = atoi(dval.str);
 			break;
@@ -280,7 +283,7 @@
 			break;
 			
 		default:
-			throw runtime_error("Unexpected d-bus value");
+			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping int"});
 
 		}
 
@@ -291,7 +294,9 @@
 	DBus::Message & DBus::Message::pop(unsigned int &value) {
 
 		DBusBasicValue dval;
-		switch(get(dval)) {
+		auto type = get(dval);
+
+		switch(type) {
 		case DBUS_TYPE_STRING:
 			value = (unsigned int) atoi(dval.str);
 			break;
@@ -317,7 +322,7 @@
 			break;
 			
 		default:
-			throw runtime_error("Unexpected d-bus value");
+			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping unsigned int"});
 
 		}
 
@@ -328,7 +333,9 @@
 	DBus::Message & DBus::Message::pop(bool &value) {
 
 		DBusBasicValue dval;
-		switch(get(dval)) {
+		auto type = get(dval);
+
+		switch(type) {
 		case DBUS_TYPE_STRING:
 			value = String{dval.str}.as_bool();
 			break;
@@ -354,7 +361,7 @@
 			break;
 			
 		default:
-			throw runtime_error("Unexpected d-bus value");
+			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping boolean"});
 
 		}
 
@@ -365,7 +372,9 @@
 	DBus::Message & DBus::Message::pop(double &value) {
 
 		DBusBasicValue dval;
-		switch(get(dval)) {
+		auto type = get(dval);
+
+		switch(type) {
 		case DBUS_TYPE_STRING:
 			value = atof(dval.str);
 			break;
@@ -375,7 +384,7 @@
 			break;
 
 		default:
-			throw runtime_error("Unexpected d-bus value");
+			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping double"});
 
 		}
 

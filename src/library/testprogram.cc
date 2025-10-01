@@ -34,10 +34,11 @@
  using namespace std;
 
  #ifdef DEBUG 
- UDJAT_API int run_unit_test(const char *name) {
+ UDJAT_API int run_udjat_unit_test(const char *name) {
 
 	Logger::String{"Running unit test: ",name}.info();
 
+	Logger::String{"Calling gnome screensaver"}.info();
 	SessionBus::getInstance().call_and_wait(
 		"org.gnome.ScreenSaver",
 		"/org/gnome/ScreenSaver",
@@ -60,6 +61,26 @@
 
 		});
 
+
+	Logger::String{"Calling invalid service"}.info();
+	SessionBus::getInstance().call_and_wait(
+		"org.invalid.Service",
+		"/org/invalid/Service",
+		"org.invalid.Service",
+		"Method",
+		[](DBus::Message & message) {
+
+			if(message) {
+
+				throw runtime_error("Should not get here");
+
+			} else {
+
+				Logger::String{"No response, as expected: ",message.error_name()," - ",message.error_message()}.info();
+
+			}
+
+		});
 
 
 	return 0;

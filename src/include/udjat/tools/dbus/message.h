@@ -94,6 +94,10 @@
 				return !err.valid;
 			}
 
+			inline operator bool() {
+				return !err.valid;
+			}
+
 			inline bool empty() const {
 				return !message.valid;
 			}
