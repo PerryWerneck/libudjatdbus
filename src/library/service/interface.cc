@@ -86,12 +86,14 @@
 			xmldata << "</method>";
 		}
 
+		/*
 		DBus::Emitter::for_each([&](const DBus::Emitter &emitter){
 			if(emitter == DBUS_MESSAGE_TYPE_SIGNAL && emitter == this->intfname) {
 				emitter.introspect(xmldata);
 			}
 			return false;
 		});
+		*/
 
 		xmldata << "</interface>";
 

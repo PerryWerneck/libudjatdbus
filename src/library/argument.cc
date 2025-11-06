@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2021 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2025 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,9 +17,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /*
  #include <config.h>
  #include <udjat/defs.h>
+ #include <udjat/tools/actions/dbus.h>
+ #include <dbus/dbus.h>
+ #include <udjat/tools/string.h>
+
+ /*
  #include <udjat/tools/abstract/object.h>
  #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/dbus/member.h>
@@ -28,15 +32,15 @@
  #include <udjat/alert/d-bus.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/string.h>
- #include <dbus/dbus.h>
  #include <stdexcept>
  #include <udjat/tools/singleton.h>
+ */
 
  using namespace std;
 
  namespace Udjat {
 
-	static int TypeFactory(const XML::Node &node) {
+	int DBus::Action::Argument::TypeFactory(const XML::Node &node) {
 
 		static const struct {
 			int type;
@@ -125,6 +129,102 @@
 
 		throw runtime_error("Unsupported argument type");
 	}
+
+	DBus::Action::Argument::Argument(const XML::Node &node)
+		: name{String{node,"name"}.as_quark()},
+		  value{String{node,"template"}.c_str()},
+		  type{TypeFactory(node)} {
+
+		if(!(name && *name)) {
+			throw runtime_error("Required attribute 'name' is missing or empty");
+		}
+
+		// If value contains '$', consider it a template.
+		if(strchr(value.c_str(),'$') || node.attribute("template").as_bool(false)) {
+			tmplt = value.as_quark();
+			value.clear();
+		}
+
+	}
+
+	static const DBusBasicValue * set_dbus_value(const char *str, int type, DBusBasicValue &dbval) {
+
+		memset(&dbval,0,sizeof(dbval));
+
+		switch(type) {
+		case DBUS_TYPE_STRING:
+			dbval.str = (char *) str;
+			break;
+
+		case DBUS_TYPE_BOOLEAN:
+			dbval.bool_val = (dbus_bool_t) atoi(str);
+			break;
+
+		case DBUS_TYPE_INT16:
+			dbval.i16 = (int16_t) atoi(str);
+			break;
+			
+		case DBUS_TYPE_UINT16:
+			dbval.u16 = (uint16_t) atoi(str);
+			break;
+			
+		case DBUS_TYPE_INT32:
+			dbval.i32 = (int32_t) atoi(str);
+			break;
+			
+		case DBUS_TYPE_UINT32:
+			dbval.u16 = (uint32_t) atoi(str);
+			break;
+			
+		case DBUS_TYPE_INT64:
+			dbval.i64 = (int64_t) atoll(str);
+			break;
+			
+		case DBUS_TYPE_UINT64:
+			dbval.u64 = (uint64_t) atoll(str);
+			break;
+			
+		case DBUS_TYPE_DOUBLE:
+			dbval.dbl = atof(str);
+			break;
+						
+		default:
+			throw runtime_error("Unsupported argument type");
+
+		}
+		return &dbval;
+	}
+
+	const DBusBasicValue * DBus::Action::Argument::get(DBusBasicValue &dbval) const {
+		return set_dbus_value(value.c_str(),type,dbval);
+	}
+
+	const DBusBasicValue * DBus::Action::Argument::set(const Udjat::Value &obj, DBusBasicValue &dbval) {
+
+		if(!tmplt) {
+			return set_dbus_value(value.c_str(),type,dbval);
+		}
+
+		value = tmplt;
+		value.expand([&obj](const char *key, std::string &value) {
+			return obj.getProperty(key,value);
+		},true);
+
+		return set_dbus_value(value.c_str(),type,dbval);
+	}
+
+	const DBusBasicValue * DBus::Action::Argument::set(const Udjat::Abstract::Object &object, DBusBasicValue &dbval) {
+
+		if(!tmplt) {
+			return set_dbus_value(value.c_str(),type,dbval);
+		}
+
+		value = tmplt;
+		value.expand(object);
+		return set_dbus_value(value.c_str(),type,dbval);
+	}
+
+	/*
 
 #if __cplusplus < 201703L			
 	DBus::Emitter::Argument::Argument(int t, const DBusBasicValue &v) : type{t} {
@@ -257,7 +357,6 @@
   <arg name="state" type="i"/>
   <arg name="error" type="s"/>
 </signal>stringstream
-
 		xmldata << "<signal name=\"" << member << "\">";
 
 		for(const auto &output : outputs) {
@@ -388,6 +487,6 @@
 		dbus_message_unref(message);
 
 	}
+*/
 
  }
-*/

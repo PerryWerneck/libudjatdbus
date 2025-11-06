@@ -73,7 +73,7 @@
 				Udjat::Interface::Handler & push_back(const XML::Node &node) override;
 
 				void introspect(std::stringstream &xmldata) const;
-				bool push_back(const XML::Node &node, std::shared_ptr<Action> action) override;
+				bool push_back(const XML::Node &node, std::shared_ptr<Udjat::Action> action) override;
 
 				inline const char * interface() const noexcept {
 					return intfname;
