@@ -82,17 +82,7 @@
 
 			Action(const XML::Node &node);
 
-			/// @brief Set properties from request, call action and set it as active.
-			/// @param request The request to get properties from.
-			/// @param response The response received from d-bus service.
-			/// @param except If true, launch exceptions on errors.
-			/// @return 0 if ok, error code otherwise.
 			int call(Udjat::Request &request, Udjat::Response &response, bool except) override;
-
-			/// @brief Call action using already set parameters.
-			/// @param except If true, launch exceptions on errors.
-			/// @return 0 if ok, error code otherwise.
-			int call(bool except) override;
 
 			void introspect(std::stringstream &xmldata) const;
 
@@ -129,11 +119,6 @@
 				
 			void get_arguments(std::shared_ptr<DBusMessage> message, const Udjat::Request &request);
 			void get_arguments(std::shared_ptr<DBusMessage> message, const Udjat::Abstract::Object &object);
-
-			/// @brief Set arguments from Udjat::Abstract::Object, change state to active.
-			/// @param object Object to get properties from.
-			/// @return true
-			bool activate(const Udjat::Abstract::Object &object) noexcept override;
 
 		};
 

@@ -98,19 +98,6 @@
 
 	}
 
-	bool DBus::Action::activate(const Udjat::Abstract::Object &object) noexcept {
-
-		debug("--- Activating D-Bus action '",interface,".",member,"' ---");
-		
-		debug("Setting up ",arguments.size()," arguments");
-		for(auto &argument : arguments) {
-			DBusBasicValue dbval;
-			argument.set(object,dbval);
-		}
-
-		return Activatable::activate(object);
-	}
-
 	std::shared_ptr<DBusMessage> DBus::Action::MessageFactory() const {
 
 		auto message = make_handle(dbus_message_new(message_type),dbus_message_unref);
@@ -151,59 +138,6 @@
 
 	}
 
-	int DBus::Action::call(bool except) {
-
-		Logger::String{
-			"Calling ",
-			dbus_message_type_to_string(message_type)," ",
-			interface," ",
-			path," ",
-			member
-		}.trace();
-
-		auto message = MessageFactory();
-		DBusMessageIter iter;
-		dbus_message_iter_init_append(message.get(),&iter);
-
-		debug("Setting up ",arguments.size()," arguments");
-		for(auto &argument : arguments) {
-			DBusBasicValue dbval;
-			dbus_message_iter_append_basic(&iter, argument.dbus_type(), argument.get(dbval));
-		}
-		
-		try {
-
-			if(message_type == DBUS_MESSAGE_TYPE_SIGNAL) {
-				Connection::getInstance(bustype).call(message.get());
-				return 0;
-			} else {
-				throw std::system_error(ENOTSUP, std::system_category(),"D-Bus method calls are not supported yet");
-			}
-
-		} catch(const std::system_error &e) {
-			if(except) {
-				throw;
-			}
-			Logger::String{e.what()}.error();
-			return e.code().value();
-
-		} catch(const std::exception &e) {
-			if(except) {
-				throw;
-			}
-			Logger::String{e.what()}.error();
-
-		} catch(...) {
-			if(except) {
-				throw;
-			}
-			Logger::String{"Unexpected error emitting d-bus signal"}.error();
-		}
-
-		return -1;
-
-	}
-
 	int DBus::Action::call(Udjat::Request &request, Udjat::Response &response, bool except) {
 
 		Logger::String{
@@ -216,9 +150,6 @@
 
 		auto message = MessageFactory();
 		get_arguments(message,request);
-
-		// Got properties, set action as active.
-		Activatable::activate();
 
 		try {
 

@@ -22,7 +22,6 @@
  #include <udjat/tools/abstract/object.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/actions/dbus.h>
- #include <udjat/tools/activatable.h>
  #include <udjat/alert.h>
  #include <udjat/alert/d-bus.h>
  #include <udjat/tools/logger.h>
@@ -109,31 +108,7 @@
 	*/
 
 	int DBus::Alert::emit() {
-
-		Logger::String{
-			"Emitting ",
-			dbus_message_type_to_string(message_type)," ",
-			interface," ",
-			path," ",
-			member
-		}.trace();
-
-		auto message = MessageFactory();
-		DBusMessageIter iter;
-		dbus_message_iter_init_append(message.get(),&iter);
-
-		debug("Setting up ",arguments.size()," arguments");
-		for(auto &argument : arguments) {
-			DBusBasicValue dbval;
-			dbus_message_iter_append_basic(&iter, argument.dbus_type(), argument.get(dbval));
-		}
-
-		if(message_type == DBUS_MESSAGE_TYPE_SIGNAL) {
-			Connection::getInstance(bustype).call(message.get());
-		} else {
-			throw std::system_error(ENOTSUP, std::system_category(),"D-Bus method calls are not supported yet");
-		}
-
+		DBus::Action::activate();
 		return 0;
 	}
 

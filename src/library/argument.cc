@@ -214,8 +214,6 @@
 			return obj.getProperty(key,value);
 		},true,true);
 
-//		debug("Value:\n",obj.serialize(MimeType::json).c_str());
-
 		debug("Expanded argument '",name,"' to '",value,"' using Udjat::Value");
 		return set_dbus_value(value.c_str(),type,dbval);
 	}
