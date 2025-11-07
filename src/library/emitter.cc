@@ -17,7 +17,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- /*
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/abstract/object.h>
@@ -253,11 +252,12 @@
 
 	void DBus::Emitter::introspect(std::stringstream &xmldata) const {
 
+/*
 <signal name="StateChanged">
   <arg name="state" type="i"/>
   <arg name="error" type="s"/>
 </signal>stringstream
-
+*/
 		xmldata << "<signal name=\"" << member << "\">";
 
 		for(const auto &output : outputs) {
@@ -390,4 +390,3 @@
 	}
 
  }
-*/

@@ -30,17 +30,16 @@
  #include <udjat/tools/xml.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/dbus/emitter.h>
- #include <udjat/tools/actions/dbus.h>
  #include <vector>
 
  namespace Udjat {
 
 	namespace DBus {
 
-		class UDJAT_API Alert : public Udjat::Alert, private Action {
+		class UDJAT_API Alert : public Udjat::Alert, private Emitter {
 		protected:
 			int emit() override;
-			// void reset(time_t next) noexcept override;
+			void reset(time_t next) noexcept override;
 
 		public:
 
@@ -55,8 +54,8 @@
 			Alert(const XML::Node &node);
 			virtual ~Alert();
 
-			//bool activate() noexcept override;
-			//bool activate(const Abstract::Object &object) noexcept override;
+			bool activate() noexcept override;
+			bool activate(const Abstract::Object &object) noexcept override;
 
 		};
 
