@@ -132,20 +132,17 @@
 
 	DBus::Action::Argument::Argument(const XML::Node &node)
 		: name{String{node,"name"}.as_quark()},
-		  value{String{node,"value"}.c_str()},
+		  value{String{node,"template"}.c_str()},
 		  type{TypeFactory(node)} {
 
 		if(!(name && *name)) {
 			throw runtime_error("Required attribute 'name' is missing or empty");
 		}
 
-		debug("------------------- Argument '",name,"' of type ",type," with value '",value,"'");
-
 		// If value contains '$', consider it a template.
-		if(node.attribute("template").as_bool(strchr(value.c_str(),'$'))) {
+		if(strchr(value.c_str(),'$') || node.attribute("template").as_bool(false)) {
 			tmplt = value.as_quark();
 			value.clear();
-			debug("Argument '",name,"' is a template: '",tmplt,"'");
 		}
 
 	}
@@ -205,29 +202,25 @@
 	const DBusBasicValue * DBus::Action::Argument::set(const Udjat::Value &obj, DBusBasicValue &dbval) {
 
 		if(!tmplt) {
-			debug("Using argument '",name,"' value '",value,"' without expansion");
 			return set_dbus_value(value.c_str(),type,dbval);
 		}
 
 		value = tmplt;
 		value.expand([&obj](const char *key, std::string &value) {
 			return obj.getProperty(key,value);
-		},true,true);
+		},true);
 
-		debug("Expanded argument '",name,"' to '",value,"' using Udjat::Value");
 		return set_dbus_value(value.c_str(),type,dbval);
 	}
 
 	const DBusBasicValue * DBus::Action::Argument::set(const Udjat::Abstract::Object &object, DBusBasicValue &dbval) {
 
 		if(!tmplt) {
-			debug("Using argument '",name,"' value '",value,"' without expansion");
 			return set_dbus_value(value.c_str(),type,dbval);
 		}
 
 		value = tmplt;
-		value.expand(object,true,true);
-		debug("Expanded argument '",name,"' to '",value,"' using Abstract::Object");
+		value.expand(object);
 		return set_dbus_value(value.c_str(),type,dbval);
 	}
 

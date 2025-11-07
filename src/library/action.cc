@@ -117,25 +117,19 @@
 	void DBus::Action::get_arguments(std::shared_ptr<DBusMessage> message, const Udjat::Request &request) {
 		DBusMessageIter iter;
 		dbus_message_iter_init_append(message.get(),&iter);
-
-		debug("Setting up ",arguments.size()," arguments");
 		for(auto &argument : arguments) {
 			DBusBasicValue dbval;
 			dbus_message_iter_append_basic(&iter, argument.dbus_type(), argument.set(request,dbval));
 		}
-
 	}
 
 	void DBus::Action::get_arguments(std::shared_ptr<DBusMessage> message, const Udjat::Abstract::Object &object) {
 		DBusMessageIter iter;
 		dbus_message_iter_init_append(message.get(),&iter);
-
-		debug("Setting up ",arguments.size()," arguments");
 		for(auto &argument : arguments) {
 			DBusBasicValue dbval;
 			dbus_message_iter_append_basic(&iter, argument.dbus_type(), argument.set(object,dbval));
 		}
-
 	}
 
 	int DBus::Action::call(Udjat::Request &request, Udjat::Response &response, bool except) {
