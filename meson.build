@@ -80,6 +80,7 @@ compiler_flags = [
   '-fPIC',
   '-DHAVE_CONFIG_H=1',
   '-DBUILD_DATE='+time_epoch,
+  '-Wno-overloaded-virtual',
   '-DLOG_DOMAIN="d-bus"',
 ]
 
@@ -134,7 +135,6 @@ lib_src = [
   'src/library/module.cc',
   'src/library/signal.cc',
   'src/library/exception.cc',
-  'src/library/emitter.cc',
   'src/library/alert.cc',
   'src/library/action.cc',
   'src/library/testprogram.cc',
@@ -257,6 +257,5 @@ install_headers(
   'src/include/udjat/tools/dbus/member.h',
   'src/include/udjat/tools/dbus/message.h',
   'src/include/udjat/tools/dbus/signal.h',
-  'src/include/udjat/tools/dbus/emitter.h',
   subdir: 'udjat/tools/dbus'  
 )

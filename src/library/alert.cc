@@ -20,13 +20,13 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/abstract/object.h>
- #include <udjat/tools/dbus/connection.h>
  #include <udjat/alert.h>
  #include <udjat/alert/d-bus.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/string.h>
  #include <dbus/dbus.h>
  #include <stdexcept>
+ #include <udjat/tools/xml.h>
 
  using namespace std;
 
@@ -42,70 +42,20 @@
 		return make_shared<DBus::Alert>(node);
 	}
 
-	DBus::Alert::Alert(const XML::Node &node) : Udjat::Alert{node}, DBus::Emitter{node} {
+	DBus::Alert::Alert(const XML::Node &node) : Udjat::Alert{node}, Udjat::DBus::Action{node} {
 	}
 
 	DBus::Alert::~Alert() {
 	}
 
 	void DBus::Alert::reset(time_t next) noexcept {
-		if(!next) {
-			Emitter::clear();
-		}
-		super::reset(next);
-	}
-
-	bool DBus::Alert::activate() noexcept {
-
-		debug("Activating '",name(),"' without object");
-
-		try {
-
-			if(active()) {
-				errno = EALREADY;
-				return false;
-			}
-
-			prepare();
-			return ::Udjat::Alert::activate();
-
-		} catch(const std::exception &e) {
-
-			Logger::String{e.what()}.error(name());
-
-		}
-
-		return false;
-
-	}
-
-	bool DBus::Alert::activate(const Abstract::Object &object) noexcept {
-
-		debug("Activating '",name(),"' with object");
-
-		try {
-
-			if(active()) {
-				errno = EALREADY;
-				return false;
-			}
-
-			prepare(object);
-			return ::Udjat::Alert::activate();
-
-		} catch(const std::exception &e) {
-
-			Logger::String{e.what()}.error(name());
-
-		}
-
-		return false;
-
 	}
 
 	int DBus::Alert::emit() {
-		Emitter::send();
-		return 0;
+
+		// TODO: Implement.
+
+		return EINVAL;
 	}
 
  }

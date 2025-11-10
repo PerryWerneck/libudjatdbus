@@ -34,9 +34,8 @@
  using namespace std;
 
  #ifdef DEBUG 
- UDJAT_API int run_udjat_unit_test(const char *name) {
 
-	Logger::String{"Running unit test: ",name}.info();
+ static int call_and_wait_test() {
 
 	Logger::String{"Calling gnome screensaver"}.info();
 	SessionBus::getInstance().call_and_wait(
@@ -84,5 +83,35 @@
 
 
 	return 0;
+
+ }
+
+ UDJAT_API int run_udjat_unit_test(const char *name) {
+
+	static const struct {
+		const char *name;
+		int (*test)();
+	} tests[] = {
+		{"call_and_wait",call_and_wait_test},
+	};
+
+	Logger::String{"Running unit test: ",name}.info();
+
+	if(!name) {
+		for(const auto &test : tests) {
+			Logger::String{"Running unit test: ",test.name}.info();
+			test.test();
+		}
+	} else {
+		for(const auto &test : tests) {
+			if(strcasecmp(test.name, name) == 0) {
+				Logger::String{"Running unit test: ",test.name}.info();
+				return test.test();
+			}
+		}
+	}
+
+	return 0;
+
  }
  #endif // DEBUG

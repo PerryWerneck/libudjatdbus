@@ -29,14 +29,16 @@
  #include <udjat/tools/abstract/object.h>
  #include <udjat/tools/xml.h>
  #include <udjat/tools/string.h>
- #include <udjat/tools/dbus/emitter.h>
+ #include <udjat/tools/actions/dbus.h>
+ #include <udjat/tools/actions/dbus.h>
+ #include <memory>
  #include <vector>
-
+ 
  namespace Udjat {
 
 	namespace DBus {
 
-		class UDJAT_API Alert : public Udjat::Alert, private Emitter {
+		class UDJAT_API Alert : public Udjat::Alert, private Udjat::DBus::Action {
 		protected:
 			int emit() override;
 			void reset(time_t next) noexcept override;
