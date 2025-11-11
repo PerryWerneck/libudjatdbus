@@ -154,6 +154,8 @@
 
 		char *ptr = (char *) (str_block + valsize);
 
+		debug("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+		debug("Loading D-Bus action arguments for action '",name(),"'");
 		unload();
 		values = reinterpret_cast<DBusBasicValue *>(str_block);
 
@@ -161,6 +163,7 @@
 
 			switch(arguments[ix].type) {
 			case DBUS_TYPE_STRING:
+				debug("Loading string argument '",arguments[ix].name,"' with value '",vals[ix],"'");
 				strcpy(ptr,vals[ix].c_str());
 				values[ix].str = ptr;
 				ptr += vals[ix].length() + 1;
@@ -208,6 +211,7 @@
 
 	void DBus::Action::load(const Udjat::Request &request) {
 
+		debug("Loading D-Bus action arguments from request for action '",name(),"'");
 		std::vector<String> vals;
 		for(const auto &arg : arguments) {
 			String str{arg.tmplt};
@@ -225,9 +229,11 @@
 	/// @param object The object with argument values.
 	void DBus::Action::load(const Udjat::Abstract::Object &object) {
 
+		debug("Loading D-Bus action arguments from object for action '",name(),"'");
 		std::vector<String> vals;
 		for(const auto &arg : arguments) {
 			String str{arg.tmplt};
+			debug("Argument '",arg.name,"' template before expand: '",str.c_str(),"'");
 			str.expand(object,true);
 			vals.push_back(str);
 		}

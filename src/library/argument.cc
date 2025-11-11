@@ -58,8 +58,8 @@
 	}
 
 	DBus::Action::Argument::Argument(const XML::Node &node)
-		: name{Abstract::Object::settings_from(node,"name","")},
-		  tmplt{Abstract::Object::settings_from(node,"template","")},
+		: name{String{node,"name",""}.as_quark()},
+		  tmplt{String{node,"value",""}.as_quark()},
 		  type{DBusTypeFactory(node)} {
 	}
 
