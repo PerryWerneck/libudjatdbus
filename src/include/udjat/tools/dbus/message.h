@@ -117,6 +117,11 @@
 			/// @brief Launch exception if this message has errors.
 			void except() const;
 
+			/// @brief Iterate over all values in the message.
+			/// @param call Funcion to call for each value.
+			/// @return true if iteration was stopped by the call function returning true.
+			bool for_each(const std::function<bool (const Udjat::Value &value)> &call);
+
 			Message & pop(Udjat::Value &value);
 			Message & pop(std::string &value);
 			Message & pop(int &value);

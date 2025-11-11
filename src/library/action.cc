@@ -23,7 +23,10 @@
  #include <stdexcept>
  #include <udjat/tools/actions/dbus.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/dbus/exception.h>
+ #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/memory.h>
+ #include <udjat/tools/logger.h>
 
  using namespace std;
 
@@ -74,14 +77,71 @@
 		try {
 
 			load(request);
-			exec();
+			if(message_type != DBUS_MESSAGE_TYPE_METHOD_CALL) {
+				exec();
+			}
+
+			// TODO: Check for introspection to get property names.
+
+			// It's a method call, we need to wait for a reply.
+
+			auto message = make_handle(dbus_message_new(message_type),dbus_message_unref);
+			dbus_message_set_destination(message.get(),destination);
+			dbus_message_set_interface(message.get(),iface);
+			dbus_message_set_path(message.get(),path);
+			dbus_message_set_member(message.get(),member);
+
+			DBusMessageIter iter;
+			dbus_message_iter_init_append(message.get(),&iter);
+			for(size_t ix = 0; ix < arguments.size(); ix++) {
+				dbus_message_iter_append_basic(&iter, arguments[ix].type, &values[ix]);
+			}
+
+			DBusError error;
+			dbus_error_init(&error);
+
+			debug("Calling and waiting...");
+			
+			DBusMessage * rsp =
+				dbus_connection_send_with_reply_and_block(
+					Connection::getInstance(bustype).get(),
+					message.get(),
+					DBUS_TIMEOUT_USE_DEFAULT,
+					&error
+				);
+
+			if(dbus_error_is_set(&error)) {
+				if(rsp) {
+					dbus_message_unref(rsp);
+				}
+				throw runtime_error(Logger::String{"D-Bus call error: ",error.name," - ",error.message});
+			}
+
+			if(!rsp) {
+				throw runtime_error("No response received from D-Bus call");
+			}
+
+			DBus::Message msg{rsp};
+			dbus_message_unref(rsp);
+
+			// TODO: Use introspection data to build proper response.
+			msg.for_each([&response](const Udjat::Value &value) {
+				response.append(value);
+				return false;
+			});
 
 		} catch(const system_error &e) {
-			
+	
+			if(except) {
+				throw;
+			}
 			return e.code().value();
 
 		} catch(const std::exception &e) {
 			
+			if(except) {
+				throw;
+			}
 			return -1;
 
 		}
@@ -154,7 +214,6 @@
 
 		char *ptr = (char *) (str_block + valsize);
 
-		debug("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		debug("Loading D-Bus action arguments for action '",name(),"'");
 		unload();
 		values = reinterpret_cast<DBusBasicValue *>(str_block);
@@ -249,14 +308,6 @@
 
 		auto message = make_handle(dbus_message_new(message_type),dbus_message_unref);
 
-		Logger::String{
-			"Emitting ",
-			dbus_message_type_to_string(message_type)," ",
-			iface," ",
-			path," ",
-			member
-		}.trace();
-
 		debug("Interface name will bet set to '",iface,"'");
 		dbus_message_set_interface(message.get(),iface);
 
@@ -272,10 +323,20 @@
 			dbus_message_iter_append_basic(&iter, arguments[ix].type, &values[ix]);
 		}
 
-		if(message_type == DBUS_MESSAGE_TYPE_SIGNAL) {
+		switch(message_type) {
+		case DBUS_MESSAGE_TYPE_SIGNAL:
+			Logger::String{
+				"Emitting ",
+				dbus_message_type_to_string(message_type)," ",
+				iface,".",member," on path ",
+				path
+			}.trace(name());
 			Connection::getInstance(bustype).call(message.get());
-		} else {
-			throw std::system_error(ENOTSUP,system_category(),"Only signal message type is supported");
+			break;
+		
+		default:
+			throw std::system_error(ENOTSUP,system_category(),Logger::String{"Unsupported D-Bus message type: ",dbus_message_type_to_string(message_type)});
+
 		}
 
 	}

@@ -107,6 +107,10 @@
 				return conn;
 			}
 
+			inline DBusConnection * get() const noexcept {
+				return conn;
+			}
+
 			inline operator DBusConnection *() const noexcept {
 				return conn;
 			}
