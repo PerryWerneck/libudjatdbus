@@ -41,7 +41,6 @@
 		class UDJAT_API Alert : public Udjat::Alert, private Udjat::DBus::Action {
 		protected:
 			int emit() override;
-			void reset(time_t next) noexcept override;
 
 		public:
 

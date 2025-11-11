@@ -21,7 +21,7 @@
 
  #include <dbus/dbus.h>
  #include <udjat/defs.h>
- #include <udjat/tools/actions/abstract.h>
+ #include <udjat/action.h>
  #include <udjat/tools/request.h>
  #include <udjat/tools/response.h>
  #include <udjat/tools/xml.h>
@@ -32,6 +32,9 @@
  	namespace DBus {
  
 		typedef int DBusType;
+		DBusType DBusTypeFactory(const XML::Node &node);
+ 
+ 		/// @brief D-Bus action.
 
 		class UDJAT_API Action : public Udjat::Action {
 		public:
@@ -59,7 +62,7 @@
 
 			/// Update arguments from object.
 			/// @param object The object with new argument values.
-			void set(const Udjat::Abstract::Object &object);
+			void call(const Udjat::Abstract::Object &object);
 
 			/// @brief D-Bus message arguments.
 			struct Argument {
@@ -67,13 +70,16 @@
 				const char *tmplt = nullptr;	///< @brief Argument template (for string parsing).
 				const DBusType type;			///< @brief D-Bus data type.
 
-				Argument(const char *n, const DBusType d, const char *t = nullptr)
+				constexpr Argument(const char *n, const DBusType d, const char *t = nullptr)
 					: name{n}, tmplt{t}, type{d} {
 				}
 
 				Argument(const XML::Node &node);
 			};
 			
+			/// @brief Execute the action, with pre-loaded arguments.
+			void exec();
+
 		private:
 
 			/// @brief The d-bus message type.
@@ -102,10 +108,15 @@
 			/// @param object The object with argument values.
 			void load(const Udjat::Abstract::Object &object);
 
+			/// @brief Release loaded argument values.
+			void unload();
+			
 			std::vector<Argument> arguments;
 
 			/// @brief The argument values after loading.
 			DBusBasicValue * values = nullptr;
+
+			void load(const std::vector<Udjat::String> &vals);
 
 		};
  	}

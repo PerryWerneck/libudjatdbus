@@ -48,14 +48,46 @@
 	DBus::Alert::~Alert() {
 	}
 
-	void DBus::Alert::reset(time_t next) noexcept {
+	bool DBus::Alert::activate() noexcept {
+		Abstract::Object empty;
+		return activate(empty);
+	}
+
+	bool DBus::Alert::activate(const Abstract::Object &object) noexcept {
+
+		try {
+
+			DBus::Action::call(object);
+
+		} catch(const std::exception &e) {
+			
+			failed(e.what());
+			return -1;
+
+		}
+		return false;
+
 	}
 
 	int DBus::Alert::emit() {
 
-		// TODO: Implement.
+		try {
 
-		return EINVAL;
+			DBus::Action::call(true);
+
+		} catch(const system_error &e) {
+			
+			failed(e.what());
+			return e.code().value();
+
+		} catch(const std::exception &e) {
+			
+			failed(e.what());
+			return -1;
+
+		}
+
+		return 0;
 	}
 
  }

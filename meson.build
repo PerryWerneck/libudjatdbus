@@ -20,7 +20,7 @@
 project(
 	'udjatdbus', 
 	['cpp'],
-	version: '2.0.3',
+	version: '2.0.4',
 	default_options : ['c_std=c11', 'cpp_std=c++17'],
 	license: 'GPL-3.0-or-later',
 )
@@ -137,6 +137,7 @@ lib_src = [
   'src/library/exception.cc',
   'src/library/alert.cc',
   'src/library/action.cc',
+  'src/library/argument.cc',
   'src/library/testprogram.cc',
 ]
 

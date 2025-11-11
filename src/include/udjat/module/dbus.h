@@ -26,14 +26,15 @@
  #include <udjat/defs.h>
  #include <udjat/module/abstract.h>
  #include <udjat/tools/interface.h>
- #include <udjat/alert/d-bus.h>
+ #include <udjat/tools/actions/dbus.h>
+ #include <udjat/alert/d-bus.h>	
  #include <vector>
 
  namespace Udjat {
 
 	namespace DBus {
 
-		class UDJAT_API Module : public Udjat::Module, private DBus::Alert::Factory {
+		class UDJAT_API Module : public Udjat::Module, private DBus::Alert::Factory, private DBus::Action::Factory {
 		public:
 
 			Module();
