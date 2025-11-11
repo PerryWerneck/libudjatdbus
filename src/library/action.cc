@@ -62,35 +62,94 @@
 	}
 
 	DBus::Action::~Action() {
-		unload();
 	}	
 
-	void DBus::Action::unload() {
-		if(values) {
-			free(values);
-			values = nullptr;
+	std::shared_ptr<DBusMessage> DBus::Action::MessageFactory(const std::vector<String> &vals) {
+
+		std::shared_ptr<DBusMessage> message =
+			make_handle(
+				dbus_message_new(message_type),
+				dbus_message_unref
+			);
+
+		if(message_type != DBUS_MESSAGE_TYPE_METHOD_CALL) {
+			dbus_message_set_destination(message.get(),destination);
 		}
-	}	
+		
+		DBusMessageIter iter;
+		dbus_message_iter_init_append(message.get(), &iter);
+		for(size_t ix = 0; ix < arguments.size(); ix++) {
+
+			DBusBasicValue val;
+			memset(&val,0,sizeof(val));
+
+			switch(arguments[ix].type) {
+			case DBUS_TYPE_STRING:
+				val.str = (char *) vals[ix].c_str();
+				break;
+
+			case DBUS_TYPE_INT16:
+				val.i16 = atoi(vals[ix].c_str());
+				break;
+
+			case DBUS_TYPE_UINT16:
+				val.u16 = static_cast<uint16_t>(atoi(vals[ix].c_str()));
+				break;
+
+			case DBUS_TYPE_INT32:
+				val.i32 = atoi(vals[ix].c_str());
+				break;
+
+			case DBUS_TYPE_UINT32:
+				val.u32 = static_cast<uint32_t>(atoi(vals[ix].c_str()));
+				break;
+
+			case DBUS_TYPE_INT64:
+				val.i64 = static_cast<int64_t>(atoll(vals[ix].c_str()));
+				break;
+
+			case DBUS_TYPE_UINT64:
+				val.u64 = static_cast<uint64_t>(atoll(vals[ix].c_str()));
+				break;
+
+			case DBUS_TYPE_DOUBLE:
+				val.dbl = atof(vals[ix].c_str());
+				break;
+
+			case DBUS_TYPE_BOOLEAN:
+				val.bool_val = atoi(vals[ix].c_str()) != 0;
+				break;
+
+			default:
+				throw std::system_error(ENOTSUP,system_category(),"Unsupported D-Bus argument type");
+			}
+
+			if(!dbus_message_iter_append_basic(&iter,arguments[ix].type,&val)) {
+				throw runtime_error("Can't add value to d-bus iterator");
+			}
+
+		}
+
+		return message;
+	}
 
 	int DBus::Action::call(Udjat::Request &request, Udjat::Response &response, bool except) {
 
 		try {
 
-			load(request);
-			if(message_type != DBUS_MESSAGE_TYPE_METHOD_CALL) {
-				exec();
-			}
+			std::vector<String> vals;
+
+			message = MessageFactory(vals);
+			dbus_message_set_interface(message.get(),iface);
+			dbus_message_set_path(message.get(),path);
+			dbus_message_set_member(message.get(),member);
 
 			// TODO: Check for introspection to get property names.
 
 			// It's a method call, we need to wait for a reply.
 
-			auto message = make_handle(dbus_message_new(message_type),dbus_message_unref);
-			dbus_message_set_destination(message.get(),destination);
-			dbus_message_set_interface(message.get(),iface);
-			dbus_message_set_path(message.get(),path);
-			dbus_message_set_member(message.get(),member);
 
+			/*
 			DBusMessageIter iter;
 			dbus_message_iter_init_append(message.get(),&iter);
 			for(size_t ix = 0; ix < arguments.size(); ix++) {
@@ -129,6 +188,7 @@
 				response.append(value);
 				return false;
 			});
+			*/
 
 		} catch(const system_error &e) {
 	
@@ -153,8 +213,19 @@
 	/// Update arguments from object.
 	/// @param object The object with new argument values.
 	void DBus::Action::call(const Udjat::Abstract::Object &object) {
-		load(object);
-		exec();
+
+		std::vector<String> vals;
+		for(const auto &arg : arguments) {
+			String str{arg.tmplt};
+			str.expand(object,true);
+			vals.push_back(str);
+		}
+
+		message = MessageFactory(vals);
+		dbus_message_set_interface(message.get(),String{iface}.expand(object,true).c_str());
+		dbus_message_set_path(message.get(),String{path}.expand(object,true).c_str());
+		dbus_message_set_member(message.get(),String{member}.expand(object,true).c_str());
+
 	}
 
 	/// @brief Call action using already set parameters.
@@ -164,12 +235,12 @@
 
 		try {
 
-			if(!values) {
-				Udjat::Abstract::Object obj;
-				load(obj);
+			if(!message) {
+				message = MessageFactory();
+				dbus_message_set_interface(message.get(),iface);
+				dbus_message_set_path(message.get(),path);
+				dbus_message_set_member(message.get(),member);
 			}
-
-			exec();
 			
 		} catch(const system_error &e) {
 			if(except) {
@@ -195,6 +266,7 @@
 
 	}
 
+	/*
 	void DBus::Action::load(const std::vector<Udjat::String> &vals) {
 
 		// Get lengths.
@@ -267,7 +339,9 @@
 		}
 
 	}
+	*/
 
+	/*
 	void DBus::Action::load(const Udjat::Request &request) {
 
 		debug("Loading D-Bus action arguments from request for action '",name(),"'");
@@ -283,7 +357,9 @@
 		load(vals);
 
 	}
+	*/
 
+	/*
 	/// @brief Load argument values from object.
 	/// @param object The object with argument values.
 	void DBus::Action::load(const Udjat::Abstract::Object &object) {
@@ -299,7 +375,9 @@
 
 		load(vals);
 	}
+	*/
 
+	/*
 	void DBus::Action::exec() {
 
 		if(!values) {
@@ -340,5 +418,6 @@
 		}
 
 	}
+	*/
 
  }
