@@ -79,9 +79,6 @@
 	
 		private:
 
-			/// @brief The D-Bus message with expanded action parameters.
-			std::shared_ptr<DBusMessage> message;
-
 			/// @brief The d-bus message type.
 			int message_type = DBUS_MESSAGE_TYPE_SIGNAL;
 

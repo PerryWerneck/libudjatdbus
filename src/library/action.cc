@@ -139,7 +139,7 @@
 
 			std::vector<String> vals;
 
-			message = MessageFactory(vals);
+			auto message = MessageFactory(vals);
 			dbus_message_set_interface(message.get(),iface);
 			dbus_message_set_path(message.get(),path);
 			dbus_message_set_member(message.get(),member);
@@ -221,10 +221,12 @@
 			vals.push_back(str);
 		}
 
-		message = MessageFactory(vals);
+		auto message = MessageFactory(vals);
 		dbus_message_set_interface(message.get(),String{iface}.expand(object,true).c_str());
 		dbus_message_set_path(message.get(),String{path}.expand(object,true).c_str());
 		dbus_message_set_member(message.get(),String{member}.expand(object,true).c_str());
+
+		Connection::getInstance(bustype).call(message.get());
 
 	}
 
@@ -235,13 +237,13 @@
 
 		try {
 
-			if(!message) {
-				message = MessageFactory();
-				dbus_message_set_interface(message.get(),iface);
-				dbus_message_set_path(message.get(),path);
-				dbus_message_set_member(message.get(),member);
-			}
+			auto message = MessageFactory();
+			dbus_message_set_interface(message.get(),iface);
+			dbus_message_set_path(message.get(),path);
+			dbus_message_set_member(message.get(),member);
 			
+			Connection::getInstance(bustype).call(message.get());
+
 		} catch(const system_error &e) {
 			if(except) {
 				throw;
