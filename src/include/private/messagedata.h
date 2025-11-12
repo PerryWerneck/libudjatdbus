@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2025 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -25,31 +25,25 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include <dbus/dbus.h>
+ #include <private/dataslot.h>
+ #include <udjat/tools/string.h>
  #include <udjat/tools/logger.h>
 
- class DataSlot {
- private:
-	dbus_int32_t slot = -1; // The passed-in slot must be initialized to -1, and is filled in with the slot ID
-
+ class UDJAT_PRIVATE MessageData {
  public:
+	std::vector<Udjat::String> arguments;
+	Udjat::String iface;
+	Udjat::String path;
+	Udjat::String member;
 
-	DataSlot() {
-		dbus_connection_allocate_data_slot(&slot);
-	}
+	MessageData() = default;
 
-	~DataSlot() {
-		dbus_connection_free_data_slot(&slot);
-	}
+	static DataSlot & getSlot();
 
-	static DataSlot & getInstance() {
-		static DataSlot instance;
-		return instance;
-	}
-
-	inline dbus_int32_t value() const noexcept {
-		return slot;
+	~MessageData() {
 	}
 
  };
+
+ 
 

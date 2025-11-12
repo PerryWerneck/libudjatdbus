@@ -27,6 +27,8 @@
  #include <dbus/dbus.h>
  #include <stdexcept>
  #include <udjat/tools/xml.h>
+ #include <private/messagedata.h>
+ #include <udjat/tools/dbus/connection.h>
 
  using namespace std;
 
@@ -48,6 +50,14 @@
 	DBus::Alert::~Alert() {
 	}
 
+	bool DBus::Alert::deactivate() noexcept {
+		if(Udjat::Alert::deactivate()) {
+			message.reset();
+			return true;
+		}
+		return false;
+	}
+
 	bool DBus::Alert::activate() noexcept {
 		Abstract::Object empty;
 		return activate(empty);
@@ -57,12 +67,35 @@
 
 		try {
 
-			DBus::Action::call(object);
+			std::vector<String> vals;
+			for(const auto &arg : arguments) {
+				String str{arg.tmplt};
+				str.expand(object,true);
+				vals.push_back(str);
+			}
+
+			message = MessageFactory(vals);
+
+			MessageData *data = 
+				(MessageData *) dbus_message_get_data(
+					message.get(),
+					MessageData::getSlot().value()
+				);
+
+			data->iface = String{iface}.expand(object,true);
+			data->path = String{path}.expand(object,true);
+			data->member = String{member}.expand(object,true);
+
+			dbus_message_set_interface(message.get(),data->iface.c_str());
+			dbus_message_set_path(message.get(),data->path.c_str());
+			dbus_message_set_member(message.get(),data->member.c_str());
+
+			emit();
+			return true;
 
 		} catch(const std::exception &e) {
 			
 			failed(e.what());
-			return -1;
 
 		}
 		return false;
@@ -73,7 +106,26 @@
 
 		try {
 
-			DBus::Action::call(true);
+			if(!message) {
+				throw std::runtime_error("D-Bus message not set");
+			}
+
+			MessageData *data = 
+				(MessageData *) dbus_message_get_data(
+					message.get(),
+					MessageData::getSlot().value()
+				);
+
+			Logger::String{
+				"Emitting ",dbus_message_type_to_string(message_type)," dbus://",
+				data->iface.c_str(),
+				".",data->member.c_str(),
+				data->path.c_str(),
+			}.trace(Udjat::Alert::name());
+
+			auto copy = dbus_message_copy(message.get());
+			Connection::getInstance(bustype).call(copy);
+			dbus_message_unref(copy);
 
 		} catch(const system_error &e) {
 			

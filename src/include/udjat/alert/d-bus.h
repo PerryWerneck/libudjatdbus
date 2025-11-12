@@ -39,7 +39,10 @@
 	namespace DBus {
 
 		class UDJAT_API Alert : public Udjat::Alert, private Udjat::DBus::Action {
-		protected:
+		private:
+			std::shared_ptr<DBusMessage> message;
+		
+			protected:
 			int emit() override;
 
 		public:
@@ -57,6 +60,7 @@
 
 			bool activate() noexcept override;
 			bool activate(const Abstract::Object &object) noexcept override;
+			bool deactivate() noexcept override;
 
 		};
 

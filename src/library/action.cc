@@ -28,6 +28,7 @@
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/memory.h>
  #include <udjat/tools/logger.h>
+ #include <private/messagedata.h>
 
  using namespace std;
 
@@ -65,13 +66,26 @@
 	DBus::Action::~Action() {
 	}	
 
+	static void free_message_data(MessageData *data) {
+		delete data;
+	}
+
 	std::shared_ptr<DBusMessage> DBus::Action::MessageFactory(const std::vector<String> &vals) {
+
+		MessageData *data = new MessageData();
 
 		std::shared_ptr<DBusMessage> message =
 			make_handle(
 				dbus_message_new(message_type),
 				dbus_message_unref
 			);
+
+		dbus_message_set_data(
+			message.get(),
+			MessageData::getSlot().value(),
+			(void *) data,
+			(DBusFreeFunction) free_message_data
+		);
 
 		if(message_type != DBUS_MESSAGE_TYPE_METHOD_CALL) {
 			dbus_message_set_destination(message.get(),destination);
@@ -86,7 +100,11 @@
 
 			switch(arguments[ix].type) {
 			case DBUS_TYPE_STRING:
-				val.str = (char *) vals[ix].c_str();
+				{
+					// Store argument template for later use.
+					data->arguments.push_back(vals[ix]);
+					val.str = (char *) data->arguments.back().c_str();
+				}
 				break;
 
 			case DBUS_TYPE_INT16:
@@ -147,14 +165,15 @@
 				vals.push_back(str);
 			}
 
-			message = MessageFactory(vals);
-			dbus_message_set_interface(message.get(),iface);
-			dbus_message_set_path(message.get(),path);
-			dbus_message_set_member(message.get(),member);
+			// This method is usually called only once, so we build the message here.
+			auto query = MessageFactory(vals);
+			dbus_message_set_interface(query.get(),iface);
+			dbus_message_set_path(query.get(),path);
+			dbus_message_set_member(query.get(),member);
 
 			// If it's a signal, just send it and return.
 			if(message_type == DBUS_MESSAGE_TYPE_SIGNAL) {
-				Connection::getInstance(bustype).call(dbus_message_copy(message.get()));
+				Connection::getInstance(bustype).call(query.get());
 				return 0;
 			}
 
@@ -168,7 +187,7 @@
 			DBusMessage * rsp =
 				dbus_connection_send_with_reply_and_block(
 					Connection::getInstance(bustype).get(),
-					message.get(),
+					query.get(),
 					DBUS_TIMEOUT_USE_DEFAULT,
 					&error
 				);
@@ -215,9 +234,12 @@
 
 	}
 
+	/*
 	/// Update arguments from object.
 	/// @param object The object with new argument values.
-	void DBus::Action::call(const Udjat::Abstract::Object &object) {
+	void DBus::Action::set(const Udjat::Abstract::Object &object) {
+
+		debug("--------- Setting D-Bus action '",name(),"' arguments from object");
 
 		std::vector<String> vals;
 		for(const auto &arg : arguments) {
@@ -227,32 +249,77 @@
 		}
 
 		auto message = MessageFactory(vals);
-		dbus_message_set_interface(message.get(),String{iface}.expand(object,true).c_str());
-		dbus_message_set_path(message.get(),String{path}.expand(object,true).c_str());
-		dbus_message_set_member(message.get(),String{member}.expand(object,true).c_str());
 
-		Connection::getInstance(bustype).call(dbus_message_copy(message.get()));
+		MessageData *data = 
+			(MessageData *) dbus_message_get_data(
+				message.get(),
+				MessageData::getSlot().value()
+			);
+
+		data->iface = String{iface}.expand(object,true);
+		data->path = String{path}.expand(object,true);
+		data->member = String{member}.expand(object,true);
+
+		dbus_message_set_interface(message.get(),data->iface.c_str());
+		dbus_message_set_path(message.get(),data->path.c_str());
+		dbus_message_set_member(message.get(),data->member.c_str());
 
 	}
+	*/
 
 	/// @brief Call action using already set parameters.
 	/// @param except if true will launch exceptions on errors.
 	/// @return 0 if ok, error code otherwise.
 	int DBus::Action::call(bool except) {
 
+		debug("--------- Calling D-Bus action '",name(),"'");
+
 		try {
 
-			if(message) {
-				// Have message already built, just use it.
-				Connection::getInstance(bustype).call(dbus_message_copy(message.get()));
-			} else {
-				// Dont have message, build it now.
-				auto message = MessageFactory();
-				dbus_message_set_interface(message.get(),iface);
-				dbus_message_set_path(message.get(),path);
-				dbus_message_set_member(message.get(),member);
-				Connection::getInstance(bustype).call(message.get());
+			std::vector<String> vals;
+			for(const auto &arg : arguments) {
+				String str{arg.tmplt};
+				str.expand();
+				vals.push_back(str);
 			}
+
+			auto message = MessageFactory(vals);
+
+			MessageData *data = 
+				(MessageData *) dbus_message_get_data(
+					message.get(),
+					MessageData::getSlot().value()
+				);
+
+			data->iface = String{iface}.expand(true);
+			if(data->iface.empty()) {
+				throw std::runtime_error("D-Bus interface cannot be empty");
+			}
+			
+			data->path = String{path}.expand(true);
+			if(data->path.empty()) {
+				throw std::runtime_error("D-Bus path cannot be empty");
+			}
+
+			data->member = String{member}.expand(true);
+			if(data->member.empty()) {
+				throw std::runtime_error("D-Bus member cannot be empty");
+			}
+
+			dbus_message_set_interface(message.get(),data->iface.c_str());
+			dbus_message_set_path(message.get(),data->path.c_str());
+			dbus_message_set_member(message.get(),data->member.c_str());
+
+			Logger::String{
+				"Emitting ",dbus_message_type_to_string(message_type)," dbus://",
+				data->iface.c_str(),
+				".",data->member.c_str(),
+				data->path.c_str(),
+			}.trace(name());
+
+			auto copy = dbus_message_copy(message.get());
+			Connection::getInstance(bustype).call(copy);
+			dbus_message_unref(copy);
 
 		} catch(const system_error &e) {
 			if(except) {
@@ -279,3 +346,10 @@
 	}
 
  }
+
+ DataSlot & MessageData::getSlot() {
+	static DataSlot instance;
+	return instance;
+ }
+
+

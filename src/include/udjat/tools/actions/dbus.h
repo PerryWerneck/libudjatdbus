@@ -60,10 +60,6 @@
 			/// @return 0 if ok, error code otherwise.
 			int call(bool except = true) override;
 
-			/// Update arguments from object.
-			/// @param object The object with new argument values.
-			void call(const Udjat::Abstract::Object &object);
-
 			/// @brief D-Bus message arguments.
 			struct Argument {
 				const char *name;				///< @brief Argument name.
@@ -77,10 +73,7 @@
 				Argument(const XML::Node &node);
 			};
 	
-		private:
-
-			/// @brief Parsed message with all arguments set.
-			std::shared_ptr<DBusMessage> message;
+		protected:
 
 			/// @brief The d-bus message type.
 			int message_type = DBUS_MESSAGE_TYPE_SIGNAL;
@@ -103,8 +96,10 @@
 			/// @brief The argument values (can be templates).
 			std::vector<Argument> arguments;
 
-			std::shared_ptr<DBusMessage> MessageFactory(const std::vector<String> &vals = {});
-
+			/// @brief Construct D-Bus message from argument values.
+			/// @param vals The argument values.
+			/// @return Pointer to D-Bus message.
+			std::shared_ptr<DBusMessage> MessageFactory(const std::vector<String> &vals);
 
 		};
  	}
