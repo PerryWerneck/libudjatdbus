@@ -79,6 +79,9 @@
 	
 		private:
 
+			/// @brief Parsed message with all arguments set.
+			std::shared_ptr<DBusMessage> message;
+
 			/// @brief The d-bus message type.
 			int message_type = DBUS_MESSAGE_TYPE_SIGNAL;
 
