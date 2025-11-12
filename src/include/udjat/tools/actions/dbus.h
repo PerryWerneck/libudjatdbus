@@ -55,7 +55,7 @@
 
 			int call(Udjat::Request &request, Udjat::Response &response, bool except) override;
 
-			/// @brief Call action using already set parameters.
+			/// @brief Call action without request/response.
 			/// @param except if true will launch exceptions on errors.
 			/// @return 0 if ok, error code otherwise.
 			int call(bool except = true) override;

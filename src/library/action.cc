@@ -234,42 +234,6 @@
 
 	}
 
-	/*
-	/// Update arguments from object.
-	/// @param object The object with new argument values.
-	void DBus::Action::set(const Udjat::Abstract::Object &object) {
-
-		debug("--------- Setting D-Bus action '",name(),"' arguments from object");
-
-		std::vector<String> vals;
-		for(const auto &arg : arguments) {
-			String str{arg.tmplt};
-			str.expand(object,true);
-			vals.push_back(str);
-		}
-
-		auto message = MessageFactory(vals);
-
-		MessageData *data = 
-			(MessageData *) dbus_message_get_data(
-				message.get(),
-				MessageData::getSlot().value()
-			);
-
-		data->iface = String{iface}.expand(object,true);
-		data->path = String{path}.expand(object,true);
-		data->member = String{member}.expand(object,true);
-
-		dbus_message_set_interface(message.get(),data->iface.c_str());
-		dbus_message_set_path(message.get(),data->path.c_str());
-		dbus_message_set_member(message.get(),data->member.c_str());
-
-	}
-	*/
-
-	/// @brief Call action using already set parameters.
-	/// @param except if true will launch exceptions on errors.
-	/// @return 0 if ok, error code otherwise.
 	int DBus::Action::call(bool except) {
 
 		debug("--------- Calling D-Bus action '",name(),"'");
