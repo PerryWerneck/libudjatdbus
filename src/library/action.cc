@@ -165,7 +165,6 @@
 				vals.push_back(str);
 			}
 
-			// This method is usually called only once, so we build the message here.
 			auto query = MessageFactory(vals);
 
 			MessageData *data = 
