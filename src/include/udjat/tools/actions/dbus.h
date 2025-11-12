@@ -76,11 +76,11 @@
 
 				Argument(const XML::Node &node);
 			};
-			
-			/// @brief Execute the action, with pre-loaded arguments.
-			void exec();
-
+	
 		private:
+
+			/// @brief Parsed message with all arguments set.
+			std::shared_ptr<DBusMessage> message;
 
 			/// @brief The d-bus message type.
 			int message_type = DBUS_MESSAGE_TYPE_SIGNAL;
@@ -100,23 +100,11 @@
 			/// @brief The alert member.
 			const char *member = nullptr;
 
-			/// @brief Load argument values from request.
-			/// @param request The request with argument values.
-			void load(const Udjat::Request &request);
-
-			/// @brief Load argument values from object.
-			/// @param object The object with argument values.
-			void load(const Udjat::Abstract::Object &object);
-
-			/// @brief Release loaded argument values.
-			void unload();
-			
+			/// @brief The argument values (can be templates).
 			std::vector<Argument> arguments;
 
-			/// @brief The argument values after loading.
-			DBusBasicValue * values = nullptr;
+			std::shared_ptr<DBusMessage> MessageFactory(const std::vector<String> &vals = {});
 
-			void load(const std::vector<Udjat::String> &vals);
 
 		};
  	}
