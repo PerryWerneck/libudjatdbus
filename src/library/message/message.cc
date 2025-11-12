@@ -419,4 +419,24 @@
 		return *this;
 	}
 
+	bool DBus::Message::for_each(const std::function<bool (const Udjat::Value &value)> &call) {
+
+		DBusMessageIter iter;
+
+		if(!dbus_message_iter_init(this->message.value, &iter)) {
+			return false;
+		}
+
+		int type;
+		while ((type = dbus_message_iter_get_arg_type (&iter)) != DBUS_TYPE_INVALID) {
+			Udjat::Value val;
+			to_value(&iter, val);
+			if(call(val)) {
+				return true;
+			}
+			dbus_message_iter_next(&iter);		
+		}
+		return false;
+	}
+
  }

@@ -167,9 +167,31 @@
 
 			// This method is usually called only once, so we build the message here.
 			auto query = MessageFactory(vals);
-			dbus_message_set_interface(query.get(),iface);
-			dbus_message_set_path(query.get(),path);
-			dbus_message_set_member(query.get(),member);
+
+			MessageData *data = 
+				(MessageData *) dbus_message_get_data(
+					query.get(),
+					MessageData::getSlot().value()
+				);
+
+			data->iface = String{iface}.expand(true);
+			if(data->iface.empty()) {
+				throw std::runtime_error("D-Bus interface cannot be empty");
+			}
+			
+			data->path = String{path}.expand(true);
+			if(data->path.empty()) {
+				throw std::runtime_error("D-Bus path cannot be empty");
+			}
+
+			data->member = String{member}.expand(true);
+			if(data->member.empty()) {
+				throw std::runtime_error("D-Bus member cannot be empty");
+			}
+
+			dbus_message_set_interface(query.get(),data->iface.c_str());
+			dbus_message_set_path(query.get(),data->path.c_str());
+			dbus_message_set_member(query.get(),data->member.c_str());
 
 			// If it's a signal, just send it and return.
 			if(message_type == DBUS_MESSAGE_TYPE_SIGNAL) {
@@ -206,13 +228,11 @@
 			DBus::Message msg{rsp};
 			dbus_message_unref(rsp);
 
-			/*
 			// TODO: Use introspection data to build proper response.
 			msg.for_each([&response](const Udjat::Value &value) {
 				response.append(value);
 				return false;
 			});
-			*/
 
 		} catch(const system_error &e) {
 	
@@ -281,9 +301,8 @@
 				data->path.c_str(),
 			}.trace(name());
 
-			auto copy = dbus_message_copy(message.get());
-			Connection::getInstance(bustype).call(copy);
-			dbus_message_unref(copy);
+			auto copy = make_handle(dbus_message_copy(message.get()),dbus_message_unref);
+			Connection::getInstance(bustype).call(copy.get());
 
 		} catch(const system_error &e) {
 			if(except) {

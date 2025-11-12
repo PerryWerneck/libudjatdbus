@@ -29,6 +29,7 @@
  #include <udjat/tools/xml.h>
  #include <private/messagedata.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/memory.h>
 
  using namespace std;
 
@@ -123,9 +124,8 @@
 				data->path.c_str(),
 			}.trace(Udjat::Alert::name());
 
-			auto copy = dbus_message_copy(message.get());
-			Connection::getInstance(bustype).call(copy);
-			dbus_message_unref(copy);
+			auto copy = make_handle(dbus_message_copy(message.get()),dbus_message_unref);
+			Connection::getInstance(bustype).call(copy.get());
 
 		} catch(const system_error &e) {
 			

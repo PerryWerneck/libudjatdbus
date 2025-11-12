@@ -19,7 +19,7 @@
 
 Summary:		DBus client/server library for %{udjat_product_name}  
 Name:			libudjat%{module_name}
-Version: 2.0.3
+Version: 2.0.4
 Release:		0
 License:		LGPL-3.0
 Source:			%{name}-%{version}.tar.xz
