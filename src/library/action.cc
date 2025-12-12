@@ -40,7 +40,7 @@
 
 	DBus::Action::Action(const XML::Node &node) 
 		: Udjat::Action{node},
-		  message_type{DBUS_MESSAGE_TYPE_SIGNAL},	// TODO: Implement XML parsing for message type
+		  message_type{dbus_message_type_from_string(String{node,"dbus-message-type","method_call"}.c_str())},
 		  bustype{BusTypeFactory(node)},
 		  path{String{node,"dbus-path"}.as_quark()},
 		  iface{String{node,"dbus-interface"}.as_quark()},

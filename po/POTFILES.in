@@ -17,7 +17,6 @@ src/library/service/main.cc
 src/library/service/interface.cc
 src/library/signal.cc
 src/library/alert.cc
-src/library/emitter.cc
 src/library/argument.cc
 src/library/action.cc
 src/module/init.cc

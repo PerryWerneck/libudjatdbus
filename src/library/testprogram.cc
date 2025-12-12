@@ -27,8 +27,10 @@
  #include <udjat/tools/application.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/dbus/signal.h>
+ #include <udjat/tools/response.h>
  #include <string>
- 
+ #include <udjat/tools/actions/dbus.h>
+
  using namespace Udjat;
  using namespace Udjat::DBus;
  using namespace std;
@@ -36,6 +38,23 @@
  #ifdef DEBUG 
 
  static int call_and_wait_test() {
+
+	Logger::String{"Emitting signal with action"}.info();
+	{
+		DBus::Action action{
+			DBUS_MESSAGE_TYPE_SIGNAL,
+			DBUS_BUS_SESSION,
+			"br.eti.werneck.udjat.MyInterface",
+			"/br/eti/werneck/udjat/MyObject",
+			"br.eti.werneck.udjat.MyInterface",
+			"TestSignal"
+		};
+
+		Udjat::Request request;
+		Udjat::Response response;
+		action.call(request,response,true);
+
+	}
 
 	Logger::String{"Calling gnome screensaver"}.info();
 	SessionBus::getInstance().call_and_wait(
@@ -60,6 +79,22 @@
 
 		});
 
+	Logger::String{"Calling gnome screensaver using action"}.info();
+	{
+		DBus::Action action{
+			DBUS_MESSAGE_TYPE_METHOD_CALL,
+			DBUS_BUS_SESSION,
+			"org.gnome.ScreenSaver",
+			"/org/gnome/ScreenSaver",
+			"org.gnome.ScreenSaver",
+			"GetActiveTime"
+		};
+
+		Udjat::Request request;
+		Udjat::Response response;
+		action.call(request,response,true);
+
+	}
 
 	Logger::String{"Calling invalid service"}.info();
 	SessionBus::getInstance().call_and_wait(
