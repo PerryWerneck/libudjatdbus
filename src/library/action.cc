@@ -74,6 +74,11 @@
 
 		MessageData *data = new MessageData();
 
+		debug(
+			"Creating D-Bus message of type ",dbus_message_type_to_string(message_type),
+			" with ",arguments.size()," arguments"
+		);
+
 		std::shared_ptr<DBusMessage> message =
 			make_handle(
 				dbus_message_new(message_type),
@@ -87,66 +92,71 @@
 			(DBusFreeFunction) free_message_data
 		);
 
-		if(message_type != DBUS_MESSAGE_TYPE_METHOD_CALL) {
+		if(destination && *destination) {
+			debug("Destination: '",destination,"'");
 			dbus_message_set_destination(message.get(),destination);
+		} else {
+			dbus_message_set_destination(message.get(),NULL);
 		}
 		
-		DBusMessageIter iter;
-		dbus_message_iter_init_append(message.get(), &iter);
-		for(size_t ix = 0; ix < arguments.size(); ix++) {
+		if(arguments.size()) {
+			DBusMessageIter iter;
+			dbus_message_iter_init_append(message.get(), &iter);
+			for(size_t ix = 0; ix < arguments.size(); ix++) {
 
-			DBusBasicValue val;
-			memset(&val,0,sizeof(val));
+				DBusBasicValue val;
+				memset(&val,0,sizeof(val));
 
-			switch(arguments[ix].type) {
-			case DBUS_TYPE_STRING:
-				{
-					// Store argument template for later use.
-					data->arguments.push_back(vals[ix]);
-					val.str = (char *) data->arguments.back().c_str();
+				switch(arguments[ix].type) {
+				case DBUS_TYPE_STRING:
+					{
+						// Store argument template for later use.
+						data->arguments.push_back(vals[ix]);
+						val.str = (char *) data->arguments.back().c_str();
+					}
+					break;
+
+				case DBUS_TYPE_INT16:
+					val.i16 = atoi(vals[ix].c_str());
+					break;
+
+				case DBUS_TYPE_UINT16:
+					val.u16 = static_cast<uint16_t>(atoi(vals[ix].c_str()));
+					break;
+
+				case DBUS_TYPE_INT32:
+					val.i32 = atoi(vals[ix].c_str());
+					break;
+
+				case DBUS_TYPE_UINT32:
+					val.u32 = static_cast<uint32_t>(atoi(vals[ix].c_str()));
+					break;
+
+				case DBUS_TYPE_INT64:
+					val.i64 = static_cast<int64_t>(atoll(vals[ix].c_str()));
+					break;
+
+				case DBUS_TYPE_UINT64:
+					val.u64 = static_cast<uint64_t>(atoll(vals[ix].c_str()));
+					break;
+
+				case DBUS_TYPE_DOUBLE:
+					val.dbl = atof(vals[ix].c_str());
+					break;
+
+				case DBUS_TYPE_BOOLEAN:
+					val.bool_val = atoi(vals[ix].c_str()) != 0;
+					break;
+
+				default:
+					throw std::system_error(ENOTSUP,system_category(),"Unsupported D-Bus argument type");
 				}
-				break;
 
-			case DBUS_TYPE_INT16:
-				val.i16 = atoi(vals[ix].c_str());
-				break;
+				if(!dbus_message_iter_append_basic(&iter,arguments[ix].type,&val)) {
+					throw runtime_error("Can't add value to d-bus iterator");
+				}
 
-			case DBUS_TYPE_UINT16:
-				val.u16 = static_cast<uint16_t>(atoi(vals[ix].c_str()));
-				break;
-
-			case DBUS_TYPE_INT32:
-				val.i32 = atoi(vals[ix].c_str());
-				break;
-
-			case DBUS_TYPE_UINT32:
-				val.u32 = static_cast<uint32_t>(atoi(vals[ix].c_str()));
-				break;
-
-			case DBUS_TYPE_INT64:
-				val.i64 = static_cast<int64_t>(atoll(vals[ix].c_str()));
-				break;
-
-			case DBUS_TYPE_UINT64:
-				val.u64 = static_cast<uint64_t>(atoll(vals[ix].c_str()));
-				break;
-
-			case DBUS_TYPE_DOUBLE:
-				val.dbl = atof(vals[ix].c_str());
-				break;
-
-			case DBUS_TYPE_BOOLEAN:
-				val.bool_val = atoi(vals[ix].c_str()) != 0;
-				break;
-
-			default:
-				throw std::system_error(ENOTSUP,system_category(),"Unsupported D-Bus argument type");
 			}
-
-			if(!dbus_message_iter_append_basic(&iter,arguments[ix].type,&val)) {
-				throw runtime_error("Can't add value to d-bus iterator");
-			}
-
 		}
 
 		return message;

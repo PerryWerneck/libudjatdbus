@@ -152,7 +152,13 @@
 			value.set((int) dval.i32);
 			break;
 
+		case DBUS_TYPE_UINT32:
+			dbus_message_iter_get_basic(iter,&dval);
+			value.set((unsigned int) dval.u32);
+			break;
+
 		default:
+			debug("Unsupported d-bus value type:",type," (",(char) type,")");
 			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"'"});
 
 		}
@@ -283,6 +289,7 @@
 			break;
 			
 		default:
+			debug("Unsupported d-bus value type:",type," (",(char) type,")");
 			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping int"});
 
 		}
@@ -322,6 +329,7 @@
 			break;
 			
 		default:
+			debug("Unsupported d-bus value type:",type," (",(char) type,")");
 			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping unsigned int"});
 
 		}
@@ -361,6 +369,7 @@
 			break;
 			
 		default:
+			debug("Unsupported d-bus value type:",type," (",(char) type,")");
 			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping boolean"});
 
 		}
@@ -383,7 +392,10 @@
 			value = dval.dbl;
 			break;
 
+		break;
+
 		default:
+			debug("Unsupported d-bus value type:",type," (",(char) type,")");
 			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping double"});
 
 		}
