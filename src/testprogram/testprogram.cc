@@ -36,7 +36,6 @@
 			Module()
 				: DBus::Module{},
 					DBus::Service{
-						(const ModuleInfo &) *this,
 						DBus::Connection::getInstance(DBUS_BUS_STARTER),
 						"dbus",
 						String{PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()

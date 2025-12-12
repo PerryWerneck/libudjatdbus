@@ -24,7 +24,6 @@
  #pragma once
  
  #include <udjat/defs.h>
- #include <udjat/module/info.h>
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/defs.h>
  #include <udjat/tools/interface.h>
@@ -86,8 +85,8 @@
 		public:
 
 			Service();
-			Service(const ModuleInfo &module, const char *name, const char *destination);
-			Service(const ModuleInfo &module, DBusConnection * conn, const char *name, const char *destination);
+			Service(const char *name, const char *destination);
+			Service(DBusConnection * conn, const char *name, const char *destination);
 
 			/// @brief Find interface.
 			/// @param name The name of requested interface.

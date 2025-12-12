@@ -20,7 +20,7 @@
 project(
 	'udjatdbus', 
 	['cpp'],
-	version: '2.1.0',
+	version: '2.4.0',
 	default_options : ['c_std=c11', 'cpp_std=c++17'],
 	license: 'GPL-3.0-or-later',
 )
@@ -49,7 +49,7 @@ libversion = '@0@.@1@'.format(pkg_major_version,pkg_minor_version)
 libudjat = dependency(
   'libudjat',
   required: true, 
-  version: '>=2.0.0',
+  version: '>=2.3.0',
   fallback: ['libudjat', 'static_library'],
 )
 

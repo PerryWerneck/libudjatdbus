@@ -54,8 +54,8 @@
 
  namespace Udjat {
 
-	DBus::Service::Service(const ModuleInfo &module, DBusConnection *c, const char *name, const char *destination)
-		: Udjat::Service{name,module}, Udjat::Interface::Factory{name}, conn{c}, dest{destination} {
+	DBus::Service::Service(DBusConnection *c, const char *name, const char *destination)
+		: Udjat::Service{name, "dbus " STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " service"}, Udjat::Interface::Factory{name}, conn{c}, dest{destination} {
 
 		// Keep running if d-bus disconnect.
 		dbus_connection_set_exit_on_disconnect(conn, false);
@@ -104,8 +104,8 @@
 		dbus_connection_unref(conn);
 	}
 
-	DBus::Service::Service(const ModuleInfo &module, const char *name, const char *destination)
-		: Service{module,Udjat::DBus::StarterBus::ConnectionFactory(),name,destination} {
+	DBus::Service::Service(const char *name, const char *destination)
+		: Service{Udjat::DBus::StarterBus::ConnectionFactory(),name,destination} {
 	}
 
 	/// @brief Scan XML definition for interface name.

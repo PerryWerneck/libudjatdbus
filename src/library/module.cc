@@ -43,13 +43,11 @@
 
  namespace Udjat {
 
- 	static const Udjat::ModuleInfo moduleinfo { "dbus" STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " module" };
-
-	DBus::Service::Service() 
-		: DBus::Service::Service{moduleinfo,"dbus",String{PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()} {
+ 	DBus::Service::Service() 
+		: DBus::Service::Service{"dbus",String{PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()} {
 	}
 
-	DBus::Module::Module() : Udjat::Module{"dbus",moduleinfo} {
+	DBus::Module::Module() : Udjat::Module{"dbus","dbus " STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " module"} {
 		DBus::initialize();
 	}
 
