@@ -1,4 +1,18 @@
 -------------------------------------------------------------------
+Fri Dec 12 20:56:59 UTC 2025 - perry.werneck@gmail.com
+
+- Update to version 2.4.0+git20251212:
+  * Updating to latest libudjat.
+  * Refactoring dbus::action.
+  * Adding subprojects.
+  * Archiving autoconf, adding libudjat as subproject.
+  * Fixing segfault on invalid response.
+  * Unit tests only in debug mode.
+  * Debugging empty responses, using the new unit-test engine from libudjat.
+  * Warning about unavailability of glib mainloop.
+  * Debugging legacy builds.
+
+-------------------------------------------------------------------
 Sat Jul 05 01:59:03 UTC 2025 - perry.werneck@gmail.com
 
 - Update to version 2.0.2+git20250704:
