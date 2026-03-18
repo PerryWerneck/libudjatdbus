@@ -5,7 +5,7 @@ AC_PREREQ(2.59)
 
 dnl Initialise automake with the package name, version and
 dnl bug-reporting address.
-AC_INIT([udjat-module-dbus], [2.0.2], [perry.werneck@gmail.com],[udjat-module-dbus],[https://github.com/PerryWerneck/udjat-module-http])
+AC_INIT([udjat-module-dbus], m4_normalize(m4_include([legacy/version])), [perry.werneck@gmail.com],[udjat-module-dbus],[https://github.com/PerryWerneck/udjat-module-http])
 
 dnl Place auxilliary scripts here.
 AC_CONFIG_AUX_DIR([scripts])
@@ -175,13 +175,9 @@ PKG_CHECK_MODULES( [UDJAT], [libudjat], AC_DEFINE(HAVE_UDJAT,[],[Do we have libu
 AC_SUBST(UDJAT_LIBS)
 AC_SUBST(UDJAT_CFLAGS)
 
-app_cv_product=`pkg-config --variable=product_name libudjat`
-AC_DEFINE_UNQUOTED(PRODUCT_NAME, $app_cv_product, [The product name])
-AC_SUBST(PRODUCT_NAME,$app_cv_product)
-
-app_cv_product_id=`pkg-config --variable=product_id libudjat`
-AC_DEFINE_UNQUOTED(PRODUCT_ID, $app_cv_product_id, [The product id])
-AC_SUBST(PRODUCT_NAME,$app_cv_product_id)
+app_cv_domain=`pkg-config --variable=product_domain libudjat`
+AC_DEFINE_UNQUOTED(PRODUCT_DOMAIN, "$app_cv_domain", [The product domain])
+AC_SUBST(PRODUCT_DOMAIN,$app_cv_domain)
 
 app_cv_module_path=`pkg-config --variable=module_path libudjat`
 AC_DEFINE_UNQUOTED(MODULE_PATH, $app_cv_module_path, [The path for module installation])

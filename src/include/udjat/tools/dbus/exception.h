@@ -37,6 +37,7 @@
 
 		public:
 			Exception(DBusMessage *message, const char *error_name, const char *error_text = nullptr);
+			
 			~Exception();
 
 			void send(DBusConnection *connct) const noexcept;

@@ -24,7 +24,6 @@
  #pragma once
  
  #include <udjat/defs.h>
- #include <udjat/module/info.h>
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/defs.h>
  #include <udjat/tools/interface.h>
@@ -73,7 +72,7 @@
 				Udjat::Interface::Handler & push_back(const XML::Node &node) override;
 
 				void introspect(std::stringstream &xmldata) const;
-				bool push_back(const XML::Node &node, std::shared_ptr<Action> action) override;
+				bool push_back(const XML::Node &node, std::shared_ptr<Udjat::Action> action) override;
 
 				inline const char * interface() const noexcept {
 					return intfname;
@@ -86,8 +85,8 @@
 		public:
 
 			Service();
-			Service(const ModuleInfo &module, const char *name, const char *destination);
-			Service(const ModuleInfo &module, DBusConnection * conn, const char *name, const char *destination);
+			Service(const char *name, const char *destination);
+			Service(DBusConnection * conn, const char *name, const char *destination);
 
 			/// @brief Find interface.
 			/// @param name The name of requested interface.

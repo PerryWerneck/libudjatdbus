@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: LGPL-3.0-or-later */
 
 /*
- * Copyright (C) 2024 Perry Werneck <perry.werneck@gmail.com>
+ * Copyright (C) 2025 Perry Werneck <perry.werneck@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -18,29 +18,32 @@
  */
 
  /**
-  * @brief Declare D-Bus module.
+  * @brief Declares singleton for data slot.
   */
 
  #pragma once
 
+ #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/module/abstract.h>
- #include <udjat/tools/interface.h>
- #include <udjat/tools/actions/dbus.h>
- #include <udjat/alert/d-bus.h>	
- #include <vector>
+ #include <private/dataslot.h>
+ #include <udjat/tools/string.h>
+ #include <udjat/tools/logger.h>
 
- namespace Udjat {
+ class UDJAT_PRIVATE MessageData {
+ public:
+	std::vector<Udjat::String> arguments;
+	Udjat::String iface;
+	Udjat::String path;
+	Udjat::String member;
 
-	namespace DBus {
+	MessageData() = default;
 
-		class UDJAT_API Module : public Udjat::Module, private DBus::Alert::Factory, private DBus::Action::Factory {
-		public:
+	static DataSlot & getSlot();
 
-			Module();
-			virtual ~Module();
-
-		};
+	~MessageData() {
 	}
 
- }
+ };
+
+ 
+

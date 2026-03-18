@@ -70,7 +70,6 @@
 		Module(const XML::Node &node, const char *name, const char *srvname)
 			: DBus::Module{},
 				DBus::Service{
-					(const ModuleInfo &) *this,
 					(DBusConnection *) DBus::Connection::getInstance(node),
 					name,
 					srvname

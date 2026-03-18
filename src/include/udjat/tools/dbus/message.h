@@ -37,6 +37,7 @@
 		protected:
 
 			struct {
+				bool valid = false;		/// @brief True if the iter is valid.
 				DBusMessage *value = nullptr;
 				DBusMessageIter iter;
 			} message;
@@ -60,6 +61,8 @@
 				push_back(value);
 				return add(Fargs...);
 			}
+
+			int get(DBusBasicValue &value);
 
 		public:
 			Message(const Message &message) = delete;
@@ -91,6 +94,18 @@
 				return !err.valid;
 			}
 
+			inline operator bool() {
+				return !err.valid;
+			}
+
+			inline bool empty() const {
+				return !message.valid;
+			}
+
+			inline bool valid() const {
+				return message.valid;
+			}
+
 			DBusMessageIter * getIter();
 
 			inline bool failed() const {
@@ -101,6 +116,11 @@
 
 			/// @brief Launch exception if this message has errors.
 			void except() const;
+
+			/// @brief Iterate over all values in the message.
+			/// @param call Funcion to call for each value.
+			/// @return true if iteration was stopped by the call function returning true.
+			bool for_each(const std::function<bool (const Udjat::Value &value)> &call);
 
 			Message & pop(Udjat::Value &value);
 			Message & pop(std::string &value);

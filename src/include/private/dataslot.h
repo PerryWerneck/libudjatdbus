@@ -31,12 +31,12 @@
  class DataSlot {
  private:
 	dbus_int32_t slot = -1; // The passed-in slot must be initialized to -1, and is filled in with the slot ID
-	DataSlot() {
-		dbus_connection_allocate_data_slot(&slot);
-		Udjat::Logger::String{"Got slot '",slot,"' for connection watchdog"}.write(Udjat::Logger::Debug,"d-bus");
-	}
 
  public:
+
+	DataSlot() {
+		dbus_connection_allocate_data_slot(&slot);
+	}
 
 	~DataSlot() {
 		dbus_connection_free_data_slot(&slot);

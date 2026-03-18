@@ -21,6 +21,8 @@
   * @brief Declare d-bus emitter.
   */
 
+ #error deprecated
+ 
  #pragma once
 
  #include <udjat/defs.h>

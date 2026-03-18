@@ -29,20 +29,23 @@
 
 	DBus::Message::Message(const char *destination, const char *path, const char *iface, const char *method) {
 		message.value = dbus_message_new_method_call(destination, path, iface, method);
+		message.valid = true;
 		dbus_message_iter_init_append(message.value, &message.iter);
 	}
 
 	DBus::Message::Message(const DBusError &error) {
-		this->message.value = nullptr;
-		this->err.valid = true;
-		this->err.name = error.name;
-		this->err.message = error.message;
+		message.value = nullptr;
+		message.valid = false;
+		err.valid = true;
+		err.name = error.name;
+		err.message = error.message;
 	}
 
 	DBus::Message::Message(DBusMessage *message) {
 
 		if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_ERROR) {
 
+			this->message.valid = false;
 			err.valid = true;
 			err.name = dbus_message_get_error_name(message);
 
@@ -65,7 +68,7 @@
 
 			this->message.value = message;
 			dbus_message_ref(message);
-			dbus_message_iter_init(this->message.value, &this->message.iter);
+			this->message.valid = dbus_message_iter_init(this->message.value, &this->message.iter);
 
 		}
 
@@ -88,6 +91,8 @@
 	bool DBus::Message::next() {
 		if(err.valid) {
 			throw runtime_error(err.message);
+		} else if(!message.valid) {
+			return false;
 		}
 		return dbus_message_iter_next(&message.iter);
 	}
@@ -103,8 +108,9 @@
 		DBusBasicValue dval;
 
 		value.clear();
+		auto type = dbus_message_iter_get_arg_type(iter);
 
-		switch(dbus_message_iter_get_arg_type(iter)) {
+		switch(type) {
 		case DBUS_TYPE_INVALID:
 			throw runtime_error("Invalid d-bus value");
 
@@ -146,8 +152,14 @@
 			value.set((int) dval.i32);
 			break;
 
+		case DBUS_TYPE_UINT32:
+			dbus_message_iter_get_basic(iter,&dval);
+			value.set((unsigned int) dval.u32);
+			break;
+
 		default:
-			throw system_error(EINVAL,system_category(),"Unexpected d-bus value");
+			debug("Unsupported d-bus value type:",type," (",(char) type,")");
+			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"'"});
 
 		}
 
@@ -180,6 +192,29 @@
 		return type;
 	}
 
+	int DBus::Message::get(DBusBasicValue &value) {
+
+		if(message.valid) {
+			int type = dbus_message_iter_get_arg_type(&message.iter);
+
+			if(type == DBUS_TYPE_VARIANT) {
+				DBusMessageIter sub;
+				dbus_message_iter_recurse(&message.iter, &sub);
+				type = to_value(&sub,value);
+				dbus_message_iter_next(&message.iter);
+				return type;
+			}
+
+			dbus_message_iter_get_basic(&message.iter,&value);
+			message.valid = dbus_message_iter_next(&message.iter);
+
+			return type;
+		}
+
+		return DBUS_TYPE_INVALID;
+	}
+
+
 	static Udjat::String get_string(DBusMessageIter *iter) {
 
 		DBusBasicValue dval;
@@ -190,9 +225,6 @@
 			dbus_message_iter_recurse(iter, &sub);
 			return get_string(&sub);
 		}
-
-		// char str[] = {(char) type,'\0'};
-		// debug("Iterator type is '",str,"'");
 
 		switch(type) {
 		case DBUS_TYPE_STRING:
@@ -207,11 +239,18 @@
 	}
 
 	Udjat::String DBus::Message::to_string() {
+		if(!message.valid) {
+			return "";
+		}
 		return get_string(&message.iter);
 	}
 
 
 	DBus::Message & DBus::Message::pop(std::string &value) {
+
+		if(!message.valid) {
+			throw runtime_error("Empty message");
+		}
 
 		value = get_string(&message.iter);
 		dbus_message_iter_next(&message.iter);
@@ -222,7 +261,9 @@
 	DBus::Message & DBus::Message::pop(int &value) {
 
 		DBusBasicValue dval;
-		switch(to_value(&message.iter,dval)) {
+		int type = get(dval);
+
+		switch(type) {
 		case DBUS_TYPE_STRING:
 			value = atoi(dval.str);
 			break;
@@ -248,7 +289,8 @@
 			break;
 			
 		default:
-			throw runtime_error("Unexpected d-bus value");
+			debug("Unsupported d-bus value type:",type," (",(char) type,")");
+			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping int"});
 
 		}
 
@@ -259,7 +301,9 @@
 	DBus::Message & DBus::Message::pop(unsigned int &value) {
 
 		DBusBasicValue dval;
-		switch(to_value(&message.iter,dval)) {
+		auto type = get(dval);
+
+		switch(type) {
 		case DBUS_TYPE_STRING:
 			value = (unsigned int) atoi(dval.str);
 			break;
@@ -285,7 +329,8 @@
 			break;
 			
 		default:
-			throw runtime_error("Unexpected d-bus value");
+			debug("Unsupported d-bus value type:",type," (",(char) type,")");
+			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping unsigned int"});
 
 		}
 
@@ -296,7 +341,9 @@
 	DBus::Message & DBus::Message::pop(bool &value) {
 
 		DBusBasicValue dval;
-		switch(to_value(&message.iter,dval)) {
+		auto type = get(dval);
+
+		switch(type) {
 		case DBUS_TYPE_STRING:
 			value = String{dval.str}.as_bool();
 			break;
@@ -322,7 +369,8 @@
 			break;
 			
 		default:
-			throw runtime_error("Unexpected d-bus value");
+			debug("Unsupported d-bus value type:",type," (",(char) type,")");
+			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping boolean"});
 
 		}
 
@@ -333,7 +381,9 @@
 	DBus::Message & DBus::Message::pop(double &value) {
 
 		DBusBasicValue dval;
-		switch(to_value(&message.iter,dval)) {
+		auto type = get(dval);
+
+		switch(type) {
 		case DBUS_TYPE_STRING:
 			value = atof(dval.str);
 			break;
@@ -342,8 +392,11 @@
 			value = dval.dbl;
 			break;
 
+		break;
+
 		default:
-			throw runtime_error("Unexpected d-bus value");
+			debug("Unsupported d-bus value type:",type," (",(char) type,")");
+			throw system_error(EINVAL, system_category(), String{"Unexpected d-bus value type '",type,"' poping double"});
 
 		}
 
@@ -376,6 +429,26 @@
 	DBus::Message & DBus::Message::push_back(const double value) {
 		dbus_message_iter_append_basic(&message.iter, DBUS_TYPE_DOUBLE, &value);
 		return *this;
+	}
+
+	bool DBus::Message::for_each(const std::function<bool (const Udjat::Value &value)> &call) {
+
+		DBusMessageIter iter;
+
+		if(!dbus_message_iter_init(this->message.value, &iter)) {
+			return false;
+		}
+
+		int type;
+		while ((type = dbus_message_iter_get_arg_type (&iter)) != DBUS_TYPE_INVALID) {
+			Udjat::Value val;
+			to_value(&iter, val);
+			if(call(val)) {
+				return true;
+			}
+			dbus_message_iter_next(&iter);		
+		}
+		return false;
 	}
 
  }

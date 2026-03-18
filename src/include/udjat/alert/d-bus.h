@@ -29,17 +29,21 @@
  #include <udjat/tools/abstract/object.h>
  #include <udjat/tools/xml.h>
  #include <udjat/tools/string.h>
- #include <udjat/tools/dbus/emitter.h>
+ #include <udjat/tools/actions/dbus.h>
+ #include <udjat/tools/actions/dbus.h>
+ #include <memory>
  #include <vector>
-
+ 
  namespace Udjat {
 
 	namespace DBus {
 
-		class UDJAT_API Alert : public Udjat::Alert, private Emitter {
-		protected:
+		class UDJAT_API Alert : public Udjat::Alert, private Udjat::DBus::Action {
+		private:
+			std::shared_ptr<DBusMessage> message;
+		
+			protected:
 			int emit() override;
-			void reset(time_t next) noexcept override;
 
 		public:
 
@@ -56,6 +60,7 @@
 
 			bool activate() noexcept override;
 			bool activate(const Abstract::Object &object) noexcept override;
+			bool deactivate() noexcept override;
 
 		};
 

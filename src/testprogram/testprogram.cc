@@ -28,14 +28,14 @@
  using namespace Udjat;
 
  int main(int argc, char **argv) {
-	return loader(argc,argv, [](Application &app) {
+	
+	return loader(argc,argv, [](Application &app) -> int {
 
 		class Module : public DBus::Module, public DBus::Service {
 		public:
 			Module()
 				: DBus::Module{},
 					DBus::Service{
-						(const ModuleInfo &) *this,
 						DBus::Connection::getInstance(DBUS_BUS_STARTER),
 						"dbus",
 						String{PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()
@@ -47,6 +47,8 @@
 		};
 
 		new Module();
+
+		return 0;
 
 	});
 

@@ -20,8 +20,8 @@
 project(
 	'udjatdbus', 
 	['cpp'],
-	version: '2.0.2',
-	default_options : ['c_std=c11', 'cpp_std=c++17'],
+	version: '2.4.0',
+	default_options : ['c_std=c11', 'cpp_std=c++17', 'buildtype=release'],
 	license: 'GPL-3.0-or-later',
 )
 
@@ -46,8 +46,18 @@ libversion = '@0@.@1@'.format(pkg_major_version,pkg_minor_version)
 #
 # Required libraries
 #
-libudjat = dependency('libudjat')
-dbus = dependency('dbus-1')
+libudjat = dependency(
+  'libudjat',
+  required: true, 
+  version: '>=2.3.0',
+  fallback: ['libudjat', 'static_library'],
+)
+
+dbus = dependency(
+  'dbus-1',
+  required: true
+)
+
 lib_deps = [
   libudjat,
   dbus,
@@ -70,6 +80,7 @@ compiler_flags = [
   '-fPIC',
   '-DHAVE_CONFIG_H=1',
   '-DBUILD_DATE='+time_epoch,
+  '-Wno-overloaded-virtual',
   '-DLOG_DOMAIN="d-bus"',
 ]
 
@@ -124,9 +135,10 @@ lib_src = [
   'src/library/module.cc',
   'src/library/signal.cc',
   'src/library/exception.cc',
-  'src/library/emitter.cc',
   'src/library/alert.cc',
   'src/library/action.cc',
+  'src/library/argument.cc',
+  'src/library/testprogram.cc',
 ]
 
 module_src = [
@@ -149,7 +161,8 @@ pkg = import('pkgconfig')
 pkg.generate(
   name: 'lib' + meson.project_name(),
   description: project_description,
-  requires: [ 'dbus-1', 'libudjat' ],
+  requires: [ 'libudjat' ],
+  requires_private: [ 'dbus-1' ],
   libraries: [ '-l' + meson.project_name() ]
 )
 
@@ -245,6 +258,5 @@ install_headers(
   'src/include/udjat/tools/dbus/member.h',
   'src/include/udjat/tools/dbus/message.h',
   'src/include/udjat/tools/dbus/signal.h',
-  'src/include/udjat/tools/dbus/emitter.h',
   subdir: 'udjat/tools/dbus'  
 )

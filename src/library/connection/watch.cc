@@ -19,6 +19,7 @@
 
  #include <udjat/defs.h>
  #include <private/mainloop.h>
+ #include <udjat/module/abstract.h>
  #include <udjat/tools/mainloop.h>
  #include <udjat/tools/handler.h>
  #include <udjat/tools/logger.h>
@@ -190,7 +191,7 @@
  void mainloop_add(DBusConnection *conn) {
 
 	// Initialize Main loop.
-	MainLoop::getInstance();
+	MainLoop::getInstance().type();
 
 	// Set watch functions.
 	if(!dbus_connection_set_watch_functions(

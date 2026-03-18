@@ -32,13 +32,17 @@
  #include <fcntl.h>
  #include <unistd.h>
  #include <sys/types.h>
- #include <sys/stat.h>
  #include <udjat/tools/file/text.h>
  #include <pwd.h>
 
  #ifdef HAVE_SYSTEMD
 	#include <systemd/sd-login.h>
  #endif // HAVE_SYSTEMD
+
+ #ifdef HAVE_UNISTD_H
+	#include <unistd.h>
+ #endif // HAVE_UNISTD_H
+
 
  using namespace std;
 

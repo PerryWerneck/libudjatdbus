@@ -47,7 +47,6 @@
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/dbus/exception.h>
- #include <udjat/tools/dbus/emitter.h>
 
  #include <sstream>
 
@@ -86,12 +85,14 @@
 			xmldata << "</method>";
 		}
 
+		/*
 		DBus::Emitter::for_each([&](const DBus::Emitter &emitter){
 			if(emitter == DBUS_MESSAGE_TYPE_SIGNAL && emitter == this->intfname) {
 				emitter.introspect(xmldata);
 			}
 			return false;
 		});
+		*/
 
 		xmldata << "</interface>";
 
@@ -105,7 +106,7 @@
 	DBus::Service::Interface::~Interface() {
 	}
 
-	bool DBus::Service::Interface::push_back(const XML::Node &node, std::shared_ptr<Action> action) {
+	bool DBus::Service::Interface::push_back(const XML::Node &node, std::shared_ptr<Udjat::Action> action) {
 		push_back(node).push_back(action);
 		return true;
 	}

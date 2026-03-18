@@ -20,13 +20,16 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/abstract/object.h>
- #include <udjat/tools/dbus/connection.h>
  #include <udjat/alert.h>
  #include <udjat/alert/d-bus.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/string.h>
  #include <dbus/dbus.h>
  #include <stdexcept>
+ #include <udjat/tools/xml.h>
+ #include <private/messagedata.h>
+ #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/memory.h>
 
  using namespace std;
 
@@ -42,69 +45,100 @@
 		return make_shared<DBus::Alert>(node);
 	}
 
-	DBus::Alert::Alert(const XML::Node &node) : Udjat::Alert{node}, DBus::Emitter{node} {
+	DBus::Alert::Alert(const XML::Node &node) : Udjat::Alert{node}, Udjat::DBus::Action{node} {
 	}
 
 	DBus::Alert::~Alert() {
 	}
 
-	void DBus::Alert::reset(time_t next) noexcept {
-		if(!next) {
-			Emitter::clear();
+	bool DBus::Alert::deactivate() noexcept {
+		if(Udjat::Alert::deactivate()) {
+			message.reset();
+			return true;
 		}
-		super::reset(next);
+		return false;
 	}
 
 	bool DBus::Alert::activate() noexcept {
-
-		debug("Activating '",name(),"' without object");
-
-		try {
-
-			if(active()) {
-				errno = EALREADY;
-				return false;
-			}
-
-			prepare();
-			return ::Udjat::Alert::activate();
-
-		} catch(const std::exception &e) {
-
-			Logger::String{e.what()}.error(name());
-
-		}
-
-		return false;
-
+		Abstract::Object empty;
+		return activate(empty);
 	}
 
 	bool DBus::Alert::activate(const Abstract::Object &object) noexcept {
 
-		debug("Activating '",name(),"' with object");
-
 		try {
 
-			if(active()) {
-				errno = EALREADY;
-				return false;
+			std::vector<String> vals;
+			for(const auto &arg : arguments) {
+				String str{arg.tmplt};
+				str.expand(object,true);
+				vals.push_back(str);
 			}
 
-			prepare(object);
-			return ::Udjat::Alert::activate();
+			message = MessageFactory(vals);
+
+			MessageData *data = 
+				(MessageData *) dbus_message_get_data(
+					message.get(),
+					MessageData::getSlot().value()
+				);
+
+			data->iface = String{iface}.expand(object,true);
+			data->path = String{path}.expand(object,true);
+			data->member = String{member}.expand(object,true);
+
+			dbus_message_set_interface(message.get(),data->iface.c_str());
+			dbus_message_set_path(message.get(),data->path.c_str());
+			dbus_message_set_member(message.get(),data->member.c_str());
+
+			emit();
+			return true;
 
 		} catch(const std::exception &e) {
-
-			Logger::String{e.what()}.error(name());
+			
+			failed(e.what());
 
 		}
-
 		return false;
 
 	}
 
 	int DBus::Alert::emit() {
-		Emitter::send();
+
+		try {
+
+			if(!message) {
+				throw std::runtime_error("D-Bus message not set");
+			}
+
+			MessageData *data = 
+				(MessageData *) dbus_message_get_data(
+					message.get(),
+					MessageData::getSlot().value()
+				);
+
+			Logger::String{
+				"Emitting ",dbus_message_type_to_string(message_type)," dbus://",
+				data->iface.c_str(),
+				".",data->member.c_str(),
+				data->path.c_str(),
+			}.trace(Udjat::Alert::name());
+
+			auto copy = make_handle(dbus_message_copy(message.get()),dbus_message_unref);
+			Connection::getInstance(bustype).call(copy.get());
+
+		} catch(const system_error &e) {
+			
+			failed(e.what());
+			return e.code().value();
+
+		} catch(const std::exception &e) {
+			
+			failed(e.what());
+			return -1;
+
+		}
+
 		return 0;
 	}
 

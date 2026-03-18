@@ -186,6 +186,8 @@
 		DBusError error;
 		dbus_error_init(&error);
 
+		debug("Calling and waiting...");
+		
 		DBusMessage * response =
 			dbus_connection_send_with_reply_and_block(
 				conn,
@@ -194,7 +196,11 @@
 				&error
 			);
 
+
+
 		if(dbus_error_is_set(&error)) {
+
+			debug("Error on d-bus call: ",error.name," - ",error.message);
 
 			Udjat::DBus::Message message{error};
 
