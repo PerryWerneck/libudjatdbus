@@ -22,14 +22,12 @@
  #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/logger.h>
+ #include <udjat/tools/singleton.h>
  #include <stdexcept>
 
  using namespace std;
 
  namespace Udjat {
-
-	Abstract::DBus::Interface::Interface(const char *n, const char *t) : std::string{n}, type{t} {
-	}
 
 	/// @brief Scan XML definition for interface name.
 	String Abstract::DBus::Interface::NameFactory(const XML::Node &node) {
@@ -70,6 +68,9 @@
 		}
 
 		throw runtime_error("The d-bus interface name is empty or invalid");
+	}
+
+	Abstract::DBus::Interface::Interface(const char *n, const char *t) : std::string{n}, type{t} {
 	}
 
 	Abstract::DBus::Interface::Interface(const XML::Node &node, const char *t) : std::string{NameFactory(node)}, type{t} {

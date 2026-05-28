@@ -36,10 +36,12 @@
 		namespace DBus {
 
 			class UDJAT_API Interface : public std::string {
+				
 			protected:
 				const char *type;
 
 			public:
+				class Controller;
 
 				/// @brief Get interface name from XML node.
 				/// @param node Node with interface definition.
