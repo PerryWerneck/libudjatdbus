@@ -29,20 +29,7 @@
 
  using namespace Udjat;
  
- Udjat::Module * udjat_module_init() {
-
-	class Module : public DBus::Module, private DBus::Service {
-	public:
-		Module() = default;
-		virtual ~Module() {
-		}
-
-	};
-
-	return new Module();
- }
-
- Udjat::Module * udjat_module_init_from_xml(const XML::Node &node) {
+ Udjat::Module * udjat_module_init(const XML::Node &node) {
 
 	/// @brief busname.
 	String srvname{node,"dbus-service-name",""};
@@ -73,7 +60,9 @@
 					(DBusConnection *) DBus::Connection::getInstance(node),
 					name,
 					srvname
-				} { }
+				} { 
+					autoclean();
+				}
 
 		virtual ~Module() {
 		}
