@@ -36,12 +36,10 @@
 		const std::function<void(DBus::Message &)> call;
 
 		CallParameters(DBus::Connection *c, const std::function<void(DBus::Message &)> &f) : connection(c->connection()), call(f) {
-			Logger::trace() << "New call parameters " << hex << ((void *) this) << dec << endl;
 			dbus_connection_ref(connection);
 		}
 
 		~CallParameters() {
-			Logger::trace() << "Delete call parameters " << hex << ((void *) this) << dec << endl;
 			dbus_connection_unref(connection);
 		}
 
