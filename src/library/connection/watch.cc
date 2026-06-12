@@ -39,16 +39,7 @@
  public:
 
 	Context(DBusConnection *c, int f, DBusWatch *w, short e) : MainLoop::Handler(f,(MainLoop::Handler::Event) e), connection(c), watch(w) {
-#ifdef DEBUG
-		Logger::trace() << "handler\tCreating d-bus context " << hex << ((void *) this) << dec << endl;
-#endif // DEBUG
 	}
-
-#ifdef DEBUG
-	virtual ~Context() {
-		Logger::trace() << "handler\tDestroying d-bus context " << hex << ((void *) this) << dec << endl;
-	}
-#endif // DEBUG
 
  };
 
@@ -72,10 +63,6 @@
 
 	Context *context = new Context(connection,dbus_watch_get_unix_fd(watch),watch,event);
 
-#ifdef DEBUG
-	Logger::trace() << "d-bus\t*** Adding watch " << hex << ((void *) context) << dec << " from connection " << connection << endl;
-#endif // DEBUG
-
 	dbus_watch_set_data(watch, context, NULL);
 
 	context->enable();
@@ -88,11 +75,6 @@
 	Context *context = (Context *) dbus_watch_get_data(watch);
 
 	if(context) {
-
-#ifdef DEBUG
-		Logger::trace() << "d-bus\t*** Removing watch " << hex << ((void *) context) << dec << endl;
-#endif // DEBUG
-
 		dbus_watch_set_data(watch, NULL, NULL);
 		context->disable();
 		delete context;
@@ -109,14 +91,8 @@
 		context->set(dbus_watch_get_unix_fd(watch));
 
 		if (dbus_watch_get_enabled(watch)) {
-#ifdef DEBUG
-			Logger::trace() << "d-bus\t*** " << __FUNCTION__<< ".enable " << hex << ((void *) context) << dec << endl;
-#endif // DEBUG
 			context->enable();
 		} else {
-#ifdef DEBUG
-			Logger::trace() << "d-bus\t*** " << __FUNCTION__<< ".enable " << hex << ((void *) context) << dec << endl;
-#endif // DEBUG
 			context->disable();
 		}
 
@@ -130,14 +106,7 @@
 
  void Context::handle_event(const MainLoop::Handler::Event events) {
 
-#ifdef DEBUG
-	Logger::trace() << "d-bus\t*** Activity on watch " << hex << ((void *) this) << dec << " events=" << events;
-#endif // DEBUG
-
 	if(!dbus_watch_get_enabled(watch)) {
-#ifdef DEBUG
-		Logger::trace() << " DISABLED" << endl;
-#endif // DEBUG
 		disable();
 		return;
 	}
@@ -146,35 +115,19 @@
 
 	if (events & POLLIN) {
 		flags |= DBUS_WATCH_READABLE;
-#ifdef DEBUG
-		Logger::trace() << " DBUS_WATCH_READABLE";
-#endif // DEBUG
 	}
 
 	if (events & POLLOUT) {
 		flags |= DBUS_WATCH_WRITABLE;
-#ifdef DEBUG
-		Logger::trace() << " DBUS_WATCH_WRITABLE";
-#endif // DEBUG
 	}
 
 	if (events & POLLHUP) {
 		flags |= DBUS_WATCH_HANGUP;
-#ifdef DEBUG
-		Logger::trace() << " DBUS_WATCH_HANGUP";
-#endif // DEBUG
 	}
 
 	if (events & POLLERR) {
 		flags |= DBUS_WATCH_ERROR;
-#ifdef DEBUG
-		Logger::trace() << " DBUS_WATCH_ERROR";
-#endif // DEBUG
 	}
-
-#ifdef DEBUG
-	Logger::trace() << endl;
-#endif // DEBUG
 
 	if(dbus_watch_handle(watch, flags) == FALSE) {
 		cerr << "d-bus\tdbus_watch_handle() failed" << endl;

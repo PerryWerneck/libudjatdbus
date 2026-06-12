@@ -39,7 +39,7 @@
 		/// @brief Initialize D-Bus system.
 		bool UDJAT_API initialize();
 
-		DBusBusType UDJAT_API BusTypeFactory(const XML::Node &node);
+		DBusBusType UDJAT_API BusTypeFactory(const Udjat::Properties &props);
 
 		/// @brief Connection to D-Bus service.
 		class UDJAT_API Connection {
@@ -86,7 +86,7 @@
 			/// @brief Get connection from XML node
 			/// @param node The XML node describing the connection.
 			/// @return The d-bus connection.
-			static Connection & getInstance(const XML::Node &node);
+			static Connection & getInstance(const Udjat::Properties &props);
 
 			/// @brief Get connection from bus type.
 			/// @param bustype The type for the connection.

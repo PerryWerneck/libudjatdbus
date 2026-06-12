@@ -56,15 +56,15 @@
 		return false;
 	}
 
-	DBusBusType UDJAT_API DBus::BusTypeFactory(const XML::Node &node) {
+	DBusBusType UDJAT_API DBus::BusTypeFactory(const Udjat::Properties &props) {
 
-		String type{node,"dbus-bus-name"};
+		String type{props["dbus-bus-name"]};
 		if(type.empty()) {
-			type = String{node,"bus-name"};
+			type = String{props["bus-name"]};
 		}
 
 		if(type.empty()) {
-			Logger::String{"Required attribute bus-name is missing on <",node.name(),">, using default"}.warning();
+			Logger::String{"Required attribute bus-name is missing on '",props.path().c_str(),"', using default"}.warning();
 			return DBUS_BUS_STARTER;
 		}
 
@@ -87,8 +87,8 @@
 
 	}
 
-	DBus::Connection & DBus::Connection::getInstance(const XML::Node &node) {
-		return getInstance(DBus::BusTypeFactory(node));
+	DBus::Connection & DBus::Connection::getInstance(const Udjat::Properties &props) {
+		return getInstance(DBus::BusTypeFactory(props));
 	}
 
 	DBus::Connection & DBus::Connection::getInstance(DBusBusType bustype) {

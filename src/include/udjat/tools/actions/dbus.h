@@ -25,6 +25,7 @@
  #include <udjat/tools/request.h>
  #include <udjat/tools/response.h>
  #include <udjat/tools/xml.h>
+ #include <udjat/tools/properties.h>
  #include <vector>
 
  namespace Udjat {
@@ -32,7 +33,7 @@
  	namespace DBus {
  
 		typedef int DBusType;
-		DBusType DBusTypeFactory(const XML::Node &node);
+		DBusType DBusTypeFactory(const Udjat::Properties &props);
  
  		/// @brief D-Bus action.
 

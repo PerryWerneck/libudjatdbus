@@ -27,7 +27,7 @@
 
  namespace Udjat {
 
-	DBus::DBusType DBus::DBusTypeFactory(const XML::Node &node) {
+	DBus::DBusType DBus::DBusTypeFactory(const Udjat::Properties &props) {
 
 		static const struct {
 			const char *name;
@@ -45,7 +45,7 @@
 			{nullptr, DBUS_TYPE_INVALID}
 		};
 
-		String typestr{node,"type","string"};
+		String typestr{props.get("type","string")};
 
 		for(size_t i = 0; dbus_types[i].name != nullptr; i++) {
 			if(strcasecmp(typestr.c_str(),dbus_types[i].name) == 0) {

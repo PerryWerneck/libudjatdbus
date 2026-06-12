@@ -29,16 +29,20 @@
 
  using namespace Udjat;
  
- Udjat::Module * udjat_module_init(const XML::Node &node) {
+ Udjat::Module * udjat_module_init(const Udjat::Properties &props) {
 
 	/// @brief busname.
-	String srvname{node,"dbus-service-name",""};
+	String srvname{props["dbus-service-name"]};
 	
 	if(srvname.empty()) {
-		srvname = String{node,"service-name",""};
+		srvname = props["service-name"];
 	}
 
-	if(srvname.empty() && node.attribute("enable-service").as_bool(false)) {
+	if(srvname.empty()) {
+		srvname = String{PRODUCT_DOMAIN,""};
+	}
+
+	if(srvname.empty() && props.get("enable-service",false)) {
 		srvname = String{PRODUCT_DOMAIN,".",Application::Name().c_str()};
 	}
 
@@ -48,16 +52,16 @@
 	}
 
 	/// @brief Service name.
-	String name{node,"name","dbus"};
+	String name{props.get("name","dbus")};
 
 	Logger::String{"Initializing d-bus service '",srvname.c_str(),"'"}.trace(name.c_str());
 
 	class Module : public DBus::Module, public DBus::Service {
 	public:
-		Module(const XML::Node &node, const char *name, const char *srvname)
+		Module(const Udjat::Properties &props, const char *name, const char *srvname)
 			: DBus::Module{},
 				DBus::Service{
-					(DBusConnection *) DBus::Connection::getInstance(node),
+					(DBusConnection *) DBus::Connection::getInstance(props),
 					name,
 					srvname
 				} { 
@@ -69,6 +73,6 @@
 
 	};
 
-	return new Module(node,name.as_quark(),srvname.as_quark());
+	return new Module(props,name.as_quark(),srvname.as_quark());
 
  }
