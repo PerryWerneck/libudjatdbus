@@ -109,13 +109,13 @@
 	}
 
 	/// @brief Scan XML definition for interface name.
-	const char * DBus::Service::ServiceNameFactory(const XML::Node &node) {
+	const char * DBus::Service::ServiceNameFactory(const Properties &props) {
 
 		Application::Name appname;
 
 		for(const char *attrname : { "dbus-service-name", "dbus-name", "service-name", "name" }) {
 
-			String name{node,attrname};
+			String name{props[attrname]};
 			if(name.empty() || !strcasecmp(name.c_str(),"dbus")) {
 				continue;
 			}

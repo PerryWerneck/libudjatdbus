@@ -97,7 +97,7 @@
 				return service_name;
 			}
 
-			static const char * ServiceNameFactory(const XML::Node &node);
+			static const char * ServiceNameFactory(const Properties &props);
 
 			virtual ~Service();
 

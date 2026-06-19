@@ -25,6 +25,7 @@
  #include <udjat/defs.h>
  #include <string>
  #include <udjat/tools/xml.h>
+ #include <udjat/tools/properties.h>
  #include <udjat/tools/dbus/member.h>
  #include <list>
  #include <functional>
@@ -46,7 +47,7 @@
 				/// @brief Get interface name from XML node.
 				/// @param node Node with interface definition.
 				/// @return The interface name.
-				static Udjat::String NameFactory(const XML::Node &node);
+				static Udjat::String NameFactory(const Properties &props);
 
 				virtual DBusHandlerResult filter(DBusMessage *message) const = 0;
 

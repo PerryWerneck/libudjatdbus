@@ -1,4 +1,3 @@
-src/library/connection/abstract.cc
 src/library/connection/named.cc
 src/library/connection/session.cc
 src/library/connection/starter.cc
@@ -7,9 +6,8 @@ src/library/connection/timeout.cc
 src/library/connection/call.cc
 src/library/connection/user.cc
 src/library/connection/watch.cc
+src/library/connection/abstract.cc
 src/library/exception.cc
-src/library/interface.cc
-src/library/member.cc
 src/library/message/push_back.cc
 src/library/message/message.cc
 src/library/service/interface.cc
@@ -17,8 +15,10 @@ src/library/service/main.cc
 src/library/signal.cc
 src/library/action.cc
 src/library/alert.cc
-src/library/argument.cc
 src/library/module.cc
+src/library/argument.cc
+src/library/interface.cc
+src/library/member.cc
 src/module/init.cc
 src/include/private/mainloop.h
 src/include/private/dataslot.h
@@ -27,12 +27,12 @@ src/include/udjat/alert/d-bus.h
 src/include/udjat/module/dbus.h
 src/include/udjat/tools/dbus.h
 src/include/udjat/tools/dbus/defs.h
-src/include/udjat/tools/dbus/interface.h
-src/include/udjat/tools/dbus/member.h
 src/include/udjat/tools/dbus/signal.h
-src/include/udjat/tools/dbus/connection.h
-src/include/udjat/tools/dbus/emitter.h
 src/include/udjat/tools/dbus/exception.h
 src/include/udjat/tools/dbus/message.h
+src/include/udjat/tools/dbus/connection.h
+src/include/udjat/tools/dbus/emitter.h
+src/include/udjat/tools/dbus/interface.h
+src/include/udjat/tools/dbus/member.h
 src/include/udjat/tools/dbus/service.h
 src/include/udjat/tools/actions/dbus.h

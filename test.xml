@@ -9,6 +9,7 @@
 	</module>
 	
 	<module name='information' required='no' />
+	<module path='.build/udjat-module-dbus.so' required='yes' />
 
 	<agent name='intvalue' type='integer' value='0'>
 

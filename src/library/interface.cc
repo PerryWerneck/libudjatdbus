@@ -30,7 +30,7 @@
  namespace Udjat {
 
 	/// @brief Scan XML definition for interface name.
-	String Abstract::DBus::Interface::NameFactory(const XML::Node &node) {
+	String Abstract::DBus::Interface::NameFactory(const Properties &props) {
 
 		// First check for specific names
 		{
@@ -41,7 +41,7 @@
 			};
 
 			for(const char *attrname : attrnames) {
-				String name{node,attrname};
+				String name{props[attrname]};
 				if(!name.empty()) {
 					if(name[0] == '.') {
 						return String{PRODUCT_DOMAIN,name.c_str()};
@@ -59,9 +59,9 @@
 			};
 
 			for(const char *attrname : attrnames) {
-				String name{node,attrname};
+				String name{props[attrname]};
 				if(!name.empty()) {
-					Logger::String{"Required interface name attribute is missing on <",node.name(),">, using default"}.warning();
+					Logger::String{"Required interface name attribute is missing on '",props.path(),"', using default"}.warning();
 					return String{PRODUCT_DOMAIN,".",name.c_str()};
 				}
 			}

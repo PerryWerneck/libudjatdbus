@@ -25,6 +25,7 @@
  #include <udjat/defs.h>
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/member.h>
+ #include <udjat/tools/properties.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/xml.h>
@@ -33,7 +34,7 @@
 
  namespace Udjat {
 
-	Udjat::String DBus::Member::NameFactory(const XML::Node &node) {
+	Udjat::String DBus::Member::NameFactory(const Properties &props) {
 		
 		static const char *attrnames[] = {
 			"dbus-member",
@@ -42,7 +43,7 @@
 		};
 
 		for(const char *attrname : attrnames) {
-			String str{node,attrname};
+			String str{props[attrname]};
 			if(!str.empty()) {
 				return str;
 			}
@@ -58,24 +59,19 @@
 
 	DBus::Member::Member(const XML::Node &node,const std::function<bool(Message & message)> &callback) : Member{NameFactory(node).c_str(),callback} {
 
-		const char *name = XML::StringFactory(node,"dbus-message-type");
-
-		if(name && *name) {
-
-			// TODO: Refactor using d-bus standard methods.
-			type = dbus_message_type_from_string(String{node,"message-type","signal"}.c_str());
-
-			if(!(type == DBUS_MESSAGE_TYPE_SIGNAL || type == DBUS_MESSAGE_TYPE_METHOD_CALL)) {
-				throw runtime_error("Unexpected d-bus message type");
-			}
-
-			Logger::String{"Watching ",c_str()," '",c_str(),"'"}.trace(node.name());
-
-		} else {
-
-			Logger::String{"Watching '",c_str(),"'"}.trace(node.name());
-
+		auto name = node["dbus-message-type"];
+		if(name.empty()) {
+			name = node.get("message-type","signal");
 		}
+
+		// TODO: Refactor using d-bus standard methods.
+		type = dbus_message_type_from_string(name.c_str());
+
+		if(!(type == DBUS_MESSAGE_TYPE_SIGNAL || type == DBUS_MESSAGE_TYPE_METHOD_CALL)) {
+			throw runtime_error("Unexpected d-bus message type");
+		}
+
+		Logger::String{"Watching ",name.c_str()," '",c_str(),"'"}.trace(node.name());
 
 	}
 
