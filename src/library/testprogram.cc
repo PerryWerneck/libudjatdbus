@@ -30,6 +30,7 @@
  #include <udjat/tools/response.h>
  #include <string>
  #include <udjat/tools/actions/dbus.h>
+ #include <udjat/tools/unit-test.h>
 
  using namespace Udjat;
  using namespace Udjat::DBus;
@@ -121,6 +122,24 @@
 
  }
 
+ UDJAT_API void enum_udjat_unit_tests(Udjat::UnitTests &tests) noexcept {
+
+	debug(__FUNCTION__," begin -> ",tests.size());
+
+	tests.append(
+		UnitTests::Worker{
+			"Call and wait",
+			[]() {
+				
+				call_and_wait_test();
+				return true;
+			}
+		}
+	);
+
+ }
+
+ /*
  UDJAT_API int run_udjat_unit_test(const char *name) {
 
 	static const struct {
@@ -149,4 +168,5 @@
 	return 0;
 
  }
+ */
  #endif // DEBUG

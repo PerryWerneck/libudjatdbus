@@ -3,10 +3,10 @@ src/library/connection/session.cc
 src/library/connection/starter.cc
 src/library/connection/system.cc
 src/library/connection/timeout.cc
-src/library/connection/call.cc
 src/library/connection/user.cc
 src/library/connection/watch.cc
 src/library/connection/abstract.cc
+src/library/connection/call.cc
 src/library/exception.cc
 src/library/message/push_back.cc
 src/library/message/message.cc
