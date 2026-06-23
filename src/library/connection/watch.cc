@@ -19,7 +19,7 @@
 
  #include <udjat/defs.h>
  #include <private/mainloop.h>
- #include <udjat/module/abstract.h>
+ #include <udjat/module.h>
  #include <udjat/tools/mainloop.h>
  #include <udjat/tools/handler.h>
  #include <udjat/tools/logger.h>

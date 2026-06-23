@@ -24,7 +24,7 @@
  #pragma once
 
  #include <udjat/defs.h>
- #include <udjat/module/abstract.h>
+ #include <udjat/module.h>
  #include <udjat/tools/interface.h>
  #include <udjat/tools/actions/dbus.h>
  #include <udjat/alert/d-bus.h>	

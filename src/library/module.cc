@@ -28,7 +28,7 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/module/abstract.h>
+ #include <udjat/module.h>
  #include <udjat/module/dbus.h>
  #include <udjat/tools/interface.h>
  #include <udjat/tools/dbus/connection.h>

@@ -50,7 +50,7 @@ libudjat = dependency(
   'libudjat',
   required: true, 
   version: '>=2.3.0',
-  fallback: ['libudjat', 'static_library'],
+  fallback: ['libudjat', 'dynamic_library'],
 )
 
 dbus = dependency(
@@ -60,6 +60,7 @@ dbus = dependency(
 
 lib_deps = [
   libudjat,
+  dependency('pugixml',method : 'pkg-config',required: true),
   dbus,
 ]
 
