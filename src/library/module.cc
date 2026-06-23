@@ -43,6 +43,56 @@
 
  namespace Udjat {
 
+	Udjat::Module * DBus::Module::Factory(const Udjat::Properties &props) {
+
+		/// @brief busname.
+		String srvname{props["dbus-service-name"]};
+		
+		if(srvname.empty()) {
+			srvname = props["service-name"];
+		}
+
+		if(srvname.empty()) {
+			srvname = String{PRODUCT_DOMAIN,""};
+		}
+
+		if(srvname.empty() && props.get("enable-service",false)) {
+			srvname = String{PRODUCT_DOMAIN,".",Application::Name().c_str()};
+		}
+
+		if(srvname.empty()) {
+			// No service name, build a clean module.
+			auto module = new DBus::Module();
+			module->autoclean();
+			return module;
+		}
+
+		/// @brief Service name.
+		String name{props.get("name","dbus")};
+
+		Logger::String{"Initializing d-bus service '",srvname.c_str(),"'"}.trace(name.c_str());
+
+		class Module : public DBus::Module, public DBus::Service {
+		public:
+			Module(const Udjat::Properties &props, const char *name, const char *srvname)
+				: DBus::Module{},
+					DBus::Service{
+						(DBusConnection *) DBus::Connection::getInstance(props),
+						name,
+						srvname
+					} { 
+						autoclean();
+					}
+
+			virtual ~Module() {
+			}
+
+		};
+
+		return new Module(props,name.as_quark(),srvname.as_quark());
+
+	}
+
  	DBus::Service::Service() 
 		: DBus::Service::Service{"dbus",String{PRODUCT_DOMAIN,".",Application::Name().c_str()}.as_quark()} {
 	}

@@ -28,6 +28,7 @@
  #include <udjat/tools/interface.h>
  #include <udjat/tools/actions/dbus.h>
  #include <udjat/alert/d-bus.h>	
+ #include <udjat/tools/properties.h>
  #include <vector>
 
  namespace Udjat {
@@ -39,6 +40,8 @@
 
 			Module();
 			virtual ~Module();
+
+			static Udjat::Module * Factory(const Udjat::Properties &props = Udjat::Properties{});
 
 		};
 	}

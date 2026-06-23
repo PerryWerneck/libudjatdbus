@@ -49,8 +49,8 @@ libversion = '@0@.@1@'.format(pkg_major_version,pkg_minor_version)
 libudjat = dependency(
   'libudjat',
   required: true, 
-  version: '>=2.3.0',
-  fallback: ['libudjat', 'dynamic_library'],
+  version: '>=2.7.0',
+  fallback: ['libudjat'],
 )
 
 dbus = dependency(

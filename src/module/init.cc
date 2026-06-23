@@ -30,49 +30,9 @@
  using namespace Udjat;
  
  Udjat::Module * udjat_module_init(const Udjat::Properties &props) {
-
-	/// @brief busname.
-	String srvname{props["dbus-service-name"]};
-	
-	if(srvname.empty()) {
-		srvname = props["service-name"];
-	}
-
-	if(srvname.empty()) {
-		srvname = String{PRODUCT_DOMAIN,""};
-	}
-
-	if(srvname.empty() && props.get("enable-service",false)) {
-		srvname = String{PRODUCT_DOMAIN,".",Application::Name().c_str()};
-	}
-
-	if(srvname.empty()) {
-		// No service name, just start module.
-		return new DBus::Module();
-	}
-
-	/// @brief Service name.
-	String name{props.get("name","dbus")};
-
-	Logger::String{"Initializing d-bus service '",srvname.c_str(),"'"}.trace(name.c_str());
-
-	class Module : public DBus::Module, public DBus::Service {
-	public:
-		Module(const Udjat::Properties &props, const char *name, const char *srvname)
-			: DBus::Module{},
-				DBus::Service{
-					(DBusConnection *) DBus::Connection::getInstance(props),
-					name,
-					srvname
-				} { 
-					autoclean();
-				}
-
-		virtual ~Module() {
-		}
-
-	};
-
-	return new Module(props,name.as_quark(),srvname.as_quark());
-
+#ifdef LIBUDJAT_STATIC
+        throw logic_error("Cant use modules on static libudjat");
+#else
+		return DBus::Module::Factory(props);
+#endif // LIBUDJAT_STATIC
  }
