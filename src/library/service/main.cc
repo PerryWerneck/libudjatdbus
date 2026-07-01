@@ -299,12 +299,12 @@
 		return false;
 	}
 
-	Udjat::Interface & DBus::Service::InterfaceFactory(const XML::Node &node) {
+	Udjat::Interface & DBus::Service::InterfaceFactory(const Properties &props) {
 
 		String intfname;
 
 		for(const char *attrname : { "dbus-interface", "interface", "name" }) {
-			String attr{node,attrname};
+			String attr = props[attrname];
 			if(!attr.empty()) {
 				intfname = attr;
 				break;
@@ -329,9 +329,9 @@
 
 		// It's a new interface, insert it.
 #if __cplusplus >= 201703	
-		return interfaces.emplace_back(node,intfname.as_quark());
+		return interfaces.emplace_back(props,intfname.as_quark());
 #else
-		interfaces.emplace_back(node,intfname.as_quark());
+		interfaces.emplace_back(props,intfname.as_quark());
 		return interfaces.back();
 #endif
 	}

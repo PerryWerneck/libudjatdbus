@@ -36,6 +36,7 @@
 
  #include <udjat/tools/service.h>
  #include <udjat/tools/xml.h>
+ #include <udjat/tools/properties.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/exception.h>
  #include <udjat/tools/application.h>
@@ -98,23 +99,23 @@
 
 	}
 
-	DBus::Service::Interface::Interface(const XML::Node &node, const char *in) 
-		: Udjat::Interface{node}, intfname{in} {
+	DBus::Service::Interface::Interface(const Properties &props, const char *in) 
+		: Udjat::Interface{props}, intfname{in} {
 		Logger::String("Registering interface ",intfname).trace();
 	}
 
 	DBus::Service::Interface::~Interface() {
 	}
 
-	bool DBus::Service::Interface::push_back(const XML::Node &node, std::shared_ptr<Udjat::Action> action) {
-		push_back(node).push_back(action);
+	bool DBus::Service::Interface::push_back(const Properties &props, std::shared_ptr<Udjat::Action> action) {
+		push_back(props).push_back(action);
 		return true;
 	}
 
-	Udjat::Interface::Handler & DBus::Service::Interface::push_back(const XML::Node &node) {
+	Udjat::Interface::Handler & DBus::Service::Interface::push_back(const Properties &props) {
 		const char *name = "";
 		for(const char *attrname : { "dbus-name", "name", "action-name" }) {
-			String str{node,attrname,""};
+			String str = props[attrname];
 			if(!str.empty()) {
 				name = str.as_quark();
 				break;
@@ -124,7 +125,7 @@
 			throw runtime_error("Required handler name is missing or empty (hint: attributes dbus-name or name)");
 		}
 #if __cplusplus >= 201703
-		return emplace_back(name,node);
+		return emplace_back(name,props);
 #else
 		emplace_back(name,node);
 		return back();

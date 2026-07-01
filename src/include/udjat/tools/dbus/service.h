@@ -29,6 +29,7 @@
  #include <udjat/tools/interface.h>
  #include <udjat/tools/service.h>
  #include <udjat/tools/xml.h>
+ #include <udjat/tools/properties.h>
  #include <udjat/tools/string.h>
  #include <vector>
  #include <sstream>  
@@ -57,22 +58,22 @@
 			/// @retval false The signal was not handled.
 			bool on_signal(Udjat::DBus::Message &request);
 
-			Udjat::Interface & InterfaceFactory(const XML::Node &node) override;
+			Udjat::Interface & InterfaceFactory(const Properties &props) override;
 
 			class Interface : public Udjat::Interface, public std::vector<Udjat::Interface::Handler> {
 			private:
 				const char *intfname;
 
 			public:
-				Interface(const XML::Node &node, const char *intfname);
+				Interface(const Properties &props, const char *intfname);
 				virtual ~Interface();
 
 				DBusHandlerResult on_message(DBusConnection *connct, DBusMessage *message, DBus::Service &service);
 
-				Udjat::Interface::Handler & push_back(const XML::Node &node) override;
+				Udjat::Interface::Handler & push_back(const Properties &props) override;
 
 				void introspect(std::stringstream &xmldata) const;
-				bool push_back(const XML::Node &node, std::shared_ptr<Udjat::Action> action) override;
+				bool push_back(const Properties &props, std::shared_ptr<Udjat::Action> action) override;
 
 				inline const char * interface() const noexcept {
 					return intfname;
