@@ -259,7 +259,7 @@
 		debug("Message data block was freed");
 	}
 
-	static DBusHandlerResult call(DBusConnection *connct, DBusMessage *message, Udjat::Interface::Handler &handler) noexcept {
+	static DBusHandlerResult call_handler(DBusConnection *connct, DBusMessage *message, Udjat::Interface::Handler &handler) noexcept {
 
 		DBusMessage *response = NULL;
 
@@ -354,7 +354,7 @@
 		const char *name = dbus_message_get_member(message);
 		for(Udjat::Interface::Handler &handler : *this) {
 			if(handler == name) {
-				return call(connct,message,handler);
+				return call_handler(connct,message,handler);
 			}
 		}
 
