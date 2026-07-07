@@ -48,6 +48,7 @@
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/dbus/exception.h>
+ #include <udjat/tools/schema.h>
 
  #include <sstream>
 
@@ -73,27 +74,31 @@
 		for(const auto &handler : *this) {
 
 			debug("Introspecting handler ",handler.name());
-
 			xmldata << "<method name=\"" << handler.name() << "\">";
 
-			handler.introspect([&xmldata](const char *name, const Udjat::Value::Type type, bool in){
-				xmldata << "<arg name=\"" << name << "\" type=\"";
-				xmldata << "s"; /// FIXME: Use the correct data type from type.
-				xmldata << "\" direction=\"" << (in ? "in" : "out") << "\"/>";
+			Schema schema;
 
-			});
+			if(handler.input_schema(schema)) {
+				for(const auto &item : schema) {
+					xmldata << "<arg name=\"" << item.name() << "\" type=\"";
+					xmldata << "s"; /// FIXME: Use the correct value from item type.
+					xmldata << "\" direction=\"in\"/>";
+				}
+				schema.clear();
+			}
+
+			if(handler.output_schema(schema)) {
+				for(const auto &item : schema) {
+					xmldata << "<arg name=\"" << item.name() << "\" type=\"";
+					xmldata << "s"; /// FIXME: Use the correct value from item type.
+					xmldata << "\" direction=\"out\"/>";
+				}
+				schema.clear();
+			}
 
 			xmldata << "</method>";
-		}
 
-		/*
-		DBus::Emitter::for_each([&](const DBus::Emitter &emitter){
-			if(emitter == DBUS_MESSAGE_TYPE_SIGNAL && emitter == this->intfname) {
-				emitter.introspect(xmldata);
-			}
-			return false;
-		});
-		*/
+		}
 
 		xmldata << "</interface>";
 
@@ -271,22 +276,21 @@
 			Udjat::Request request{dbus_message_get_path(message)};
 			
 			{
-				DBusMessageIter iter;
-				if(dbus_message_iter_init(message,&iter)) {
-					handler.introspect([&](const char *name, const Udjat::Value::Type type, bool in){
-						if(in) {
-							auto &value = request[name];
-							value.clear(type);
+				Schema schema;
+				if(handler.input_schema(schema)) {
+					DBusMessageIter iter;
+					if(dbus_message_iter_init(message,&iter)) {
+						for(const auto &item : schema) {
+							auto &value = request[item.name()];
+							value.clear(item.type());
 							import_value(&iter,value);
-							dbus_message_iter_next(&iter);
+							if(!dbus_message_iter_next(&iter)) {
+								break;
+							}
 						}
-					});
-				} else {
-					handler.introspect([&](const char *name, const Udjat::Value::Type type, bool in){
-						if(in) {
-							throw runtime_error(Logger::String{"Required argument '",name,"' is missing"});
-						}
-					});
+					} else {
+						throw runtime_error("Required arguments are missing");
+					}
 				}
 			}
 
@@ -312,14 +316,14 @@
 			dbus_message_set_data(response,data_slot,strings,free_data_block);
 
 			try {
-				DBusMessageIter iter;
- 				dbus_message_iter_init_append(response, &iter);
-				handler.introspect([&](const char *name, const Udjat::Value::Type type, bool in){
-					if(!in) {
-						export_value(type,&iter,rsp[name],*strings);
+				Schema schema;
+				if(handler.output_schema(schema)) {
+					DBusMessageIter iter;
+					dbus_message_iter_init_append(response, &iter);
+					for(const auto &item : schema) {
+						export_value(item.type(),&iter,rsp[item.name()],*strings);
 					}
-				});
-
+				}
 			} catch(...) {
 				dbus_message_unref(response);
 				response = NULL;
