@@ -20,7 +20,6 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/logger.h>
- #include <udjat/tools/xml.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/signal.h>
 

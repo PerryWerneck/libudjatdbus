@@ -29,7 +29,6 @@
  #include <udjat/tools/string.h>
  #include <string>
  #include <functional>
- #include <udjat/tools/xml.h>
  #include <udjat/tools/properties.h>
 
  namespace Udjat {
@@ -48,7 +47,7 @@
 			static Udjat::String NameFactory(const Properties &props);
 
 			Member(const char *name, const std::function<bool(Message & message)> &callback);
-			Member(const XML::Node &node,const std::function<bool(Message & message)> &callback);
+			Member(const Properties &props,const std::function<bool(Message & message)> &callback);
 			~Member();
 
 			bool operator==(const char *name) const noexcept;

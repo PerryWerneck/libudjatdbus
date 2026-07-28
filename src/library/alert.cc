@@ -19,14 +19,13 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/tools/abstract/object.h>
+ #include <udjat/tools/object.h>
  #include <udjat/alert.h>
  #include <udjat/alert/d-bus.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/string.h>
  #include <dbus/dbus.h>
  #include <stdexcept>
- #include <udjat/tools/xml.h>
  #include <private/messagedata.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/memory.h>

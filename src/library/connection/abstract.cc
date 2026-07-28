@@ -29,7 +29,6 @@
  #include <memory>
  
  #include <udjat/tools/dbus/connection.h>
- #include <udjat/tools/dbus/interface.h>
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/signal.h>
  #include <udjat/tools/dbus/exception.h>
@@ -213,18 +212,22 @@
 	DBusHandlerResult DBus::Connection::filter(DBusMessage *message) {
 
 		const char *interface = dbus_message_get_interface(message);
-		for(const auto &intf : interfaces) {
+		debug("----------------> Check for interface '",interface,"'");
 
-			if(intf == interface) {
+		// TODO: Check if we have an interface matching the request
 
-				DBusHandlerResult rc = intf.filter(message);
-				if(rc != DBUS_HANDLER_RESULT_NOT_YET_HANDLED) {
-					return rc;
-				}
+		// for(const auto &intf : interfaces) {
 
-			}
+		// 	if(intf == interface) {
 
-		}
+		// 		DBusHandlerResult rc = intf.filter(message);
+		// 		if(rc != DBUS_HANDLER_RESULT_NOT_YET_HANDLED) {
+		// 			return rc;
+		// 		}
+
+		// 	}
+
+		// }
 
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
@@ -243,101 +246,101 @@
 		dbus_connection_flush(conn);
 	}
 
-	void DBus::Connection::insert(const Udjat::DBus::Interface &interface) {
+	// void DBus::Connection::insert(const Udjat::DBus::Interface &interface) {
 
-		Logger::String{"Connecting to '",interface.rule().c_str(),"'"}.trace(name());
+	// 	Logger::String{"Connecting to '",interface.rule().c_str(),"'"}.trace(name());
 
-		DBusError error;
-		dbus_error_init(&error);
+	// 	DBusError error;
+	// 	dbus_error_init(&error);
 
-		dbus_bus_add_match(conn,interface.rule().c_str(), &error);
-		dbus_connection_flush(conn);
+	// 	dbus_bus_add_match(conn,interface.rule().c_str(), &error);
+	// 	dbus_connection_flush(conn);
 
-		if (dbus_error_is_set(&error)) {
-			Logger::String message{"Error '",error.message,"' adding rule ",interface.rule().c_str()};
-			dbus_error_free(&error);
-			throw std::runtime_error(message);
-		}
+	// 	if (dbus_error_is_set(&error)) {
+	// 		Logger::String message{"Error '",error.message,"' adding rule ",interface.rule().c_str()};
+	// 		dbus_error_free(&error);
+	// 		throw std::runtime_error(message);
+	// 	}
 
-	}
+	// }
 
-	void DBus::Connection::remove(const Udjat::DBus::Interface &interface) {
+	// void DBus::Connection::remove(const Udjat::DBus::Interface &interface) {
 
-		Logger::String{"Disconnecting from '",interface.rule().c_str(),"'"}.trace(name());
+	// 	Logger::String{"Disconnecting from '",interface.rule().c_str(),"'"}.trace(name());
 
-		DBusError error;
-		dbus_error_init(&error);
+	// 	DBusError error;
+	// 	dbus_error_init(&error);
 
-		dbus_bus_remove_match(conn,interface.rule().c_str(), &error);
+	// 	dbus_bus_remove_match(conn,interface.rule().c_str(), &error);
 
-		if(dbus_error_is_set(&error)) {
-			Logger::String{"Error '",error.message,"' removing interface '",interface.c_str(),"'"}.error(name());
-			dbus_error_free(&error);
-		}
+	// 	if(dbus_error_is_set(&error)) {
+	// 		Logger::String{"Error '",error.message,"' removing interface '",interface.c_str(),"'"}.error(name());
+	// 		dbus_error_free(&error);
+	// 	}
 
-	}
+	// }
 
-	void DBus::Connection::push_back(Udjat::DBus::Interface &intf) {
-		lock_guard<mutex> lock(guard);
-		insert(intf);
-		interfaces.push_back(intf);
-	}
+	// void DBus::Connection::push_back(Udjat::DBus::Interface &intf) {
+	// 	lock_guard<mutex> lock(guard);
+	// 	insert(intf);
+	// 	interfaces.push_back(intf);
+	// }
 
-	Udjat::DBus::Interface & DBus::Connection::emplace_back(const char *intf) {
+// 	Udjat::DBus::Interface & DBus::Connection::emplace_back(const char *intf) {
 
-		if(!(intf && *intf)) {
-			throw system_error(EINVAL,system_category(),"A dbus interface name is required");
-		}
+// 		if(!(intf && *intf)) {
+// 			throw system_error(EINVAL,system_category(),"A dbus interface name is required");
+// 		}
 
-		lock_guard<mutex> lock(guard);
+// 		lock_guard<mutex> lock(guard);
 
-		for(auto &inserted : interfaces) {
-			if(!strcasecmp(inserted.c_str(),intf)) {
-				Logger::String{"Already watching '",intf,"'"}.write(Logger::Debug,name());
-				return inserted;
-			}
-		}
+// 		for(auto &inserted : interfaces) {
+// 			if(!strcasecmp(inserted.c_str(),intf)) {
+// 				Logger::String{"Already watching '",intf,"'"}.write(Logger::Debug,name());
+// 				return inserted;
+// 			}
+// 		}
 
-#if __cplusplus >= 201703
-		Udjat::DBus::Interface & interface = interfaces.emplace_back(intf);
-#else
-		interfaces.emplace_back(intf);
-		Udjat::DBus::Interface & interface = interfaces.back();
-#endif
-		insert(interface);
+// #if __cplusplus >= 201703
+// 		Udjat::DBus::Interface & interface = interfaces.emplace_back(intf);
+// #else
+// 		interfaces.emplace_back(intf);
+// 		Udjat::DBus::Interface & interface = interfaces.back();
+// #endif
+// 		insert(interface);
 
-		return interface;
-	}
+// 		return interface;
+// 	}
 
-	void DBus::Connection::push_back(const XML::Node &node) {
-		Udjat::DBus::Interface intf{node};
-		return push_back(intf);
-	}
+	// void DBus::Connection::push_back(const XML::Node &node) {
+	// 	Udjat::DBus::Interface intf{node};
+	// 	return push_back(intf);
+	// }
 
-	Udjat::DBus::Member & DBus::Connection::subscribe(const char *interface, const char *member, const std::function<bool(Udjat::DBus::Message &message)> &callback) {
-		return emplace_back(interface).emplace_back(member,callback);
-	}
+	// Udjat::DBus::Member & DBus::Connection::subscribe(const char *interface, const char *member, const std::function<bool(Udjat::DBus::Message &message)> &callback) {
+	// 	return emplace_back(interface).emplace_back(member,callback);
+	// }
 
-	void DBus::Connection::remove(Udjat::DBus::Interface &intf) {
-		lock_guard<mutex> lock(guard);
-		interfaces.remove(intf);
-	}
+	// void DBus::Connection::remove(Udjat::DBus::Interface &intf) {
+	// 	lock_guard<mutex> lock(guard);
+	// 	interfaces.remove(intf);
+	// }
 
-	void DBus::Connection::remove(const Udjat::DBus::Member &member) {
+	// void DBus::Connection::remove(const Udjat::DBus::Member &member) {
 
-		lock_guard<mutex> lock(guard);
-		interfaces.remove_if([this,&member](Udjat::DBus::Interface &interface){
+	// 	lock_guard<mutex> lock(guard);
+	// 	interfaces.remove_if([this,&member](Udjat::DBus::Interface &interface){
 
-			interface.remove(member);	
-			if(interface.empty()) {
-				Logger::String{"Unwatching '",interface.c_str(),"'"}.trace(name());
-				return true;
-			}
-			return false;
+	// 		interface.remove(member);	
+	// 		if(interface.empty()) {
+	// 			Logger::String{"Unwatching '",interface.c_str(),"'"}.trace(name());
+	// 			return true;
+	// 		}
+	// 		return false;
 
-		});
+	// 	});
 
-	}
+	// }
 
 	void DBus::Connection::signal(const Udjat::DBus::Signal &sig) {
 

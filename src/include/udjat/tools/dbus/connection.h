@@ -30,7 +30,6 @@
  #include <mutex>
  #include <thread>
  #include <list>
- #include <udjat/tools/xml.h>
 
  namespace Udjat {
 
@@ -119,12 +118,7 @@
 
 			void flush() noexcept;
 
-			void push_back(Interface &interface);
-			void remove(Interface &interface);
-			
-			void push_back(const XML::Node &node);
-
-			Interface & emplace_back(const char *interface);
+			void push_back(const Properties &props);
 
 #if __cplusplus >= 201703L			
 			inline auto begin() const {

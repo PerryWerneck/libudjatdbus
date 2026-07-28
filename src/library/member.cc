@@ -28,7 +28,6 @@
  #include <udjat/tools/properties.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/logger.h>
- #include <udjat/tools/xml.h>
 
  using namespace std;
 
@@ -57,11 +56,11 @@
 		Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
 	}
 
-	DBus::Member::Member(const XML::Node &node,const std::function<bool(Message & message)> &callback) : Member{NameFactory(node).c_str(),callback} {
+	DBus::Member::Member(const Properties &props,const std::function<bool(Message & message)> &callback) : Member{NameFactory(node).c_str(),callback} {
 
-		auto name = node["dbus-message-type"];
+		auto name = props["dbus-message-type"];
 		if(name.empty()) {
-			name = node.get("message-type","signal");
+			name = props.get("message-type","signal");
 		}
 
 		// TODO: Refactor using d-bus standard methods.

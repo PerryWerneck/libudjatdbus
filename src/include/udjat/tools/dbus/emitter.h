@@ -27,7 +27,6 @@
 
  #include <udjat/defs.h>
  #include <udjat/tools/abstract/object.h>
- #include <udjat/tools/xml.h>
  #include <udjat/tools/string.h>
  #include <vector>
  #include <dbus/dbus.h>
@@ -64,7 +63,7 @@
 				const char *name;		///< @brief Argument name.
 				int type;				///< @brief D-Bus data type.
 				DBusBasicValue dbval;	///< @brief Default value.
-				Output(const XML::Node &node);
+				Output(const Properties &props);
 			};
 			std::vector<Output> outputs;
 
@@ -107,7 +106,7 @@
 			void clear() noexcept;
 
 		public:
-			Emitter(const XML::Node &node);
+			Emitter(const Properties &props);
 			virtual ~Emitter();
 
 			/// @brief Get the message type.

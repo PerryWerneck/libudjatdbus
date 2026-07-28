@@ -129,17 +129,15 @@ lib_src = [
   'src/library/connection/user.cc',
   'src/library/connection/watch.cc',
   'src/library/service/main.cc',
-  'src/library/service/interface.cc',
-  'src/library/interface.cc',
   'src/library/member.cc',
-  'src/library/message/message.cc',
+  'src/library/message.cc',
   'src/library/module.cc',
   'src/library/signal.cc',
   'src/library/exception.cc',
   'src/library/alert.cc',
   'src/library/action.cc',
   'src/library/argument.cc',
-  'src/library/testprogram.cc',
+  'src/library/testcases.cc',
 ]
 
 module_src = [
@@ -255,7 +253,6 @@ install_headers(
 install_headers(
   'src/include/udjat/tools/dbus/connection.h',
   'src/include/udjat/tools/dbus/defs.h',
-  'src/include/udjat/tools/dbus/interface.h',
   'src/include/udjat/tools/dbus/member.h',
   'src/include/udjat/tools/dbus/message.h',
   'src/include/udjat/tools/dbus/signal.h',

@@ -23,6 +23,7 @@
  #include <string>
  #include <stdexcept>
  #include <udjat/tools/actions/dbus.h>
+ #include <udjat/tools/properties.h>
  #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/dbus/exception.h>
  #include <udjat/tools/dbus/message.h>
@@ -34,28 +35,28 @@
 
  namespace Udjat {
 
-	std::shared_ptr<Udjat::Action> DBus::Action::Factory::ActionFactory(const XML::Node &node) const {
-		return std::make_shared<DBus::Action>(node);
+	std::shared_ptr<Udjat::Action> DBus::Action::Factory::ActionFactory(const Properties &props) const {
+		return std::make_shared<DBus::Action>(props);
 	}
 
-	DBus::Action::Action(const XML::Node &node) 
-		: Udjat::Action{node},
-		  message_type{dbus_message_type_from_string(String{node,"dbus-message-type","method_call"}.c_str())},
-		  bustype{BusTypeFactory(node)},
-		  path{String{node,"dbus-path"}.as_quark()},
-		  iface{String{node,"dbus-interface"}.as_quark()},
-		  member{String{node,"dbus-member"}.as_quark()} {
+	DBus::Action::Action(const Properties &props) 
+		: Udjat::Action{props},
+		  message_type{dbus_message_type_from_string(props.get("dbus-message-type","method_call").c_str())},
+		  bustype{BusTypeFactory(props)},
+		  path{props["dbus-path"].as_quark()},
+		  iface{props["dbus-interface"].as_quark()},
+		  member{props["dbus-member"].as_quark()} {
 
-		const char *props[] = {path,iface,member};
+		const char *propnames[] = {path,iface,member};
 		const char *names[] = {"dbus-path","dbus-interface","dbus-member"};
 
-		for(const auto prop : props) {
+		for(const auto prop : propnames) {
 			if(!(prop && *prop)) {
-				throw std::runtime_error(Logger::String{"Missing required attribute '",names[&prop - props],"'"});
+				throw std::runtime_error(Logger::String{"Missing required attribute '",names[&prop - propnames],"'"});
 			}
 		}
 
-		XML::load(node,"argument",arguments);
+		props.load_children("argument",arguments);
 
 	}
 
@@ -170,7 +171,11 @@
 			for(const auto &arg : arguments) {
 				String str{arg.tmplt};
 				str.expand([&request](const char *key, std::string &value) {
-					return request.getProperty(key,value);
+					if(request.contains(key)) {
+						value = request["key"];
+						return true;
+					}
+					return false;
 				},true);
 				vals.push_back(str);
 			}

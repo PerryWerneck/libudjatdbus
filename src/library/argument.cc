@@ -19,7 +19,7 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/tools/xml.h>
+ #include <udjat/tools/properties.h>
  #include <udjat/tools/actions/dbus.h>
  #include <udjat/tools/string.h>
 
@@ -57,10 +57,10 @@
 		
 	}
 
-	DBus::Action::Argument::Argument(const XML::Node &node)
-		: name{String{node,"name",""}.as_quark()},
-		  tmplt{String{node,"value",""}.as_quark()},
-		  type{DBusTypeFactory(node)} {
+	DBus::Action::Argument::Argument(const Properties &props)
+		: name{props["name"].as_quark()},
+		  tmplt{props["value"].as_quark()},
+		  type{DBusTypeFactory(props)} {
 	}
 
 

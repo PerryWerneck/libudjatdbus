@@ -26,11 +26,12 @@
  #include <udjat/defs.h>
  #include <udjat/alert.h>
  #include <dbus/dbus.h>
- #include <udjat/tools/abstract/object.h>
- #include <udjat/tools/xml.h>
+ #include <udjat/tools/object.h>
+ #include <udjat/tools/properties.h>
  #include <udjat/tools/string.h>
  #include <udjat/tools/actions/dbus.h>
  #include <udjat/tools/actions/dbus.h>
+ 
  #include <memory>
  #include <vector>
  
@@ -51,11 +52,11 @@
 			public:
 				Factory(const char *name = "dbus");
 				virtual ~Factory();
-				std::shared_ptr<Udjat::Alert> AlertFactory(const Abstract::Object &parent, const XML::Node &node) const override;
+				std::shared_ptr<Udjat::Alert> AlertFactory(const Abstract::Object &parent, const Properties &props) const override;
 
 			};
 
-			Alert(const XML::Node &node);
+			Alert(const Properties &props);
 			virtual ~Alert();
 
 			bool activate() noexcept override;

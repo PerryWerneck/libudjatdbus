@@ -28,7 +28,6 @@
  #include <udjat/tools/dbus/defs.h>
  #include <udjat/tools/interface.h>
  #include <udjat/tools/service.h>
- #include <udjat/tools/xml.h>
  #include <udjat/tools/properties.h>
  #include <udjat/tools/string.h>
  #include <vector>

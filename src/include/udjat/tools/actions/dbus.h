@@ -24,7 +24,6 @@
  #include <udjat/action.h>
  #include <udjat/tools/request.h>
  #include <udjat/tools/response.h>
- #include <udjat/tools/xml.h>
  #include <udjat/tools/properties.h>
  #include <vector>
 
@@ -45,11 +44,11 @@
 				Factory(const char *name = "dbus") : Udjat::Action::Factory{name} {
 				}
 
-				std::shared_ptr<Udjat::Action> ActionFactory(const XML::Node &node) const override;
+				std::shared_ptr<Udjat::Action> ActionFactory(const Udjat::Properties &props) const override;
 
 			};
 
-			Action(const XML::Node &node);
+			Action(const Udjat::Properties &props);
 			Action(int message_type, DBusBusType bustype, const char *destination, const char *path, const char *interface, const char *member);
 
 			~Action() override;
@@ -71,7 +70,7 @@
 					: name{n}, tmplt{t}, type{d} {
 				}
 
-				Argument(const XML::Node &node);
+				Argument(const Properties &props);
 			};
 	
 		protected:

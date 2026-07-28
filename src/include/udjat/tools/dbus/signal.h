@@ -24,7 +24,6 @@
  #pragma once
  #include <udjat/defs.h>
  #include <string>
- #include <udjat/tools/xml.h>
  #include <udjat/tools/dbus/connection.h>
  #include <dbus/dbus.h>
 
