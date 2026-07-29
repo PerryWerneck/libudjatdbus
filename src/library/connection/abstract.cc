@@ -211,7 +211,8 @@
 		const char *interface = dbus_message_get_interface(message);
 		debug("----------------> Check for interface '",interface,"'");
 
-		// TODO: Check if we have an interface matching the request
+		// Check if we have an interface matching the request
+	
 
 		// for(const auto &intf : interfaces) {
 

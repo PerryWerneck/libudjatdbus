@@ -144,9 +144,7 @@
 		// Add interfaces.
 		Interface::for_each([this](const Interface &interface){
 			String name{dest,".",interface.name()};
-			Logger::String{"Interface '",name.c_str(),"' is available"}.info();
-
-			
+			Logger::String{"Interface '",name.c_str(),"' is available"}.info();			
 			return false;
 		});
 
@@ -291,8 +289,36 @@
 
 			} else {
 
-//				return service->interface(dbus_message_get_interface(message)).on_message(connct,message,*service);
-				throw runtime_error("incomplete");
+				debug("Processing message on service ",service->dest);
+		
+				const char *intf = dbus_message_get_interface(message);
+				debug("Searching from '",intf,"'");
+
+				auto rc = Interface::for_each([service,intf,message,connct](const Interface &interface){
+
+					String name{service->dest,".",interface.name()};
+					debug("Testing '",name.c_str(),"'");
+
+					if(strcmp(name.c_str(),intf)) {
+						return false;
+					}
+
+					debug("Found interface '",name.c_str(),"'");
+
+					DBusMessage *response = service->process(interface,name.c_str(),message);
+					if(response) {
+						dbus_connection_send(connct, response, NULL);
+						dbus_message_unref(response);
+						dbus_connection_flush(connct);
+						return true;
+					}
+
+					return false;
+				});
+
+				if(rc) {
+					return DBUS_HANDLER_RESULT_HANDLED;
+				}
 
 			}
 
@@ -313,6 +339,21 @@
 	bool DBus::Service::on_signal(Udjat::DBus::Message &) {
 		return false;
 	}
+
+	DBusMessage * DBus::Service::process(const Udjat::Interface &interface, const char *name, DBusMessage *message) {
+
+		debug("Processing '",name,"' on interface ",interface.name());
+
+
+
+		return dbus_message_new_error(
+			message,
+			DBUS_ERROR_UNKNOWN_METHOD,
+			String{"Cant find method in ",name}.c_str()
+		);
+
+	}
+
 
 // 	Udjat::Interface & DBus::Service::InterfaceFactory(const Properties &props) {
 

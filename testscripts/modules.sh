@@ -21,9 +21,9 @@
 
 dbus-send \
 	--session \
-	--dest=br.eti.werneck.udjat \
+	--dest=br.eti.werneck.udjatdbus \
 	--print-reply \
 	"/" \
-	br.eti.werneck.udjat.info.modules.get
+	br.eti.werneck.udjatdbus.module.get
 	
 
