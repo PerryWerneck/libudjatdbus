@@ -32,7 +32,6 @@
  	namespace DBus {
 
 		class Message;
-		class Interface;
 		class Signal;
 		class Member;
 

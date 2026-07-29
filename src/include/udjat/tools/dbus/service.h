@@ -62,11 +62,6 @@
 			Service(const char *name, const char *destination);
 			Service(DBusConnection * conn, const char *name, const char *destination);
 
-			/// @brief Find interface.
-			/// @param name The name of requested interface.
-			/// @return The interface, exception if not found.
-			Interface & interface(const char *name);
-
 			inline const char *name() const noexcept {
 				return service_name;
 			}

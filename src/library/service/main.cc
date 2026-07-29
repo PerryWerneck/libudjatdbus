@@ -134,13 +134,28 @@
 
 	void DBus::Service::start() {
 		DBus::Error err;
-		debug("-----------------------------------------");
+
+		debug("---- Starting service '",name(),"'");
+
 		Logger::String{"Listening dbus://",dest}.info(name());
 		dbus_bus_request_name(conn, dest, DBUS_NAME_FLAG_REPLACE_EXISTING, err);
 		err.verify();
+
+		// Add interfaces.
+		Interface::for_each([this](const Interface &interface){
+			String name{dest,".",interface.name()};
+			Logger::String{"Interface '",name.c_str(),"' is available"}.info();
+
+			
+			return false;
+		});
+
 	}
 
 	void DBus::Service::stop() {
+
+		debug("---- Stopping service '",name(),"'");
+
 		DBus::Error err;
 		dbus_bus_release_name(conn, dest, err);
 		err.verify();

@@ -21,6 +21,8 @@
  #include <udjat/defs.h>
  #include <udjat/tools/testsuite.h>
  #include <udjat/tools/actions/dbus.h>
+ #include <udjat/tools/dbus/service.h>
+ #include <udjat/tools/mainloop.h>
 
  using namespace Udjat;
 
@@ -49,6 +51,21 @@
 				action.call(request,response,true);
 
 				return "Signal emitted";
+			}
+		},
+		Case{
+			"Run simple service",
+			[](std::ostream &) {
+
+				DBus::Service srvc;
+
+				srvc.start();
+
+				MainLoop::getInstance().run();
+
+				srvc.stop();
+
+				return "Service running";
 			}
 		}
 	);
