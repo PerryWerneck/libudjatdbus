@@ -40,11 +40,11 @@
 	DBus::Alert::Factory::~Factory() {		
 	}
 
-	std::shared_ptr<Udjat::Alert> DBus::Alert::Factory::AlertFactory(const Abstract::Object &, const XML::Node &node) const {
-		return make_shared<DBus::Alert>(node);
+	std::shared_ptr<Udjat::Alert> DBus::Alert::Factory::AlertFactory(const Abstract::Object &, const Properties &props) const {
+		return make_shared<DBus::Alert>(props);
 	}
 
-	DBus::Alert::Alert(const XML::Node &node) : Udjat::Alert{node}, Udjat::DBus::Action{node} {
+	DBus::Alert::Alert(const Properties &props) : Udjat::Alert{props}, Udjat::DBus::Action{props} {
 	}
 
 	DBus::Alert::~Alert() {

@@ -26,10 +26,10 @@
  #include <dbus/dbus.h>
  #include <udjat/defs.h>
  #include <udjat/tools/dbus/defs.h>
+ #include <udjat/tools/properties.h>
  #include <string>
  #include <mutex>
  #include <thread>
- #include <list>
 
  namespace Udjat {
 
@@ -52,12 +52,6 @@
 
 			/// @brief Message filter method.
 			static DBusHandlerResult on_message(DBusConnection *, DBusMessage *, Connection *) noexcept;
-
-			/// @brief Interfaces in this connection.
-			std::list<Interface> interfaces;
-
-			void insert(const Interface &interface);
-			void remove(const Interface &interface);
 
 		protected:
 
@@ -119,24 +113,6 @@
 			void flush() noexcept;
 
 			void push_back(const Properties &props);
-
-#if __cplusplus >= 201703L			
-			inline auto begin() const {
-				return interfaces.begin();
-			}
-
-			inline auto end() const {
-				return interfaces.end();
-			}
-#else
-			inline std::list<Interface>::const_iterator begin() const {
-				return interfaces.begin();
-			}
-
-			inline std::list<Interface>::const_iterator end() const {
-				return interfaces.end();
-			}
-#endif
 
 			/// @brief Emit signal.
 			void signal(const Signal &sig);

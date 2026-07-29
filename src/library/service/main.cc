@@ -54,7 +54,7 @@
  namespace Udjat {
 
 	DBus::Service::Service(DBusConnection *c, const char *name, const char *destination)
-		: Udjat::Service{name, "dbus " STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " service"}, Udjat::Interface::Factory{name}, conn{c}, dest{destination} {
+		: Udjat::Service{name, "dbus " STRINGIZE_VALUE_OF(DBUS_MAJOR_PROTOCOL_VERSION) " service"}, conn{c}, dest{destination} {
 
 		// Keep running if d-bus disconnect.
 		dbus_connection_set_exit_on_disconnect(conn, false);
@@ -169,10 +169,10 @@
 					"<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" " \
 					"\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\"><node>";
 
-				debug("Introspecting service ",service->name()," with ",service->interfaces.size()," interfaces");
-				for(const auto &interface : service->interfaces) {
-					interface.introspect(xmldata);
-				}
+				debug("Introspecting service ",service->name());
+				// for(const auto &interface : service->interfaces) {
+				// 	interface.introspect(xmldata);
+				// }
 
 				xmldata << "</node>";
 
@@ -203,29 +203,29 @@
 				DBusMessageIter iter;
 				string error{"Invalid argument"};
 
-				if(dbus_message_iter_init(message,&iter)) {
+				// if(dbus_message_iter_init(message,&iter)) {
 
-					string args[2];
+				// 	string args[2];
 
-					for(size_t ix = 0; ix < 2; ix++) {
-						if(dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING) {
-							DBusBasicValue val;
-							dbus_message_iter_get_basic(&iter,&val);
-							args[ix] = val.str;
-							dbus_message_iter_next(&iter);
-						} else {
-							throw runtime_error("Invalid argument type");
-						}
-					}
+				// 	for(size_t ix = 0; ix < 2; ix++) {
+				// 		if(dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING) {
+				// 			DBusBasicValue val;
+				// 			dbus_message_iter_get_basic(&iter,&val);
+				// 			args[ix] = val.str;
+				// 			dbus_message_iter_next(&iter);
+				// 		} else {
+				// 			throw runtime_error("Invalid argument type");
+				// 		}
+				// 	}
 
-					// debug("Interface: ",args[0].c_str()," Property: ",args[0].c_str());
-					Interface &intf = service->interface(args[0].c_str());
+				// 	// debug("Interface: ",args[0].c_str()," Property: ",args[0].c_str());
+				// 	Interface &intf = service->interface(args[0].c_str());
 
-					Logger::String msg{"Property '",args[1].c_str(),"' is invalid for interface '",intf.name(),"'"};
-					msg.warning(service->name());
-					error = msg;
+				// 	Logger::String msg{"Property '",args[1].c_str(),"' is invalid for interface '",intf.name(),"'"};
+				// 	msg.warning(service->name());
+				// 	error = msg;
 
-				}
+				// }
 				
 				DBusMessage *response = 
 					dbus_message_new_error(
@@ -244,23 +244,23 @@
 				// https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.Properties.html
 				string error{"Invalid argument"};
 
-				DBusMessageIter iter;
-				if(dbus_message_iter_init(message,&iter) && dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING) {
+				// DBusMessageIter iter;
+				// if(dbus_message_iter_init(message,&iter) && dbus_message_iter_get_arg_type(&iter) == DBUS_TYPE_STRING) {
 
-					DBusBasicValue val;
-					dbus_message_iter_get_basic(&iter,&val);
-					debug("-----------------> GetAll(",val.str,")");
-					Interface &intf = service->interface(val.str);
+				// 	DBusBasicValue val;
+				// 	dbus_message_iter_get_basic(&iter,&val);
+				// 	debug("-----------------> GetAll(",val.str,")");
+				// 	Interface &intf = service->interface(val.str);
 
-					Logger::String msg{"Interface '",intf.name(),"' doesnt have properties"};
-					msg.trace(service->name());
-					error = msg;
+				// 	Logger::String msg{"Interface '",intf.name(),"' doesnt have properties"};
+				// 	msg.trace(service->name());
+				// 	error = msg;
 
-				} else {
+				// } else {
 
-					throw runtime_error("Invalid argument");
+				// 	throw runtime_error("Invalid argument");
 
-				}
+				// }
 
 				DBusMessage *response = 
 					dbus_message_new_error(
@@ -276,7 +276,8 @@
 
 			} else {
 
-				return service->interface(dbus_message_get_interface(message)).on_message(connct,message,*service);
+//				return service->interface(dbus_message_get_interface(message)).on_message(connct,message,*service);
+				throw runtime_error("incomplete");
 
 			}
 
@@ -298,42 +299,42 @@
 		return false;
 	}
 
-	Udjat::Interface & DBus::Service::InterfaceFactory(const Properties &props) {
+// 	Udjat::Interface & DBus::Service::InterfaceFactory(const Properties &props) {
 
-		String intfname;
+// 		String intfname;
 
-		for(const char *attrname : { "dbus-interface", "interface", "name" }) {
-			String attr = props[attrname];
-			if(!attr.empty()) {
-				intfname = attr;
-				break;
-			}
+// 		for(const char *attrname : { "dbus-interface", "interface", "name" }) {
+// 			String attr = props[attrname];
+// 			if(!attr.empty()) {
+// 				intfname = attr;
+// 				break;
+// 			}
 
-		}
+// 		}
 
-		if(intfname.empty()) {
-			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str()};
-		} else if(intfname[0] == '.') {
-			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str(),intfname.c_str()};
-		} else if(!strchr(intfname.c_str(),'.')) {
-			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str(),".",intfname.c_str()};
-		}
+// 		if(intfname.empty()) {
+// 			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str()};
+// 		} else if(intfname[0] == '.') {
+// 			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str(),intfname.c_str()};
+// 		} else if(!strchr(intfname.c_str(),'.')) {
+// 			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str(),".",intfname.c_str()};
+// 		}
 
-		// Check if interface is already registered.
-		for(Interface &interface : interfaces) {
-			if(!strcasecmp(intfname.c_str(),interface.interface())) {
-				return interface;
-			}
-		}
+// 		// Check if interface is already registered.
+// 		for(Interface &interface : interfaces) {
+// 			if(!strcasecmp(intfname.c_str(),interface.interface())) {
+// 				return interface;
+// 			}
+// 		}
 
-		// It's a new interface, insert it.
-#if __cplusplus >= 201703	
-		return interfaces.emplace_back(props,intfname.as_quark());
-#else
-		interfaces.emplace_back(props,intfname.as_quark());
-		return interfaces.back();
-#endif
-	}
+// 		// It's a new interface, insert it.
+// #if __cplusplus >= 201703	
+// 		return interfaces.emplace_back(props,intfname.as_quark());
+// #else
+// 		interfaces.emplace_back(props,intfname.as_quark());
+// 		return interfaces.back();
+// #endif
+// 	}
 
 
  }

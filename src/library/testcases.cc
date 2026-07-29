@@ -19,25 +19,42 @@
 
  #include <config.h>
  #include <udjat/defs.h>
- #include <udjat/tools/logger.h>
- #include <udjat/module.h>
- #include <udjat/tools/dbus.h>
- #include <udjat/tools/dbus/connection.h>
- #include <udjat/tools/dbus/message.h>
- #include <udjat/tools/application.h>
- #include <udjat/tools/dbus/service.h>
- #include <udjat/tools/dbus/signal.h>
- #include <udjat/tools/response.h>
- #include <string>
+ #include <udjat/tools/testsuite.h>
  #include <udjat/tools/actions/dbus.h>
- #include <udjat/tools/unit-test.h>
 
  using namespace Udjat;
- using namespace Udjat::DBus;
- using namespace std;
 
- #ifdef DEBUG 
+ #if defined(DEBUG) and ! defined(LIBUDJAT_STATIC) 
 
+ UDJAT_API void udjat_register_tests(Udjat::TestSuite &suite) noexcept {
+
+	using Case = TestSuite::Case;
+
+	suite.add(
+		Case{
+			"Emit signal action",
+			[](std::ostream &) {
+
+				DBus::Action action{
+					DBUS_MESSAGE_TYPE_SIGNAL,
+					DBUS_BUS_SESSION,
+					"br.eti.werneck.udjat.MyInterface",
+					"/br/eti/werneck/udjat/MyObject",
+					"br.eti.werneck.udjat.MyInterface",
+					"TestSignal"
+				};
+
+				Udjat::Request request;
+				Udjat::Response response;
+				action.call(request,response,true);
+
+				return "Signal emitted";
+			}
+		}
+	);
+
+ }
+	
 //  static int call_and_wait_test() {
 
 // 	Logger::String{"Emitting signal with action"}.info();

@@ -25,6 +25,7 @@
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/connection.h>
+ #include <udjat/tools/properties.h>
  #include <udjat/tools/logger.h>
  #include <private/mainloop.h>
  #include <private/dataslot.h>

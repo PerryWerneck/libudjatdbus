@@ -26,7 +26,6 @@
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
  #include <udjat/tools/dbus/defs.h>
- #include <udjat/tools/interface.h>
  #include <udjat/tools/service.h>
  #include <udjat/tools/properties.h>
  #include <udjat/tools/string.h>
@@ -37,7 +36,7 @@
 
 	namespace DBus {
 
-		class UDJAT_API Service : public Udjat::Service, protected Udjat::Interface::Factory {
+		class UDJAT_API Service : public Udjat::Service {
 		private:
 
 			/// @brief Connection to D-Bus.
@@ -56,31 +55,6 @@
 			/// @retval true The signal was handled.
 			/// @retval false The signal was not handled.
 			bool on_signal(Udjat::DBus::Message &request);
-
-			Udjat::Interface & InterfaceFactory(const Properties &props) override;
-
-			class Interface : public Udjat::Interface, public std::vector<Udjat::Interface::Handler> {
-			private:
-				const char *intfname;
-
-			public:
-				Interface(const Properties &props, const char *intfname);
-				virtual ~Interface();
-
-				DBusHandlerResult on_message(DBusConnection *connct, DBusMessage *message, DBus::Service &service);
-
-				Udjat::Interface::Handler & push_back(const Properties &props) override;
-
-				void introspect(std::stringstream &xmldata) const;
-				bool push_back(const Properties &props, std::shared_ptr<Udjat::Action> action) override;
-
-				inline const char * interface() const noexcept {
-					return intfname;
-				}
-
-			};
-
-			std::vector<Interface> interfaces;
 
 		public:
 

@@ -154,9 +154,6 @@
 
 		flush();
 
-		// Remove interfaces.
-		interfaces.clear();
-
 		// Remove filter
 		dbus_connection_remove_filter(conn,(DBusHandleMessageFunction) on_message, this);
 

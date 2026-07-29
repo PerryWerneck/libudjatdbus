@@ -49,7 +49,7 @@ libversion = '@0@.@1@'.format(pkg_major_version,pkg_minor_version)
 libudjat = dependency(
   'libudjat',
   required: true, 
-  version: '>=2.7.0',
+  version: '>=3.0.0',
   fallback: ['libudjat'],
 )
 

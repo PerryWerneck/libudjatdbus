@@ -56,7 +56,7 @@
 		Logger::String{"Watching '",c_str(),"'"}.trace("d-bus");
 	}
 
-	DBus::Member::Member(const Properties &props,const std::function<bool(Message & message)> &callback) : Member{NameFactory(node).c_str(),callback} {
+	DBus::Member::Member(const Properties &props,const std::function<bool(Message & message)> &callback) : Member{NameFactory(props).c_str(),callback} {
 
 		auto name = props["dbus-message-type"];
 		if(name.empty()) {
@@ -70,7 +70,7 @@
 			throw runtime_error("Unexpected d-bus message type");
 		}
 
-		Logger::String{"Watching ",name.c_str()," '",c_str(),"'"}.trace(node.name());
+		Logger::String{"Watching ",name.c_str()," '",c_str(),"'"}.trace();
 
 	}
 
