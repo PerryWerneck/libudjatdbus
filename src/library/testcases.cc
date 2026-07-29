@@ -23,6 +23,7 @@
  #include <udjat/tools/actions/dbus.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/mainloop.h>
+ #include <udjat/agent.h>
 
  using namespace Udjat;
 

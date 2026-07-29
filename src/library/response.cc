@@ -19,6 +19,7 @@
 
  #include <config.h>
  #include <udjat/defs.h>
+ #include <udjat/tools/response.h>
  #include <private/response.h>
  #include <udjat/tools/schema.h>
  #include <udjat/tools/interface.h>
@@ -39,6 +40,17 @@
 
 	DBusMessage * DBus::Response::MessageFactory(const Udjat::Interface &intf, DBusMessage *message) {
 	
+		if(status_code() != HTTP::Ok) {
+
+			// Failed, send message.
+			return dbus_message_new_error(
+				message,
+				DBUS_ERROR_FAILED,
+				(status.body.empty() ? status.message.c_str() : status.body.c_str())
+			);
+
+		}
+
 		OutputSchema schema;
 		if(!intf.schema(schema)) {
 			return dbus_message_new_error(
