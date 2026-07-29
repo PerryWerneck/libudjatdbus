@@ -137,6 +137,8 @@ lib_src = [
   'src/library/alert.cc',
   'src/library/action.cc',
   'src/library/argument.cc',
+  'src/library/request.cc',
+  'src/library/response.cc',
   'src/library/testcases.cc',
 ]
 

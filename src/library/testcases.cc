@@ -34,6 +34,21 @@
 
 	suite.add(
 		Case{
+			"DBus service",
+			[](std::ostream &) {
+
+				DBus::Service srvc;
+
+				srvc.start();
+
+				MainLoop::getInstance().run();
+
+				srvc.stop();
+
+				return "Service Ok";
+			}
+		},
+		Case{
 			"Emit signal action",
 			[](std::ostream &) {
 
@@ -51,21 +66,6 @@
 				action.call(request,response,true);
 
 				return "Signal emitted";
-			}
-		},
-		Case{
-			"Run simple service",
-			[](std::ostream &) {
-
-				DBus::Service srvc;
-
-				srvc.start();
-
-				MainLoop::getInstance().run();
-
-				srvc.stop();
-
-				return "Service running";
 			}
 		}
 	);

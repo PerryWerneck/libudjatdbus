@@ -46,7 +46,9 @@
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/dbus/exception.h>
-
+ #include <private/request.h>
+ #include <private/response.h>
+ 
  #include <sstream>
 
  using namespace std;
@@ -287,9 +289,9 @@
 				dbus_connection_flush(connct);
 				return DBUS_HANDLER_RESULT_HANDLED;
 
-			} else {
+			} else if(dbus_message_get_type(message) == DBUS_MESSAGE_TYPE_METHOD_CALL) {
 
-				debug("Processing message on service ",service->dest);
+				debug("Processing method call on service ",service->dest);
 		
 				const char *intf = dbus_message_get_interface(message);
 				debug("Searching from '",intf,"'");
@@ -344,7 +346,20 @@
 
 		debug("Processing '",name,"' on interface ",interface.name());
 
+		DBus::Request request{message};
+		{
+			DBusMessage *rc = request.parse_input(interface);
+			if(rc) {
+				return rc;
+			}
+		}
 
+		DBus::Response response;
+		
+		if(interface.process(request,response)) {
+			// The request was processed.
+			return response.MessageFactory(interface,message);
+		}
 
 		return dbus_message_new_error(
 			message,
