@@ -48,6 +48,7 @@
  #include <udjat/tools/dbus/exception.h>
  #include <private/request.h>
  #include <private/response.h>
+ #include <udjat/tools/schema.h>
  
  #include <sstream>
 
@@ -344,21 +345,65 @@
 
 	DBusMessage * DBus::Service::process(const Udjat::Interface &interface, const char *name, DBusMessage *message) {
 
-		debug("Processing '",name,"' on interface ",interface.name());
+		const char *member = dbus_message_get_member(message);
 
-		DBus::Request request{message};
-		{
-			DBusMessage *rc = request.parse_input(interface);
-			if(rc) {
-				return rc;
-			}
+		OutputSchema schema;
+		if(!interface.schema(schema)) {
+			return dbus_message_new_error(
+				message,
+				DBUS_ERROR_FAILED,
+				String{"The backend does not provide an output schema for ",name}.c_str()
+			);
 		}
 
-		DBus::Response response;
+		DBus::Response response{schema};
 		
-		if(interface.process(request,response)) {
-			// The request was processed.
-			return response.MessageFactory(interface,message);
+		if(!strcasecmp(member,"GetAll")) {
+
+			// Is this interface enumerable?
+			if(!(schema.caps & Schema::Enumerable)) {
+
+				// Interface is not enumerable.
+				return dbus_message_new_error(
+					message,
+					DBUS_ERROR_UNKNOWN_METHOD,
+					String{"The interface '",name,"' is not enumerable"}.c_str()
+				);
+
+			}
+			
+			DBus::Request request{message,HTTP::Get,""};
+			if(interface.process(request,response)) {
+				// The request was processed.
+				return response.MessageFactory(message);
+			}
+
+
+		} else {
+
+			HTTP::Method method = HTTP::MethodFactory(message);
+			if(method == HTTP::UnknownMethod) {
+				return dbus_message_new_error(
+					message,
+					DBUS_ERROR_UNKNOWN_METHOD,
+					"The requested method is unknown for this service"
+				);
+			}
+
+			DBus::Request request{message,method,dbus_message_get_path(message)};
+			if(request.root()) {
+				return dbus_message_new_error(
+					message,
+					DBUS_ERROR_INVALID_ARGS,
+					"An object path is required"
+				);
+			}
+
+			if(interface.process(request,response)) {
+				// The request was processed.
+				return response.MessageFactory(message);
+			}
+
 		}
 
 		return dbus_message_new_error(

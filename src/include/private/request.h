@@ -34,9 +34,10 @@
 	class UDJAT_PRIVATE Request : public Udjat::Request {
 	private:
 		DBusMessage *message;
+		HTTP::Method request_method;
 
 	public:
-		Request(DBusMessage *message);
+		Request(DBusMessage *message, const HTTP::Method method, const char *path);
 		~Request() override;
 
 		HTTP::Method method() const noexcept override;
@@ -51,4 +52,13 @@
 	};
 
  }
+
+ namespace Udjat::HTTP {
+
+	/// Build HTTP::Method from dbus message.
+	UDJAT_PRIVATE Method MethodFactory(DBusMessage *message);
+
+ }
+ 
+
 

@@ -51,7 +51,7 @@
 		return false;
 	}
 
-	DBus::Request::Request(DBusMessage *m) : Udjat::Request{dbus_message_get_path(m)}, message{m} {
+	DBus::Request::Request(DBusMessage *m, const HTTP::Method h, const char *p) : Udjat::Request{p}, message{m}, request_method{h} {
 		dbus_message_ref(message);
 	}
 
@@ -60,24 +60,7 @@
 	}
 
 	HTTP::Method DBus::Request::method() const noexcept {
-
-		const char *ptr = strrchr(dbus_message_get_interface(message),'.');
-
-		if(ptr) {
-
-			ptr++;
-			debug("The requested method is '",ptr,"'");
-
-			for(const auto &method : methods) {
-				if(!strcasecmp(method.dbus,ptr)) {
-					return method.http;
-				}
-			}
-
-		}
-
-		Logger::String{"Invalid method call: '",dbus_message_get_interface(message),"'"}.error();
-		return HTTP::UnknownMethod;
+		return request_method;
 	}
 
 	DBusMessage * DBus::Request::parse_input(const Udjat::Interface &intf) {
@@ -98,6 +81,21 @@
 
 	}
 
+	UDJAT_PRIVATE HTTP::Method HTTP::MethodFactory(DBusMessage *message) {
+		
+		const char *member = dbus_message_get_member(message);
+		for(const auto &method : methods) {
+			if(!strcasecmp(method.dbus,member)) {
+				return method.http;
+			}
+		}
+
+		Logger::String{"Invalid method call: '",dbus_message_get_interface(message),".",member,"'"}.error();
+		return HTTP::UnknownMethod;
+	}
+
  }
 
+
+ 
 

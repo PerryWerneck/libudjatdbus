@@ -17,13 +17,13 @@
 #	--session \
 #	--dest "br.eti.werneck.udjat" \
 #	--object-path "/" \
-#	--method br.eti.werneck.udjat.get
+#	--method br.eti.werneck.udjat.Get
 
 dbus-send \
 	--session \
 	--dest=br.eti.werneck.udjatdbus \
 	--print-reply \
-	"/" \
-	br.eti.werneck.udjatdbus.module.get
+	"/dbus" \
+	br.eti.werneck.udjatdbus.service.Get
 	
 

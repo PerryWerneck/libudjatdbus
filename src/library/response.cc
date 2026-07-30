@@ -30,7 +30,7 @@
 
  namespace Udjat {
 
-	DBus::Response::Response() {
+	DBus::Response::Response(const OutputSchema &s) : schema{s}  {
 
 	}
 
@@ -38,7 +38,64 @@
 
 	}
 
-	DBusMessage * DBus::Response::MessageFactory(const Udjat::Interface &intf, DBusMessage *message) {
+	static bool dbus_value_factory(const Schema::Item &item, int &arg_type, const Udjat::Value &value, DBusBasicValue &dval) {
+
+		switch(item.type()) {
+		case Schema::String: 
+		case Schema::Timestamp:
+		case Schema::State: 
+		case Schema::Icon:
+		case Schema::Url:
+		case Schema::Percent:
+			arg_type = DBUS_TYPE_STRING;
+			dval.str = (char *) value.c_str();
+			break;
+
+		case Schema::Signed:
+			{
+				int v;
+				value.get(v);
+				arg_type = DBUS_TYPE_INT32;
+				dval.i32 = v;
+			}
+			break;
+
+		case Schema::Unsigned:
+			{
+				unsigned int v;
+				value.get(v);
+				arg_type = DBUS_TYPE_UINT32;
+				dval.u32 = v;
+			}
+			break;
+
+		case Schema::Float: 
+			{
+				double v;
+				value.get(v);
+				arg_type = DBUS_TYPE_DOUBLE;
+				dval.dbl = v;
+			}
+			break;
+
+		case Schema::Boolean: 
+			{
+				bool v;
+				value.get(v);
+				arg_type = DBUS_TYPE_BOOLEAN;
+				dval.bool_val = v;
+			}
+			break;
+
+		default:
+			return false;
+
+		}
+
+		return true;
+	}
+
+	DBusMessage * DBus::Response::MessageFactory(DBusMessage *message) {
 	
 		if(status_code() != HTTP::Ok) {
 
@@ -51,23 +108,15 @@
 
 		}
 
-		OutputSchema schema;
-		if(!intf.schema(schema)) {
-			return dbus_message_new_error(
-				message,
-				DBUS_ERROR_FAILED,
-				"Output schema was not provided by backend"
-			);
-		}
-		
 		auto reply = dbus_message_new_method_return(message);
+
+		// TODO: Check if response is an array and schema is enumerable.
 
 		for(const auto &item : schema) {
 
 			const char *name = item.name();
 
-			Value value;
-			if(!this->get_property(name,value)) {
+			if(!this->contains(name)) {
 				dbus_message_unref(reply);
 				return dbus_message_new_error(
 					message,
@@ -76,64 +125,18 @@
 				);
 			}
 
+			auto value = (*this)[name];
+
 			int arg_type;
 			DBusBasicValue dval;
 
-			switch(item.type()) {
-			case Schema::String: 
-			case Schema::Timestamp:
-			case Schema::State: 
-			case Schema::Icon:
-			case Schema::Url:
-			case Schema::Percent:
-				arg_type = DBUS_TYPE_STRING;
-				dval.str = (char *) value.c_str();
-				break;
-
-			case Schema::Signed:
-				{
-					int v;
-					value.get(v);
-					arg_type = DBUS_TYPE_INT32;
-					dval.i32 = v;
-				}
-				break;
-
-			case Schema::Unsigned:
-				{
-					unsigned int v;
-					value.get(v);
-					arg_type = DBUS_TYPE_UINT32;
-					dval.u32 = v;
-				}
-				break;
-
-			case Schema::Float: 
-				{
-					double v;
-					value.get(v);
-					arg_type = DBUS_TYPE_DOUBLE;
-					dval.dbl = v;
-				}
-				break;
-
-			case Schema::Boolean: 
-				{
-					bool v;
-					value.get(v);
-					arg_type = DBUS_TYPE_BOOLEAN;
-					dval.bool_val = v;
-				}
-				break;
-
-			default:
+			if(!dbus_value_factory(item,arg_type,value,dval)) {
 				dbus_message_unref(reply);
 				return dbus_message_new_error(
 					message,
 					DBUS_ERROR_FAILED,
 					Logger::Message{"Invalid type for '{}'",name}.c_str()
 				);
-
 			}
 
 			if(!dbus_message_append_args(reply, arg_type, &dval, DBUS_TYPE_INVALID)) {
@@ -144,6 +147,8 @@
 					Logger::Message{"Unable to append '{}' to reply message",name}.c_str()
 				);
 			}
+			
+			value.clear();
 
 		}
 

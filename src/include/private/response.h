@@ -22,20 +22,23 @@
  #include <udjat/defs.h>
  #include <udjat/tools/response.h>
  #include <udjat/tools/interface.h>
+ #include <udjat/tools/schema.h>
  #include <dbus/dbus.h>
 
  namespace Udjat::DBus {
  
 	class UDJAT_PRIVATE Response : public Udjat::Response {
+	private:
+		const OutputSchema &schema;
+		
 	public:
-		Response();
+		Response(const OutputSchema &schema);
 		~Response() override;
 
 		/// @brief Build output message.
-		/// @param intf Interface with output schema.
 		/// @param message The request message.
 		/// @return Response message.
-		DBusMessage * MessageFactory(const Udjat::Interface &intf,  DBusMessage *message);
+		DBusMessage * MessageFactory(DBusMessage *message);
 
 	};
 
