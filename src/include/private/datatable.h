@@ -20,24 +20,24 @@
  #pragma once
 
  #include <udjat/defs.h>
- #include <udjat/tools/response.h>
- #include <udjat/tools/interface.h>
- #include <udjat/tools/schema.h>
+ #include <udjat/tools/datatable.h>
  #include <dbus/dbus.h>
 
  namespace Udjat::DBus {
- 
-	UDJAT_PRIVATE bool value_factory(const Schema::Item &item, int &arg_type, const Udjat::Value &value, DBusBasicValue &dval);
 
-	class UDJAT_PRIVATE Response : public Udjat::Response {
+	/// @brief Abstract object containing values ordered in rows & columns.
+	class UDJAT_API DataTable : public Udjat::DataTable {
 	private:
-		DBusMessage *request;
 		DBusMessage *reply;
-		const OutputSchema &schema;
-		
+		DBusMessageIter iter, container;
+
+	protected:
+		void push_back(const Schema::Item &schema, const Variant &value) override;
+
 	public:
-		Response(DBusMessage *request, const OutputSchema &schema);
-		~Response() override;
+		DataTable(DBusMessage *request, const OutputSchema &schema);
+
+		~DataTable() override;
 
 		/// @brief Build output message.
 		/// @return Response message.

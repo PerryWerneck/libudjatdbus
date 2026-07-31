@@ -23,7 +23,7 @@
 
  #pragma once
  #include <udjat/defs.h>
- #include <udjat/tools/value.h>
+ #include <udjat/tools/variant.h>
  #include <dbus/dbus.h>
  #include <string>
  #include <udjat/tools/string.h>

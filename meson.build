@@ -139,6 +139,7 @@ lib_src = [
   'src/library/argument.cc',
   'src/library/request.cc',
   'src/library/response.cc',
+  'src/library/datatable.cc',
   'src/library/testcases.cc',
 ]
 

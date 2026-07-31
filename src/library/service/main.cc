@@ -32,7 +32,7 @@
  #include <stdexcept>
  #include <udjat/tools/intl.h>
  #include <udjat/tools/exception.h>
- #include <udjat/tools/value.h>
+ #include <udjat/tools/variant.h>
 
  #include <udjat/tools/service.h>
  #include <udjat/tools/string.h>
@@ -46,9 +46,12 @@
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/dbus/exception.h>
+ #include <udjat/tools/datatable.h>
+
  #include <private/request.h>
  #include <private/response.h>
  #include <udjat/tools/schema.h>
+ #include <private/datatable.h>
  
  #include <sstream>
 
@@ -356,8 +359,6 @@
 			);
 		}
 
-		DBus::Response response{schema};
-		
 		if(!strcasecmp(member,"GetAll")) {
 
 			// Is this interface enumerable?
@@ -373,14 +374,17 @@
 			}
 			
 			DBus::Request request{message,HTTP::Get,""};
+			DBus::DataTable response{message,schema};
+
 			if(interface.process(request,response)) {
 				// The request was processed.
-				return response.MessageFactory(message);
+				return response.MessageFactory();
 			}
-
 
 		} else {
 
+			// It's a standard method
+			
 			HTTP::Method method = HTTP::MethodFactory(message);
 			if(method == HTTP::UnknownMethod) {
 				return dbus_message_new_error(
@@ -399,9 +403,11 @@
 				);
 			}
 
+			DBus::Response response{message,schema};
+		
 			if(interface.process(request,response)) {
 				// The request was processed.
-				return response.MessageFactory(message);
+				return response.MessageFactory();
 			}
 
 		}

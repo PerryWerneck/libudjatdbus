@@ -23,6 +23,7 @@
  #include <private/response.h>
  #include <udjat/tools/schema.h>
  #include <udjat/tools/interface.h>
+ #include <udjat/tools/variant.h>
  #include <dbus/dbus.h>
  #include <string>
 
@@ -30,15 +31,16 @@
 
  namespace Udjat {
 
-	DBus::Response::Response(const OutputSchema &s) : schema{s}  {
+	DBus::Response::Response(DBusMessage *r, const OutputSchema &s) : request{r},schema{s}  {
+		reply = dbus_message_new_method_return(request);
 
 	}
 
 	DBus::Response::~Response() {
-
+		dbus_message_unref(reply);
 	}
 
-	static bool dbus_value_factory(const Schema::Item &item, int &arg_type, const Udjat::Value &value, DBusBasicValue &dval) {
+	UDJAT_PRIVATE bool DBus::value_factory(const Schema::Item &item, int &arg_type, const Udjat::Value &value, DBusBasicValue &dval) {
 
 		switch(item.type()) {
 		case Schema::String: 
@@ -95,31 +97,27 @@
 		return true;
 	}
 
-	DBusMessage * DBus::Response::MessageFactory(DBusMessage *message) {
+	DBusMessage * DBus::Response::MessageFactory() {
 	
 		if(status_code() != HTTP::Ok) {
 
 			// Failed, send message.
 			return dbus_message_new_error(
-				message,
+				request,
 				DBUS_ERROR_FAILED,
 				(status.body.empty() ? status.message.c_str() : status.body.c_str())
 			);
 
 		}
 
-		auto reply = dbus_message_new_method_return(message);
-
-		// TODO: Check if response is an array and schema is enumerable.
-
+		// Use schema to build response.
 		for(const auto &item : schema) {
 
 			const char *name = item.name();
 
 			if(!this->contains(name)) {
-				dbus_message_unref(reply);
 				return dbus_message_new_error(
-					message,
+					request,
 					DBUS_ERROR_FAILED,
 					Logger::Message{"Value for '{}' was not provided for the backend",name}.c_str()
 				);
@@ -130,19 +128,17 @@
 			int arg_type;
 			DBusBasicValue dval;
 
-			if(!dbus_value_factory(item,arg_type,value,dval)) {
-				dbus_message_unref(reply);
+			if(!value_factory(item,arg_type,value,dval)) {
 				return dbus_message_new_error(
-					message,
+					request,
 					DBUS_ERROR_FAILED,
 					Logger::Message{"Invalid type for '{}'",name}.c_str()
 				);
 			}
 
 			if(!dbus_message_append_args(reply, arg_type, &dval, DBUS_TYPE_INVALID)) {
-				dbus_message_unref(reply);
 				return dbus_message_new_error(
-					message,
+					request,
 					DBUS_ERROR_FAILED,
 					Logger::Message{"Unable to append '{}' to reply message",name}.c_str()
 				);
@@ -152,6 +148,7 @@
 
 		}
 
+		dbus_message_ref(reply);
 		return reply;
 	}
 
