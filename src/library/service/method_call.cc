@@ -80,12 +80,17 @@
 
 				}
 				
+				debug("Interface '",name,"' is enumerable, getting results");
 				DBus::Request request{message,HTTP::Get,dbus_message_get_path(message)};
 				DBus::DataTable response{message,schema};
 
+				debug("Enumerating itens on interface '",interface.name(),"'");
 				if(interface.process(request,response)) {
 					// The request was processed.
+					debug("Sending reply");
 					return response.MessageFactory();
+				} else {
+					Logger::String{"Interface '",interface.name(),"' was unable to enumerate itens"}.warning();
 				}
 
 			} else {
@@ -112,21 +117,26 @@
 
 				DBus::Response response{message,schema};
 			
+				debug("Processing request on interface '",interface.name(),"'");
 				if(interface.process(request,response)) {
 					// The request was processed.
+					debug("Sending enumeration reply");
 					return response.MessageFactory();
 				}
 
 			}
 
+			debug("Message was not processed, returning ",DBUS_ERROR_UNKNOWN_METHOD);
 			return dbus_message_new_error(
 				message,
 				DBUS_ERROR_UNKNOWN_METHOD,
-				String{"Cant find method in ",name}.c_str()
+				String{"Method in ",name," was not recognized by backend"}.c_str()
 			);
+
 
 		} catch(const std::exception &e) {
 
+			Logger::String{e.what()}.error();
 			return dbus_message_new_error(
 				message,
 				DBUS_ERROR_FAILED,

@@ -40,7 +40,6 @@
 			{"uint32", DBUS_TYPE_UINT32},
 			{"boolean", DBUS_TYPE_BOOLEAN},
 			{"double", DBUS_TYPE_DOUBLE},
-			{"objectpath", DBUS_TYPE_OBJECT_PATH},
 			{"signature", DBUS_TYPE_SIGNATURE},
 			{nullptr, DBUS_TYPE_INVALID}
 		};

@@ -75,18 +75,18 @@
 		int type;
 		const char *str;
 	} schema_types[] = {
-		{ Schema::ObjectPath,	DBUS_TYPE_OBJECT_PATH,	DBUS_TYPE_OBJECT_PATH_AS_STRING	},
-		{ Schema::String,		DBUS_TYPE_STRING,		DBUS_TYPE_STRING_AS_STRING 		},
-		{ Schema::Timestamp,	DBUS_TYPE_STRING,		DBUS_TYPE_STRING_AS_STRING		},
-		{ Schema::Signed,		DBUS_TYPE_INT32,		DBUS_TYPE_INT32_AS_STRING		},
-		{ Schema::Unsigned,		DBUS_TYPE_UINT32,		DBUS_TYPE_UINT32_AS_STRING		},
-		{ Schema::Double,		DBUS_TYPE_DOUBLE,		DBUS_TYPE_DOUBLE_AS_STRING		},
-		{ Schema::Float,		DBUS_TYPE_DOUBLE,		DBUS_TYPE_DOUBLE_AS_STRING		},
-		{ Schema::Boolean,		DBUS_TYPE_BOOLEAN,		DBUS_TYPE_BOOLEAN_AS_STRING		},
-		{ Schema::Icon,			DBUS_TYPE_STRING,		DBUS_TYPE_STRING_AS_STRING		},
-		{ Schema::Url,			DBUS_TYPE_STRING,		DBUS_TYPE_STRING_AS_STRING		},
-		{ Schema::State,		DBUS_TYPE_STRING,		DBUS_TYPE_STRING_AS_STRING		},
-		{ Schema::Percent,		DBUS_TYPE_DOUBLE,		DBUS_TYPE_DOUBLE_AS_STRING		},
+		{ Schema::ObjectPath,	DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
+		{ Schema::String,		DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING 	},
+		{ Schema::Timestamp,	DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
+		{ Schema::Signed,		DBUS_TYPE_INT32,	DBUS_TYPE_INT32_AS_STRING	},
+		{ Schema::Unsigned,		DBUS_TYPE_UINT32,	DBUS_TYPE_UINT32_AS_STRING	},
+		{ Schema::Double,		DBUS_TYPE_DOUBLE,	DBUS_TYPE_DOUBLE_AS_STRING	},
+		{ Schema::Float,		DBUS_TYPE_DOUBLE,	DBUS_TYPE_DOUBLE_AS_STRING	},
+		{ Schema::Boolean,		DBUS_TYPE_BOOLEAN,	DBUS_TYPE_BOOLEAN_AS_STRING	},
+		{ Schema::Icon,			DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
+		{ Schema::Url,			DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
+		{ Schema::State,		DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
+		{ Schema::Percent,		DBUS_TYPE_DOUBLE,	DBUS_TYPE_DOUBLE_AS_STRING	},
 	};
 
 	UDJAT_PRIVATE const char * DBus::StringTypeFactory(const Schema::Type schema_type) noexcept {
@@ -107,12 +107,8 @@
 		case Schema::Icon:
 		case Schema::Url:
 		case Schema::Percent:
-			arg_type = DBUS_TYPE_STRING;
-			dval.str = (char *) value.c_str();
-			break;
-
 		case Schema::ObjectPath:
-			arg_type = DBUS_TYPE_OBJECT_PATH;
+			arg_type = DBUS_TYPE_STRING;
 			dval.str = (char *) value.c_str();
 			break;
 
