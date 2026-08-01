@@ -49,12 +49,12 @@
 			/// @brief Message filter method.
 			static DBusHandlerResult on_message(DBusConnection *, DBusMessage *, DBus::Service *) noexcept;
 
-			/// @brief Process message, return response.
+			/// @brief Process method call, return response.
 			/// @param interface The interface to process the message.
 			/// @param name The full interface name.
 			/// @param message The message to process.
-			/// @return The response message.
-			DBusMessage * process(const Udjat::Interface &interface, const char *name, DBusMessage *message);
+			/// @return The message reply.
+			DBusMessage * method_call(const Udjat::Interface &interface, const char *name, DBusMessage *message) noexcept;
 
 		protected:
 

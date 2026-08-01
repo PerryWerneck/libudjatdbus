@@ -311,7 +311,7 @@
 
 					debug("Found interface '",name.c_str(),"'");
 
-					DBusMessage *response = service->process(interface,name.c_str(),message);
+					DBusMessage *response = service->method_call(interface,name.c_str(),message);
 					if(response) {
 						dbus_connection_send(connct, response, NULL);
 						dbus_message_unref(response);
@@ -337,6 +337,7 @@
 			Logger::String{"Unexpected error processing message"}.error(service->name());
 
 		}
+		
 		debug("Returning DBUS_HANDLER_RESULT_NOT_YET_HANDLED for ",dbus_message_get_interface(message)," ",dbus_message_get_member(message));
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
@@ -345,118 +346,5 @@
 	bool DBus::Service::on_signal(Udjat::DBus::Message &) {
 		return false;
 	}
-
-	DBusMessage * DBus::Service::process(const Udjat::Interface &interface, const char *name, DBusMessage *message) {
-
-		const char *member = dbus_message_get_member(message);
-
-		OutputSchema schema;
-		if(!interface.schema(schema)) {
-			return dbus_message_new_error(
-				message,
-				DBUS_ERROR_FAILED,
-				String{"The backend does not provide an output schema for ",name}.c_str()
-			);
-		}
-
-		if(!strcasecmp(member,"GetAll")) {
-
-			// Is this interface enumerable?
-			if(!(schema.caps & Schema::Enumerable)) {
-
-				// Interface is not enumerable.
-				return dbus_message_new_error(
-					message,
-					DBUS_ERROR_UNKNOWN_METHOD,
-					String{"The interface '",name,"' is not enumerable"}.c_str()
-				);
-
-			}
-			
-			DBus::Request request{message,HTTP::Get,""};
-			DBus::DataTable response{message,schema};
-
-			if(interface.process(request,response)) {
-				// The request was processed.
-				return response.MessageFactory();
-			}
-
-		} else {
-
-			// It's a standard method
-			
-			HTTP::Method method = HTTP::MethodFactory(message);
-			if(method == HTTP::UnknownMethod) {
-				return dbus_message_new_error(
-					message,
-					DBUS_ERROR_UNKNOWN_METHOD,
-					"The requested method is unknown for this service"
-				);
-			}
-
-			DBus::Request request{message,method,dbus_message_get_path(message)};
-			if(request.root()) {
-				return dbus_message_new_error(
-					message,
-					DBUS_ERROR_INVALID_ARGS,
-					"An object path is required"
-				);
-			}
-
-			DBus::Response response{message,schema};
-		
-			if(interface.process(request,response)) {
-				// The request was processed.
-				return response.MessageFactory();
-			}
-
-		}
-
-		return dbus_message_new_error(
-			message,
-			DBUS_ERROR_UNKNOWN_METHOD,
-			String{"Cant find method in ",name}.c_str()
-		);
-
-	}
-
-
-// 	Udjat::Interface & DBus::Service::InterfaceFactory(const Properties &props) {
-
-// 		String intfname;
-
-// 		for(const char *attrname : { "dbus-interface", "interface", "name" }) {
-// 			String attr = props[attrname];
-// 			if(!attr.empty()) {
-// 				intfname = attr;
-// 				break;
-// 			}
-
-// 		}
-
-// 		if(intfname.empty()) {
-// 			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str()};
-// 		} else if(intfname[0] == '.') {
-// 			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str(),intfname.c_str()};
-// 		} else if(!strchr(intfname.c_str(),'.')) {
-// 			intfname = String{PRODUCT_DOMAIN,".",Application::Name().c_str(),".",intfname.c_str()};
-// 		}
-
-// 		// Check if interface is already registered.
-// 		for(Interface &interface : interfaces) {
-// 			if(!strcasecmp(intfname.c_str(),interface.interface())) {
-// 				return interface;
-// 			}
-// 		}
-
-// 		// It's a new interface, insert it.
-// #if __cplusplus >= 201703	
-// 		return interfaces.emplace_back(props,intfname.as_quark());
-// #else
-// 		interfaces.emplace_back(props,intfname.as_quark());
-// 		return interfaces.back();
-// #endif
-// 	}
-
 
  }

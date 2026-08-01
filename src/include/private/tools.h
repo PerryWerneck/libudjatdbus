@@ -23,6 +23,7 @@
  #include <dbus/dbus.h>
  #include <udjat/tools/http/method.h>
  #include <udjat/tools/schema.h>
+ #include <udjat/tools/interface.h>
 
  namespace Udjat {
 

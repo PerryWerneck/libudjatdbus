@@ -75,7 +75,7 @@
 		int type;
 		const char *str;
 	} schema_types[] = {
-		{ Schema::Path,			DBUS_TYPE_OBJECT_PATH,	DBUS_TYPE_OBJECT_PATH_AS_STRING	},
+		{ Schema::ObjectPath,	DBUS_TYPE_OBJECT_PATH,	DBUS_TYPE_OBJECT_PATH_AS_STRING	},
 		{ Schema::String,		DBUS_TYPE_STRING,		DBUS_TYPE_STRING_AS_STRING 		},
 		{ Schema::Timestamp,	DBUS_TYPE_STRING,		DBUS_TYPE_STRING_AS_STRING		},
 		{ Schema::Signed,		DBUS_TYPE_INT32,		DBUS_TYPE_INT32_AS_STRING		},
@@ -111,11 +111,11 @@
 			dval.str = (char *) value.c_str();
 			break;
 
-		case Schema::Path:
+		case Schema::ObjectPath:
 			arg_type = DBUS_TYPE_OBJECT_PATH;
 			dval.str = (char *) value.c_str();
 			break;
-			
+
 		case Schema::Signed:
 			{
 				int v;
@@ -152,10 +152,15 @@
 			}
 			break;
 
+		default:
+			Logger::String{"Unable to find dbus-type for '",std::to_string(item.type()),"'"}.error();
+			return false;
+
 		}
 
-		return false;
+		return true;
 	}
+
 
  }
 
