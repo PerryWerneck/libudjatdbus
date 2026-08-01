@@ -20,53 +20,22 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <private/datatable.h>
+ #include <private/tools.h>
  #include <dbus/dbus.h>
  #include <udjat/tools/schema.h>
  #include <udjat/tools/variant.h>
- #include <private/response.h>	// value_factory
  #include <string>
 
  using namespace std;
 
  namespace Udjat {
 
-	static const struct {
-		Schema::Type schema;
-		const char *dbus;
-
-	} types[] = {
-		{ Schema::String,		DBUS_TYPE_STRING_AS_STRING 	},
-		{ Schema::Timestamp,	DBUS_TYPE_STRING_AS_STRING	},
-		{ Schema::Signed,		DBUS_TYPE_INT32_AS_STRING	},
-		{ Schema::Unsigned,		DBUS_TYPE_UINT32_AS_STRING	},
-		{ Schema::Double,		DBUS_TYPE_DOUBLE_AS_STRING	},
-		{ Schema::Float,		DBUS_TYPE_DOUBLE_AS_STRING	},
-		{ Schema::Boolean,		DBUS_TYPE_BOOLEAN_AS_STRING	},
-		{ Schema::Icon,			DBUS_TYPE_STRING_AS_STRING	},
-		{ Schema::Url,			DBUS_TYPE_STRING_AS_STRING	},
-		{ Schema::State,		DBUS_TYPE_STRING_AS_STRING	},
-		{ Schema::Percent,		DBUS_TYPE_DOUBLE_AS_STRING	},
-	};
-
 	DBus::DataTable::DataTable(DBusMessage *request, const OutputSchema &s) : Udjat::DataTable{s}, reply{dbus_message_new_method_return(request)} {
 
 		string signature;
 
 		for(const auto &item : schema) {
-
-			const char *dbus = nullptr;
-			for(const auto &type : types) {
-				if(type.schema == item.type()) {
-					dbus = type.dbus;
-					break;
-				}
-			}
-
-			if(!dbus) {
-				throw runtime_error("Unable to determine value type from schema");
-			}
-
-			signature += dbus;
+			signature += DBus::StringTypeFactory(item.type());
 		}
 
 		debug("signature='",signature.c_str(),"'");
@@ -95,7 +64,7 @@
 		int type;
 		DBusBasicValue dval;
 
-		if(!value_factory(schema,type,value,dval)) {
+		if(!ValueFactory(value,schema,type,dval)) {
 			throw runtime_error("Unable to convert variant do dbus-value");
 		}
 

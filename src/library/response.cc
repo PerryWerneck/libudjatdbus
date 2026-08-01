@@ -21,6 +21,7 @@
  #include <udjat/defs.h>
  #include <udjat/tools/response.h>
  #include <private/response.h>
+ #include <private/tools.h>
  #include <udjat/tools/schema.h>
  #include <udjat/tools/interface.h>
  #include <udjat/tools/variant.h>
@@ -38,63 +39,6 @@
 
 	DBus::Response::~Response() {
 		dbus_message_unref(reply);
-	}
-
-	UDJAT_PRIVATE bool DBus::value_factory(const Schema::Item &item, int &arg_type, const Udjat::Value &value, DBusBasicValue &dval) {
-
-		switch(item.type()) {
-		case Schema::String: 
-		case Schema::Timestamp:
-		case Schema::State: 
-		case Schema::Icon:
-		case Schema::Url:
-		case Schema::Percent:
-			arg_type = DBUS_TYPE_STRING;
-			dval.str = (char *) value.c_str();
-			break;
-
-		case Schema::Signed:
-			{
-				int v;
-				value.get(v);
-				arg_type = DBUS_TYPE_INT32;
-				dval.i32 = v;
-			}
-			break;
-
-		case Schema::Unsigned:
-			{
-				unsigned int v;
-				value.get(v);
-				arg_type = DBUS_TYPE_UINT32;
-				dval.u32 = v;
-			}
-			break;
-
-		case Schema::Float: 
-			{
-				double v;
-				value.get(v);
-				arg_type = DBUS_TYPE_DOUBLE;
-				dval.dbl = v;
-			}
-			break;
-
-		case Schema::Boolean: 
-			{
-				bool v;
-				value.get(v);
-				arg_type = DBUS_TYPE_BOOLEAN;
-				dval.bool_val = v;
-			}
-			break;
-
-		default:
-			return false;
-
-		}
-
-		return true;
 	}
 
 	DBusMessage * DBus::Response::MessageFactory() {
@@ -128,7 +72,7 @@
 			int arg_type;
 			DBusBasicValue dval;
 
-			if(!value_factory(item,arg_type,value,dval)) {
+			if(!ValueFactory(value,item,arg_type,dval)) {
 				return dbus_message_new_error(
 					request,
 					DBUS_ERROR_FAILED,

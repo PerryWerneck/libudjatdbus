@@ -27,8 +27,6 @@
 
  namespace Udjat::DBus {
  
-	UDJAT_PRIVATE bool value_factory(const Schema::Item &item, int &arg_type, const Udjat::Value &value, DBusBasicValue &dval);
-
 	class UDJAT_PRIVATE Response : public Udjat::Response {
 	private:
 		DBusMessage *request;

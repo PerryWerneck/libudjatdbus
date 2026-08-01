@@ -20,6 +20,7 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <private/request.h>
+ #include <private/tools.h>
  #include <udjat/tools/schema.h>
  #include <udjat/tools/interface.h>
  #include <udjat/tools/http/method.h>
@@ -29,27 +30,6 @@
 // using namespace std;
 
  namespace Udjat {
-
-	static const struct {
-		HTTP::Method http;
-		const char *dbus;
-	} methods[] = {
-		{ HTTP::Get,	"get"		},
-		{ HTTP::Head,	"state"		},
-		{ HTTP::Post,	"insert"	},
-		{ HTTP::Put,	"replace"	},
-		{ HTTP::Delete,	"delete"	},
-		{ HTTP::Patch,	"update"	},
-	};
-
-	UDJAT_PRIVATE bool DBus::for_each(const std::function<bool(const HTTP::Method http, const char *dbus)> &callback) noexcept {
-		for(const auto &method : methods) {
-			if(callback(method.http,method.dbus)) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	DBus::Request::Request(DBusMessage *m, const HTTP::Method h, const char *p) : Udjat::Request{p}, message{m}, request_method{h} {
 		dbus_message_ref(message);
@@ -81,18 +61,6 @@
 
 	}
 
-	UDJAT_PRIVATE HTTP::Method HTTP::MethodFactory(DBusMessage *message) {
-		
-		const char *member = dbus_message_get_member(message);
-		for(const auto &method : methods) {
-			if(!strcasecmp(method.dbus,member)) {
-				return method.http;
-			}
-		}
-
-		Logger::String{"Invalid method call: '",dbus_message_get_interface(message),".",member,"'"}.error();
-		return HTTP::UnknownMethod;
-	}
 
  }
 

@@ -141,6 +141,7 @@ lib_src = [
   'src/library/response.cc',
   'src/library/datatable.cc',
   'src/library/testcases.cc',
+  'src/library/tools.cc',
 ]
 
 module_src = [

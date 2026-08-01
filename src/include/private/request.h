@@ -28,9 +28,6 @@
 
  namespace Udjat::DBus {
  
-	/// @brief Convenience method to enumerate methods
-	UDJAT_PRIVATE bool for_each(const std::function<bool(const HTTP::Method http, const char *dbus)> &method) noexcept;
-
 	class UDJAT_PRIVATE Request : public Udjat::Request {
 	private:
 		DBusMessage *message;
