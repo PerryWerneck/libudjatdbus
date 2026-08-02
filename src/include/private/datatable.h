@@ -28,6 +28,7 @@
 	/// @brief Abstract object containing values ordered in rows & columns.
 	class UDJAT_API DataTable : public Udjat::DataTable {
 	private:
+		DBusMessage *request;	
 		DBusMessage *reply;
 		DBusMessageIter iter, array;
 

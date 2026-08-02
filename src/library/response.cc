@@ -48,8 +48,8 @@
 			// Failed, send message.
 			return dbus_message_new_error(
 				request,
-				DBUS_ERROR_FAILED,
-				(status.body.empty() ? status.message.c_str() : status.body.c_str())
+				ErrorFactory(status_code()),
+				this->Udjat::Response::c_str()
 			);
 
 		}

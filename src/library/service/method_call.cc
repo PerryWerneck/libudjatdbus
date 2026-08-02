@@ -88,18 +88,8 @@
 				debug("Enumerating itens on interface '",interface.name(),"'");
 				if(interface.process(request,response)) {
 					// The request was processed.
-					if(response.code == HTTP::Ok) {
-						debug("Sending success");
-						return response.MessageFactory();
-					}
-
-					debug("Sending error");
-					return dbus_message_new_error(
-						message,
-						ErrorFactory(response.code),
-						response.body.empty() ? response.message.c_str() : response.body.c_str()
-					);
-
+					debug("Sending success");
+					return response.MessageFactory();
 				} else {
 					Logger::String{"Interface '",interface.name(),"' was unable to enumerate itens"}.warning();
 				}

@@ -30,7 +30,9 @@
 
  namespace Udjat {
 
-	DBus::DataTable::DataTable(DBusMessage *request, const OutputSchema &s) : Udjat::DataTable{s}, reply{dbus_message_new_method_return(request)} {
+	DBus::DataTable::DataTable(DBusMessage *message, const OutputSchema &s) : Udjat::DataTable{s}, request{message}, reply{dbus_message_new_method_return(message)} {
+
+		dbus_message_ref(request);
 
 		string signature = "(";
 
@@ -53,12 +55,24 @@
 	DBus::DataTable::~DataTable() {
 		dbus_message_iter_abandon_container_if_open(&iter, &array);
 		dbus_message_unref(reply);
+		dbus_message_unref(request);
 	}
 
 	DBusMessage * DBus::DataTable::MessageFactory() {
 		dbus_message_iter_close_container(&iter,&array);
-		dbus_message_ref(reply);
-		return reply;
+
+		if(code == HTTP::Ok) {
+			dbus_message_ref(reply);
+			return reply;
+		}
+
+		debug("Sending error");
+		return dbus_message_new_error(
+			request,
+			ErrorFactory(code),
+			HTTP::Status::c_str()
+		);
+
 	}
 
 	Udjat::DataTable & DBus::DataTable::push_back(const Value &row) {
@@ -89,7 +103,7 @@
 
 			dbus_message_iter_close_container(&array,&cols);
 			throw;
-			
+
 		}
 
 		dbus_message_iter_close_container(&array,&cols);
