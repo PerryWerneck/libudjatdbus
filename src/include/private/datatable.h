@@ -29,7 +29,7 @@
 	class UDJAT_API DataTable : public Udjat::DataTable {
 	private:
 		DBusMessage *reply;
-		DBusMessageIter iter, container;
+		DBusMessageIter iter, array;
 
 	public:
 		DataTable(DBusMessage *request, const OutputSchema &schema);

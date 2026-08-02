@@ -32,17 +32,18 @@
 
 	DBus::DataTable::DataTable(DBusMessage *request, const OutputSchema &s) : Udjat::DataTable{s}, reply{dbus_message_new_method_return(request)} {
 
-		string signature;
+		string signature = "(";
 
 		for(const auto &item : schema) {
 			signature += DBus::StringTypeFactory(item.type());
 		}
+		signature += ")";
 
 		debug("signature='",signature.c_str(),"'");
 
 		dbus_message_iter_init_append(reply, &iter);
 
-		if (!dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, signature.c_str(), &container)) {
+		if (!dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, signature.c_str(), &array)) {
         	dbus_message_unref(reply);
 			throw runtime_error("Error opening container for response");
 		}
@@ -50,12 +51,12 @@
 	}
 
 	DBus::DataTable::~DataTable() {
-		dbus_message_iter_abandon_container_if_open(&iter, &container);
+		dbus_message_iter_abandon_container_if_open(&iter, &array);
 		dbus_message_unref(reply);
 	}
 
 	DBusMessage * DBus::DataTable::MessageFactory() {
-		dbus_message_iter_close_container(&iter,&container);
+		dbus_message_iter_close_container(&iter,&array);
 		dbus_message_ref(reply);
 		return reply;
 	}
@@ -64,19 +65,34 @@
 
 		int type;
 		DBusBasicValue dval;
+		DBusMessageIter cols;
 
-		for(const auto &item : schema) {
-
-			if(!ValueFactory(row[item.name()],item,type,dval)) {
-				throw runtime_error("Unable to convert variant do dbus-value");
-			}
-
-			if(!dbus_message_append_args(reply, type, &dval, DBUS_TYPE_INVALID)) {
-				throw runtime_error("Failure adding value to table");
-			}
-
+		if(!dbus_message_iter_open_container(&array, DBUS_TYPE_STRUCT, NULL, &cols)) {
+			throw runtime_error("Unable to open response row");
 		}
 
+		try {
+
+			for(const auto &item : schema) {
+
+				if(!ValueFactory(row[item.name()],item,type,dval)) {
+					throw runtime_error("Unable to convert variant do dbus-value");
+				}
+
+				if(!dbus_message_iter_append_basic(&cols, type, &dval)) {
+					throw runtime_error("Failure adding value to table");
+				}
+
+			}
+
+		} catch(...) {
+
+			dbus_message_iter_close_container(&array,&cols);
+			throw;
+			
+		}
+
+		dbus_message_iter_close_container(&array,&cols);
 		return *this;
 		
 	}
