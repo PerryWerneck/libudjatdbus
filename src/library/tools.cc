@@ -22,6 +22,7 @@
  #include <dbus/dbus.h>
  #include <private/tools.h>
  #include <udjat/tools/http/method.h>
+ #include <udjat/tools/http/statuscodes.h>
  #include <udjat/tools/schema.h>
  #include <stdexcept>
 
@@ -157,6 +158,30 @@
 		return true;
 	}
 
+	static const struct {
+		HTTP::StatusCode code;
+		const char *dbus;
+	} http_status_codes[] = {
+
+		{ HTTP::BadRequest,			DBUS_ERROR_INVALID_ARGS },
+		{ HTTP::UnAuthenticated,	DBUS_ERROR_ACCESS_DENIED },
+		{ HTTP::Forbidden,			DBUS_ERROR_ACCESS_DENIED },
+		{ HTTP::NotFound,			DBUS_ERROR_FILE_NOT_FOUND },
+		{ HTTP::MethodNotAllowed,	DBUS_ERROR_UNKNOWN_METHOD },
+		{ HTTP::ProxyAuthRequired,	DBUS_ERROR_ACCESS_DENIED },
+		{ HTTP::RequestTimeout,		DBUS_ERROR_TIMEOUT },
+		{ HTTP::NotImplemented,		DBUS_ERROR_NOT_SUPPORTED },
+
+	};
+
+	UDJAT_PRIVATE const char * DBus::ErrorFactory(const HTTP::StatusCode code) {
+		for(const auto &status : http_status_codes) {
+			if(status.code == code) {
+				return status.dbus;
+			}
+		}
+		return DBUS_ERROR_FAILED;
+	}
 
  }
 

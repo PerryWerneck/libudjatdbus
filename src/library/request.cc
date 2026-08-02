@@ -21,9 +21,11 @@
  #include <udjat/defs.h>
  #include <private/request.h>
  #include <private/tools.h>
+ #include <udjat/tools/request.h>
  #include <udjat/tools/schema.h>
  #include <udjat/tools/interface.h>
  #include <udjat/tools/http/method.h>
+ #include <udjat/authentication.h>
  #include <dbus/dbus.h>
  #include <cstring>
 
@@ -37,6 +39,33 @@
 
 	DBus::Request::~Request() {
 		dbus_message_unref(message);
+	}
+
+	Authentication::Role DBus::Request::role() const noexcept {
+
+    	const char *sender = dbus_message_get_sender(message);
+		if(!sender) {
+			debug("Cant get message sender");
+			return Authentication::None;
+		}
+
+		debug("Message was sent from user '",sender,"'");
+    
+		// TODO: Get real user id.
+
+		// DBusError err;
+		// dbus_error_init(&err);
+
+		// unsigned long uid = dbus_bus_get_unix_user(conn, sender, &err);
+		// if (dbus_error_is_set(&err)) {
+		// 	std::cerr << "D-Bus Error: " << err.message << std::endl;
+		// 	dbus_error_free(&err);
+		// 	return Authentication::None;
+		// }
+
+		// return uid == 0 ? Authentication::Owner : Authentication::Member;
+
+		return Authentication::Owner;
 	}
 
 	HTTP::Method DBus::Request::method() const noexcept {

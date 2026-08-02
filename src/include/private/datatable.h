@@ -31,13 +31,13 @@
 		DBusMessage *reply;
 		DBusMessageIter iter, container;
 
-	protected:
-		void push_back(const Schema::Item &schema, const Variant &value) override;
-
 	public:
 		DataTable(DBusMessage *request, const OutputSchema &schema);
-
 		~DataTable() override;
+
+		/// @brief Add one row to the table.
+		/// @param value Object with column data to extract based on schema.
+		Udjat::DataTable & push_back(const Value &row) override;
 
 		/// @brief Build output message.
 		/// @return Response message.

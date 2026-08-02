@@ -24,6 +24,7 @@
  #include <udjat/tools/http/method.h>
  #include <udjat/tools/schema.h>
  #include <udjat/tools/interface.h>
+ #include <udjat/tools/http/statuscodes.h>
 
  namespace Udjat {
 
@@ -48,6 +49,11 @@
 		/// @retval true The value was converted.
 		/// @retval false Unable to convert value.
 		UDJAT_PRIVATE bool ValueFactory(const Udjat::Variant &value, const Schema::Item &schema, int &arg_type, DBusBasicValue &dval) noexcept;
+
+		/// @brief Get Dbus error from http error;
+		/// @param error The HTTP Error message.
+		/// @return The DBus error.
+		UDJAT_PRIVATE const char * ErrorFactory(const HTTP::StatusCode code);
 
 	}
 

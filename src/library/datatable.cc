@@ -55,22 +55,30 @@
 	}
 
 	DBusMessage * DBus::DataTable::MessageFactory() {
+		dbus_message_iter_close_container(&iter,&container);
 		dbus_message_ref(reply);
 		return reply;
 	}
 
-	void DBus::DataTable::push_back(const Schema::Item &schema, const Variant &value) {
-		
+	Udjat::DataTable & DBus::DataTable::push_back(const Value &row) {
+
 		int type;
 		DBusBasicValue dval;
 
-		if(!ValueFactory(value,schema,type,dval)) {
-			throw runtime_error("Unable to convert variant do dbus-value");
+		for(const auto &item : schema) {
+
+			if(!ValueFactory(row[item.name()],item,type,dval)) {
+				throw runtime_error("Unable to convert variant do dbus-value");
+			}
+
+			if(!dbus_message_append_args(reply, type, &dval, DBUS_TYPE_INVALID)) {
+				throw runtime_error("Failure adding value to table");
+			}
+
 		}
 
-		if(!dbus_message_append_args(reply, type, &value, DBUS_TYPE_INVALID)) {
-			throw runtime_error("Failure adding value to table");
-		}
+		return *this;
+		
 	}
 
  }
