@@ -21,25 +21,8 @@
  #include <udjat/defs.h>
  #include <dbus/dbus.h>
 
-//  #include <stdexcept>
-//  #include <udjat/tools/intl.h>
-//  #include <udjat/tools/exception.h>
-//  #include <udjat/tools/variant.h>
-
-//  #include <udjat/tools/service.h>
-//  #include <udjat/tools/string.h>
-//  #include <udjat/tools/exception.h>
-//  #include <udjat/tools/application.h>
-//  #include <udjat/tools/interface.h>
-//  #include <udjat/tools/timestamp.h>
  #include <udjat/tools/schema.h>
-
-//  #include <udjat/tools/dbus/defs.h>
-//  #include <udjat/tools/dbus/connection.h>
-//  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/service.h>
-//  #include <udjat/tools/dbus/exception.h>
-//  #include <udjat/tools/datatable.h>
 
  #include <private/request.h>
  #include <private/response.h>
@@ -82,7 +65,7 @@
 				}
 				
 				debug("Interface '",name,"' is enumerable, getting results");
-				DBus::Request request{message,HTTP::Get,dbus_message_get_path(message)};
+				DBus::Request request{conn,message,HTTP::Get};
 				DBus::DataTable response{message,schema};
 
 				debug("Enumerating itens on interface '",interface.name(),"'");
@@ -107,7 +90,7 @@
 					);
 				}
 
-				DBus::Request request{message,method,dbus_message_get_path(message)};
+				DBus::Request request{conn,message,method};
 				if(request.root()) {
 					return dbus_message_new_error(
 						message,

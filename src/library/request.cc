@@ -20,6 +20,7 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <private/request.h>
+ #include <udjat/tools/request.h>
  #include <private/tools.h>
  #include <udjat/tools/request.h>
  #include <udjat/tools/schema.h>
@@ -28,44 +29,53 @@
  #include <udjat/authentication.h>
  #include <dbus/dbus.h>
  #include <cstring>
+ #include <memory>
 
-// using namespace std;
+ using namespace std;
 
  namespace Udjat {
 
-	DBus::Request::Request(DBusMessage *m, const HTTP::Method h, const char *p) : Udjat::Request{p}, message{m}, request_method{h} {
+	DBus::Request::Request(DBusConnection *conn, DBusMessage *m, const HTTP::Method h) : Udjat::Request{dbus_message_get_path(m)}, message{m}, request_method{h} {
+
 		dbus_message_ref(message);
+
+		// Build authentication
+		{
+			const char *sender = dbus_message_get_sender(message);
+			if(sender) {
+
+				DBusError err;
+				dbus_error_init(&err);
+
+				unsigned long uid = dbus_bus_get_unix_user(conn, sender, &err);
+				if (dbus_error_is_set(&err)) {
+
+					Logger::String{"Unable to get authentication for ",sender,": ",err.message}.warning();
+					dbus_error_free(&err);
+
+				} else {
+
+#ifdef DEBUG
+					auth = make_shared<Authentication>(sender,Authentication::Owner);
+#else
+					if(uid == 0) {
+						// Root user.
+						auth = make_shared<Authentication>(sender,Authentication::Owner);
+					} else {
+						// Regular user.
+						auth = make_shared<Authentication>(sender,Authentication::Member);
+					}
+#endif // DEBUG					
+
+				}
+
+			}
+		}
+
 	}
 
 	DBus::Request::~Request() {
 		dbus_message_unref(message);
-	}
-
-	Authentication::Role DBus::Request::role() const noexcept {
-
-    	const char *sender = dbus_message_get_sender(message);
-		if(!sender) {
-			debug("Cant get message sender");
-			return Authentication::None;
-		}
-
-		debug("Message was sent from user '",sender,"'");
-    
-		// TODO: Get real user id.
-
-		// DBusError err;
-		// dbus_error_init(&err);
-
-		// unsigned long uid = dbus_bus_get_unix_user(conn, sender, &err);
-		// if (dbus_error_is_set(&err)) {
-		// 	std::cerr << "D-Bus Error: " << err.message << std::endl;
-		// 	dbus_error_free(&err);
-		// 	return Authentication::None;
-		// }
-
-		// return uid == 0 ? Authentication::Owner : Authentication::Member;
-
-		return Authentication::Owner;
 	}
 
 	HTTP::Method DBus::Request::method() const noexcept {

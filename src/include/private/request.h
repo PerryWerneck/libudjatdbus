@@ -34,12 +34,10 @@
 		HTTP::Method request_method;
 
 	public:
-		Request(DBusMessage *message, const HTTP::Method method, const char *path);
+		Request(DBusConnection *conn, DBusMessage *message, const HTTP::Method method);
 		~Request() override;
 
 		HTTP::Method method() const noexcept override;
-
-		Authentication::Role role() const noexcept override;
 
 		/// @brief Parse input values from message.
 		/// @param intf The interface for input schema.
