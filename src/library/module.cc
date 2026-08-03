@@ -45,6 +45,13 @@
 
 	Udjat::Module * DBus::Module::Factory(const Udjat::Properties &props) {
 
+		if(!props.get("enable-service",false)) {
+			// No service name, build a clean module.
+			auto module = new DBus::Module();
+			module->autoclean();
+			return module;
+		}
+
 		/// @brief busname.
 		String srvname{props["dbus-service-name"]};
 		
@@ -58,13 +65,6 @@
 
 		if(srvname.empty() && props.get("enable-service",false)) {
 			srvname = String{PRODUCT_DOMAIN,".",Application::Name().c_str()};
-		}
-
-		if(srvname.empty()) {
-			// No service name, build a clean module.
-			auto module = new DBus::Module();
-			module->autoclean();
-			return module;
 		}
 
 		/// @brief Service name.
