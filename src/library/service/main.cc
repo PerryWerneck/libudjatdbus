@@ -165,12 +165,6 @@
 		err.verify();
 	}
 
-	static void free_data_block(void *memory) {
-		string *xml = ((string *) memory); 
-		delete xml;
-		debug("Introspection data block was freed");
-	}
-
 	DBusHandlerResult DBus::Service::on_message(DBusConnection *connct, DBusMessage *message, DBus::Service *service) noexcept {
 
 		try {
@@ -180,47 +174,19 @@
 
 			} else if(dbus_message_is_method_call(message, DBUS_INTERFACE_INTROSPECTABLE, "Introspect")) {
 
-				// https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.Introspectable.html
+				DBusMessage *response = service->introspect(message);
 
-				std::stringstream xmldata;
-				
-				xmldata << \
-					"<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" " \
-					"\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\"><node>";
-
-				debug("Introspecting service ",service->name());
-				// for(const auto &interface : service->interfaces) {
-				// 	interface.introspect(xmldata);
-				// }
-
-				xmldata << "</node>";
-
-				{
-					static int data_slot = -1;
-					if(data_slot == -1) {
-						dbus_message_allocate_data_slot(&data_slot);
-						debug("------> Got introspection data slot ",data_slot);
-					}
-
-					string *xml = new string(xmldata.str().c_str());
-					debug("Introspection data:\n",xml->c_str(),"\n");
-
-					DBusMessage *reply = dbus_message_new_method_return(message);
-					dbus_message_set_data(reply,data_slot,xml,free_data_block);
-
-					const char * server_introspection_xml = xml->c_str();
-					dbus_message_append_args(reply,DBUS_TYPE_STRING, &server_introspection_xml,DBUS_TYPE_INVALID);
-					dbus_connection_send(connct, reply, NULL);
-					dbus_message_unref(reply);
-				}
+				dbus_connection_send(connct, response, NULL);
+				dbus_message_unref(response);
+				dbus_connection_flush(connct);
 				
 				return DBUS_HANDLER_RESULT_HANDLED;
 
 			}  else if (dbus_message_is_method_call(message, DBUS_INTERFACE_PROPERTIES, "Get")) {
 
 				// https://dbus.freedesktop.org/doc/dbus-java/api/org/freedesktop/DBus.Properties.html
-				DBusMessageIter iter;
-				string error{"Invalid argument"};
+				// DBusMessageIter iter;
+				// string error{"Invalid argument"};
 
 				// if(dbus_message_iter_init(message,&iter)) {
 
@@ -250,7 +216,7 @@
 					dbus_message_new_error(
 						message,
 						DBUS_ERROR_INVALID_ARGS,
-						error.c_str()
+						"Invalid argument"
 					);
 
 				dbus_connection_send(connct, response, NULL);

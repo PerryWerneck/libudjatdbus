@@ -56,6 +56,9 @@
 			/// @return The message reply.
 			DBusMessage * method_call(const Udjat::Interface &interface, const char *name, DBusMessage *message) noexcept;
 
+			/// @brief Process introspect request, return response.
+			DBusMessage * introspect(DBusMessage *message) noexcept;
+
 		protected:
 
 			/// @brief handle signals.

@@ -55,17 +55,16 @@
 
 				} else {
 
-#ifdef DEBUG
-					auth = make_shared<Authentication>(sender,Authentication::Owner);
-#else
 					if(uid == 0) {
 						// Root user.
-						auth = make_shared<Authentication>(sender,Authentication::Owner);
 					} else {
 						// Regular user.
+#ifdef DEBUG
+						auth = make_shared<Authentication>(sender,Authentication::Owner);
+#else
 						auth = make_shared<Authentication>(sender,Authentication::Member);
-					}
 #endif // DEBUG					
+					}
 
 				}
 
