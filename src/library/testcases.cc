@@ -23,6 +23,7 @@
  #include <udjat/tools/actions/dbus.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/mainloop.h>
+ #include <udjat/tools/service.h>
  #include <udjat/action.h>
  #include <udjat/agent.h>
  #include <memory>
@@ -50,11 +51,19 @@
 
 				DBus::Service srvc;
 
-				srvc.start();
+				Service::for_each([](Service &service){
+					service.start();
+					return false;
+				});
 
 				MainLoop::getInstance().run();
 
-				srvc.stop();
+				Service::for_each([](Service &service){
+					service.stop();
+					return false;
+				});
+
+				Abstract::Agent::deinit();
 
 				return "Service Ok";
 			}

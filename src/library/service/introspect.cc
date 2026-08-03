@@ -63,7 +63,7 @@
 					xmldata << "<method name=\"" << MethodNameFactory(method.method()) << "\">";
 
 					Schema::Input in;
-					if(interface.schema(in)) {
+					if(interface.schema(method.method(),in)) {
 						for(const auto &item : in) {
 							xmldata << "<arg name=\"" << item.name() << "\""
 									<< "type=\"" << DBus::StringTypeFactory(item.type())
@@ -72,7 +72,7 @@
 					}
 
 					Schema::Output out;
-					if(interface.schema(out)) {
+					if(interface.schema(method.method(),out)) {
 						for(const auto &item : out) {
 							xmldata << "<arg name=\"" << item.name() << "\""
 									<< "type=\"" << DBus::StringTypeFactory(item.type())
