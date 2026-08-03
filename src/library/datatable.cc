@@ -30,7 +30,7 @@
 
  namespace Udjat {
 
-	DBus::DataTable::DataTable(DBusMessage *message, const OutputSchema &s) : Udjat::DataTable{s}, request{message}, reply{dbus_message_new_method_return(message)} {
+	DBus::DataTable::DataTable(DBusMessage *message, const Schema::Output &s) : Udjat::DataTable{s}, request{message}, reply{dbus_message_new_method_return(message)} {
 
 		dbus_message_ref(request);
 

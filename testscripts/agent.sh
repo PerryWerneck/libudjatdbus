@@ -6,15 +6,14 @@
 gdbus \
 	call \
 	--session \
-	--dest "br.eti.werneck.udjat" \
+	--dest "br.eti.werneck.udjatdbus" \
 	--object-path "/" \
-	--method br.eti.werneck.udjat.agent.get
+	--method br.eti.werneck.udjatdbus.agent.Get
 
-#dbus-send \
-#	--session \
-#	--dest=br.eti.werneck.udjat \
-#	--print-reply \
-#	"/" \
-#	br.eti.werneck.udjat.agent.get
-	
 
+# dbus-send \
+# 	--session \
+# 	--dest=br.eti.werneck.udjatdbus \
+# 	--print-reply \
+# 	"/" \
+# 	br.eti.werneck.udjatdbus.agent.Get

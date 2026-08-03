@@ -83,7 +83,7 @@
 
 	DBusMessage * DBus::Request::parse_input(const Udjat::Interface &intf) {
 
-		InputSchema schema;
+		Schema::Input schema;
 		if(!intf.schema(path(),schema)) {
 			return nullptr;
 		}

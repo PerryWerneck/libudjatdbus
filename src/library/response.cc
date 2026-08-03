@@ -32,7 +32,7 @@
 
  namespace Udjat {
 
-	DBus::Response::Response(DBusMessage *r, const OutputSchema &s) : request{r},schema{s}  {
+	DBus::Response::Response(DBusMessage *r, const Schema::Output &s) : request{r},schema{s}  {
 		reply = dbus_message_new_method_return(request);
 
 	}

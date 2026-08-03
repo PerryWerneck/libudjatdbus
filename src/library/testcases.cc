@@ -23,9 +23,12 @@
  #include <udjat/tools/actions/dbus.h>
  #include <udjat/tools/dbus/service.h>
  #include <udjat/tools/mainloop.h>
+ #include <udjat/action.h>
  #include <udjat/agent.h>
+ #include <memory>
 
  using namespace Udjat;
+ using namespace std;
 
  #if defined(DEBUG) and ! defined(LIBUDJAT_STATIC) 
 
@@ -37,6 +40,13 @@
 		Case{
 			"DBus service",
 			[](std::ostream &) {
+
+				// Build sample agents
+				{
+					auto root = Abstract::Agent::RootFactory();
+					root->push_back(make_shared<Agent<int>>("intvalue"));
+					Abstract::Agent::root(root);
+				}
 
 				DBus::Service srvc;
 

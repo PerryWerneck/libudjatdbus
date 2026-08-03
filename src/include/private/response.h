@@ -31,10 +31,10 @@
 	private:
 		DBusMessage *request;
 		DBusMessage *reply;
-		const OutputSchema &schema;
+		const Schema::Output &schema;
 		
 	public:
-		Response(DBusMessage *request, const OutputSchema &schema);
+		Response(DBusMessage *request, const Schema::Output &schema);
 		~Response() override;
 
 		/// @brief Build output message.

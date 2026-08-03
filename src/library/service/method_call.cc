@@ -27,7 +27,9 @@
  #include <private/request.h>
  #include <private/response.h>
  #include <private/datatable.h>
+ #include <udjat/tools/response.h>
  #include <private/tools.h>
+ #include <udjat/tools/interface.h>
  
 //  #include <sstream>
 
@@ -41,8 +43,8 @@
 
 			const char *member = dbus_message_get_member(message);
 
-			OutputSchema schema;
-			if(!interface.schema(schema)) {
+			Schema::Output out;
+			if(!interface.schema(out)) {
 				return dbus_message_new_error(
 					message,
 					DBUS_ERROR_FAILED,
@@ -50,10 +52,13 @@
 				);
 			}
 
+			Schema::Input in;
+			interface.schema(in);
+
 			if(!strcasecmp(member,"GetAll")) {
 
 				// Is this interface enumerable?
-				if(!(schema.caps & Schema::Enumerable)) {
+				if(!(out.options & Schema::Output::Enumerable)) {
 
 					// Interface is not enumerable.
 					return dbus_message_new_error(
@@ -66,7 +71,11 @@
 				
 				debug("Interface '",name,"' is enumerable, getting results");
 				DBus::Request request{conn,message,HTTP::Get};
-				DBus::DataTable response{message,schema};
+				DBus::DataTable response{message,out};
+
+				if(!interface.allow(request,response)) {
+					return response.MessageFactory();
+				}
 
 				debug("Enumerating itens on interface '",interface.name(),"'");
 				if(interface.process(request,response)) {
@@ -91,7 +100,8 @@
 				}
 
 				DBus::Request request{conn,message,method};
-				if(request.root()) {
+
+				if(request.root() && !(in.options & Schema::Input::AllowRoot)) {
 					return dbus_message_new_error(
 						message,
 						DBUS_ERROR_INVALID_ARGS,
@@ -99,12 +109,16 @@
 					);
 				}
 
-				DBus::Response response{message,schema};
+				DBus::Response response{message,out};
+
+				if(!interface.allow(request,response)) {
+					return response.MessageFactory();
+				}
 			
 				debug("Processing request on interface '",interface.name(),"'");
 				if(interface.process(request,response)) {
 					// The request was processed.
-					debug("Sending enumeration reply");
+					debug("Sending reply");
 					return response.MessageFactory();
 				}
 

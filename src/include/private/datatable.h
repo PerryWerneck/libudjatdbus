@@ -33,7 +33,7 @@
 		DBusMessageIter iter, array;
 
 	public:
-		DataTable(DBusMessage *request, const OutputSchema &schema);
+		DataTable(DBusMessage *request, const Schema::Output &schema);
 		~DataTable() override;
 
 		/// @brief Add one row to the table.

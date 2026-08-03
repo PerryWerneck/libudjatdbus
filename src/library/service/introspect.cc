@@ -49,7 +49,7 @@
 
 			Interface::for_each([this,&xmldata](const Interface &interface){
 
-				HTTPSchema methods;
+				Schema::Method methods;
 				if(!interface.schema(methods)) {
 					return false;
 				}
@@ -62,7 +62,7 @@
 
 					xmldata << "<method name=\"" << MethodNameFactory(method.method()) << "\">";
 
-					InputSchema in;
+					Schema::Input in;
 					if(interface.schema(in)) {
 						for(const auto &item : in) {
 							xmldata << "<arg name=\"" << item.name() << "\""
@@ -71,7 +71,7 @@
 						}
 					}
 
-					OutputSchema out;
+					Schema::Output out;
 					if(interface.schema(out)) {
 						for(const auto &item : out) {
 							xmldata << "<arg name=\"" << item.name() << "\""
@@ -82,7 +82,7 @@
 					
 					xmldata << "</method>";
 
-					if(out.caps & Schema::Enumerable) {
+					if(out.options & Schema::Output::Enumerable) {
 						xmldata << "<method name=\"GetAll\">";
 						xmldata << "<arg name=\"itens\" type=\"a(";
 						for(const auto &item : out) {
