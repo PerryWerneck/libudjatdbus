@@ -297,11 +297,32 @@
 		} catch(const std::exception &e) {
 
 			Logger::String{e.what()}.error(service->name());
+			DBusMessage *response = 
+				dbus_message_new_error(
+					message,
+					DBUS_ERROR_FAILED,
+					e.what()
+				);
+			dbus_connection_send(connct, response, NULL);
+			dbus_message_unref(response);
+			dbus_connection_flush(connct);
+			return DBUS_HANDLER_RESULT_HANDLED;
 
 		} catch(...) {
 
 			Logger::String{"Unexpected error processing message"}.error(service->name());
 
+			DBusMessage *response = 
+				dbus_message_new_error(
+					message,
+					DBUS_ERROR_FAILED,
+					"Unexpected error processing message"
+				);
+
+			dbus_connection_send(connct, response, NULL);
+			dbus_message_unref(response);
+			dbus_connection_flush(connct);
+			return DBUS_HANDLER_RESULT_HANDLED;
 		}
 		
 		debug("Returning DBUS_HANDLER_RESULT_NOT_YET_HANDLED for ",dbus_message_get_interface(message)," ",dbus_message_get_member(message));
