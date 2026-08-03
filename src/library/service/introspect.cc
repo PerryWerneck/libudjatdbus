@@ -91,6 +91,11 @@
 						xmldata << ")\" direction=\"out\" /></method>";
 					}
 
+					for(const auto &item : out) {
+						xmldata << "<property name=\"" << item.name() << "\""
+								<< "type=\"" << DBus::StringTypeFactory(item.type()) << "\" access=\"read\"/>";
+					}	
+
 				}
 
 				xmldata << "</interface>";
