@@ -34,8 +34,12 @@
 		HTTP::Method request_method;
 
 	public:
-		Request(DBusConnection *conn, DBusMessage *message, const HTTP::Method method);
+		Request(DBusConnection *conn, DBusMessage *message, const HTTP::Method method = HTTP::Get);
 		~Request() override;
+
+		inline operator DBusMessage *() const noexcept {
+			return message;
+		}
 
 		HTTP::Method method() const noexcept override;
 

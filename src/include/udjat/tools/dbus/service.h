@@ -37,6 +37,8 @@
 
 	namespace DBus {
 
+		class Request;
+
 		class UDJAT_API Service : public Udjat::Service {
 		private:
 
@@ -59,6 +61,11 @@
 			/// @brief Process introspect request, return response.
 			DBusMessage * introspect(DBusMessage *message) noexcept;
 
+			/// @brief Process property request, return response.
+			DBusMessage * get_property(DBus::Request &request, const char *intf, const char *property_name) noexcept;
+
+			DBusMessage * get_properties(DBus::Request &request, const char *intf) noexcept;
+
 		protected:
 
 			/// @brief handle signals.
@@ -66,6 +73,12 @@
 			/// @retval true The signal was handled.
 			/// @retval false The signal was not handled.
 			bool on_signal(Udjat::DBus::Message &request);
+
+			/// @brief Build reply message.
+			/// @param request The request message.
+			/// @param response The reply contents.
+			/// @return A reply message.
+			DBusMessage * ReplyFactory(DBusMessage *request, const Variant &response) const noexcept;
 
 		public:
 

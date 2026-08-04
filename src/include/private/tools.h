@@ -25,6 +25,7 @@
  #include <udjat/tools/schema.h>
  #include <udjat/tools/interface.h>
  #include <udjat/tools/http/statuscodes.h>
+ #include <udjat/tools/variant.h>
 
  namespace Udjat {
 
@@ -39,6 +40,8 @@
 		UDJAT_PRIVATE bool for_each(const std::function<bool(const HTTP::Method http, const char *dbus)> &callback) noexcept;
 
 		UDJAT_PRIVATE const char * StringTypeFactory(const Schema::Type type) noexcept;
+
+		UDJAT_PRIVATE const char * StringTypeFactory(const Variant::Type type) noexcept;
 
 		/// @brief Extract dbus basic value from variant.
 		/// @param schema The basic value definition.

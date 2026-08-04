@@ -131,6 +131,8 @@ lib_src = [
   'src/library/service/main.cc',
   'src/library/service/method_call.cc',
   'src/library/service/introspect.cc',
+  'src/library/service/properties.cc',
+  'src/library/service/reply.cc',
   'src/library/member.cc',
   'src/library/message.cc',
   'src/library/module.cc',

@@ -43,11 +43,11 @@
 			[](std::ostream &) {
 
 				// Build sample agents
-				{
-					auto root = Abstract::Agent::RootFactory();
-					root->push_back(make_shared<Agent<int>>("intvalue"));
-					Abstract::Agent::root(root);
-				}
+				// {
+				// 	auto root = Abstract::Agent::RootFactory();
+				// 	root->push_back(make_shared<Agent<int>>("intvalue"));
+				// 	Abstract::Agent::root(root);
+				// }
 
 				DBus::Service srvc;
 
@@ -62,8 +62,6 @@
 					service.stop();
 					return false;
 				});
-
-				Abstract::Agent::deinit();
 
 				return "Service Ok";
 			}

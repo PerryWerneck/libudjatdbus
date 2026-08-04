@@ -73,26 +73,36 @@
 
 	static const struct {
 		Schema::Type schema;
+		Variant::Type variant;
 		int type;
 		const char *str;
-	} schema_types[] = {
-		{ Schema::ObjectPath,	DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
-		{ Schema::String,		DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING 	},
-		{ Schema::Timestamp,	DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
-		{ Schema::Signed,		DBUS_TYPE_INT32,	DBUS_TYPE_INT32_AS_STRING	},
-		{ Schema::Unsigned,		DBUS_TYPE_UINT32,	DBUS_TYPE_UINT32_AS_STRING	},
-		{ Schema::Double,		DBUS_TYPE_DOUBLE,	DBUS_TYPE_DOUBLE_AS_STRING	},
-		{ Schema::Float,		DBUS_TYPE_DOUBLE,	DBUS_TYPE_DOUBLE_AS_STRING	},
-		{ Schema::Boolean,		DBUS_TYPE_BOOLEAN,	DBUS_TYPE_BOOLEAN_AS_STRING	},
-		{ Schema::Icon,			DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
-		{ Schema::Url,			DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
-		{ Schema::State,		DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
-		{ Schema::Percent,		DBUS_TYPE_DOUBLE,	DBUS_TYPE_DOUBLE_AS_STRING	},
+	} type_mappings[] = {
+		{ Schema::ObjectPath,	Variant::ObjectPath,	DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
+		{ Schema::String,		Variant::String, 		DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING 	},
+		{ Schema::Timestamp,	Variant::Timestamp, 	DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
+		{ Schema::Signed,		Variant::Signed, 		DBUS_TYPE_INT32,	DBUS_TYPE_INT32_AS_STRING	},
+		{ Schema::Unsigned,		Variant::Unsigned, 		DBUS_TYPE_UINT32,	DBUS_TYPE_UINT32_AS_STRING	},
+		{ Schema::Double,		Variant::Real,	 		DBUS_TYPE_DOUBLE,	DBUS_TYPE_DOUBLE_AS_STRING	},
+		{ Schema::Float,		Variant::Real,	 		DBUS_TYPE_DOUBLE,	DBUS_TYPE_DOUBLE_AS_STRING	},
+		{ Schema::Boolean,		Variant::Boolean, 		DBUS_TYPE_BOOLEAN,	DBUS_TYPE_BOOLEAN_AS_STRING	},
+		{ Schema::Icon,			Variant::Icon,	 		DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
+		{ Schema::Url,			Variant::Url,	 		DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
+		{ Schema::State,		Variant::State, 		DBUS_TYPE_STRING,	DBUS_TYPE_STRING_AS_STRING	},
+		{ Schema::Percent,		Variant::Fraction, 		DBUS_TYPE_DOUBLE,	DBUS_TYPE_DOUBLE_AS_STRING	},
 	};
 
 	UDJAT_PRIVATE const char * DBus::StringTypeFactory(const Schema::Type schema_type) noexcept {
-		for(const auto &type : schema_types) {
+		for(const auto &type : type_mappings) {
 			if(type.schema == schema_type) {
+				return type.str;
+			}
+		}
+		return DBUS_TYPE_STRING_AS_STRING;
+	}
+
+	UDJAT_PRIVATE const char * DBus::StringTypeFactory(const Variant::Type variant_type) noexcept {
+		for(const auto &type : type_mappings) {
+			if(type.variant == variant_type) {
 				return type.str;
 			}
 		}
