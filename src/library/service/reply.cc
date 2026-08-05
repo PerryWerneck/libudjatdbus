@@ -144,7 +144,7 @@
 
 	}
 
-	DBusMessage * DBus::Service::ReplyFactory(DBusMessage *request, const Variant &response) const {
+	DBusMessage * DBus::Service::ReplyFactory(DBusMessage *request, const Variant &response) const noexcept {
 
 		DBusMessageIter iter;
 

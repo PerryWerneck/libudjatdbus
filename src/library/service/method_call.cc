@@ -23,6 +23,7 @@
 
  #include <udjat/tools/schema.h>
  #include <udjat/tools/dbus/service.h>
+ #include <udjat/tools/intl.h>
 
  #include <private/request.h>
  #include <private/response.h>
@@ -43,19 +44,18 @@
 
 			const char *member = dbus_message_get_member(message);
 
-			Schema::Output out;
-			if(!interface.schema(out)) {
-				return dbus_message_new_error(
-					message,
-					DBUS_ERROR_FAILED,
-					String{"The backend does not provide an output schema for ",name}.c_str()
-				);
-			}
-
-			Schema::Input in;
-			interface.schema(in);
-
 			if(!strcasecmp(member,"GetAll")) {
+
+				// Enumerate children.
+
+				Schema::Output out;
+				if(!interface.schema(out)) {
+					return dbus_message_new_error(
+						message,
+						DBUS_ERROR_FAILED,
+						String{"The backend does not provide an output schema for ",name}.c_str()
+					);
+				}
 
 				// Is this interface enumerable?
 				if(!(out.options & Schema::Output::Enumerable)) {
@@ -99,14 +99,38 @@
 					);
 				}
 
-				DBus::Request request{conn,message,method};
+				Schema::Output out;
+				if(method == HTTP::Head) {
 
-				if(request.root() && !(in.options & Schema::Input::AllowRoot)) {
+					out.add(
+						Schema::Item{ "statevalue",		Schema::String,		_("The current state")	},
+						Schema::Item{ "statemessage",	Schema::String,		_("The current message") }
+					);
+
+				} else if(!interface.schema(method,out)) {
+
 					return dbus_message_new_error(
 						message,
-						DBUS_ERROR_INVALID_ARGS,
-						"An object path is required"
+						DBUS_ERROR_FAILED,
+						String{"The backend does not provide an output schema for ",name}.c_str()
 					);
+
+				}
+
+				DBus::Request request{conn,message,method};
+				if(request.root()) {
+
+					Schema::Input in;
+					interface.schema(method,in);
+
+					if(!(in.options & Schema::Input::AllowRoot)) {
+						return dbus_message_new_error(
+							message,
+							DBUS_ERROR_INVALID_ARGS,
+							"An object path is required"
+						);
+					}
+
 				}
 
 				DBus::Response response{message,out};

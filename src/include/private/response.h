@@ -41,6 +41,8 @@
 		/// @return Response message.
 		DBusMessage * MessageFactory();
 
+		void state(const char *object_name,const char *value, const char *message) override;
+
 	};
 
  }

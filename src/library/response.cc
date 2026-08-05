@@ -27,6 +27,7 @@
  #include <udjat/tools/variant.h>
  #include <dbus/dbus.h>
  #include <string>
+ #include <sstream>
 
  using namespace std;
 
@@ -43,7 +44,7 @@
 
 	DBusMessage * DBus::Response::MessageFactory() {
 	
-		if(status_code() != HTTP::Ok) {
+		if(failed()) {
 
 			// Failed, send message.
 			return dbus_message_new_error(
@@ -60,6 +61,13 @@
 			const char *name = item.name();
 
 			if(!this->contains(name)) {
+#ifdef DEBUG 
+				{
+					stringstream dbg;
+					to_yaml(dbg);
+					debug("\n",dbg.str().c_str());
+				}
+#endif
 				return dbus_message_new_error(
 					request,
 					DBUS_ERROR_FAILED,
@@ -96,6 +104,19 @@
 		return reply;
 	}
 
+	void DBus::Response::state(const char *object_name,const char *value, const char *message) {
+		(*this)["statevalue"] = value;
+		(*this)["statemessage"] = message;
+		debug("--- STATE: value=",value," (",message,")");
+#ifdef DEBUG 
+		{
+			stringstream dbg;
+			to_yaml(dbg);
+			debug("\n",dbg.str().c_str());
+		}
+#endif
+	}
+	
  }
 
 

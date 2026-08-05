@@ -8,24 +8,23 @@
 		<option name='enable_auth_domain_check' value='no' />
 	</module>
 	
-	<module name='information' required='no' />
-	<module path='.build/udjat-module-dbus.so' required='yes' enable-service='no' />
+	<module path='.build/udjat-module-dbus.so' required='yes' service-name='default' />
 
 	<agent name='intvalue' type='integer' value='0'>
 
 	</agent>
 
-	<agent type='random' name='alerter' update-timer='10' on-demand='false'>
+	<!-- agent type='random' name='alerter' update-timer='10' on-demand='false'>
 
-		<alert name='on-value' type='dbus' trigger-event='value-change' dbus-path='${agent.path}' dbus-interface='br.eti.werneck.udjat.MyInterface' dbus-member='changed'>
+		<alert name='on-value' type='dbus' trigger-event='value-change' dbus-path='${agentpath}' dbus-interface='br.eti.werneck.udjat.MyInterface' dbus-member='changed'>
 		
-			<argument name='value' type='int16' value='${agent.value}' />
-			<argument name='level' type='string' value='${state.level}' />
-			<argument name='summary' type='string' value='${state.summary}' />
+			<argument name='value' type='int16' value='${agentvalue}' />
+			<argument name='level' type='string' value='${statelevel}' />
+			<argument name='summary' type='string' value='${statesummary}' />
 				
 		</alert>
 
-	</agent>
+	</agent -->
 
 </config>
 

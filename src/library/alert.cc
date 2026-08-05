@@ -83,8 +83,19 @@
 				);
 
 			data->iface = String{iface}.expand(object,true);
+			if(data->iface.empty()) {
+				throw logic_error("Interface name cant be empty");
+			}
+
 			data->path = String{path}.expand(object,true);
+			if(data->path.empty()) {
+				throw logic_error("Object path cant be empty");
+			}
+
 			data->member = String{member}.expand(object,true);
+			if(data->member.empty()) {
+				throw logic_error("Remote method cant be empty");
+			}
 
 			dbus_message_set_interface(message.get(),data->iface.c_str());
 			dbus_message_set_path(message.get(),data->path.c_str());
