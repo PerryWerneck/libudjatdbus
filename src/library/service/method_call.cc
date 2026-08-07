@@ -141,7 +141,17 @@
 			
 				debug("Processing request on interface '",interface.name(),"'");
 				if(interface.process(request,response)) {
+
+					debug("APPSTATE: ",response.appstate.value.c_str()," (",response.appstate.message.c_str(),")");
+
 					// The request was processed.
+					if(method == HTTP::Head) {
+						debug("Status of '",response.appstate.name.c_str(),"' is '",response.appstate.value.c_str(),"' (",response.appstate.message.c_str(),")");
+
+						response["statevalue"] = response.appstate.value.c_str();
+						response["statemessage"] = response.appstate.message.c_str();
+					}
+
 					debug("Sending reply");
 					return response.MessageFactory();
 				}

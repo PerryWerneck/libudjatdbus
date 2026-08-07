@@ -21,6 +21,7 @@
 
  #include <udjat/defs.h>
  #include <udjat/tools/response.h>
+ #include <udjat/tools/http/status.h>
  #include <udjat/tools/interface.h>
  #include <udjat/tools/schema.h>
  #include <dbus/dbus.h>
@@ -40,8 +41,6 @@
 		/// @brief Build output message.
 		/// @return Response message.
 		DBusMessage * MessageFactory();
-
-		void state(const char *object_name,const char *value, const char *message) override;
 
 	};
 

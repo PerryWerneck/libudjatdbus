@@ -20,6 +20,7 @@
  #include <config.h>
  #include <udjat/defs.h>
  #include <udjat/tools/response.h>
+ #include <udjat/tools/http/status.h>
  #include <private/response.h>
  #include <private/tools.h>
  #include <udjat/tools/schema.h>
@@ -49,8 +50,8 @@
 			// Failed, send message.
 			return dbus_message_new_error(
 				request,
-				ErrorFactory(status_code()),
-				this->Udjat::Response::c_str()
+				ErrorFactory(code),
+				HTTP::Status::c_str()
 			);
 
 		}
@@ -104,18 +105,18 @@
 		return reply;
 	}
 
-	void DBus::Response::state(const char *object_name,const char *value, const char *message) {
-		(*this)["statevalue"] = value;
-		(*this)["statemessage"] = message;
-		debug("--- STATE: value=",value," (",message,")");
-#ifdef DEBUG 
-		{
-			stringstream dbg;
-			to_yaml(dbg);
-			debug("\n",dbg.str().c_str());
-		}
-#endif
-	}
+// 	void DBus::Response::state(const char *object_name,const char *value, const char *message) {
+// 		(*this)["statevalue"] = value;
+// 		(*this)["statemessage"] = message;
+// 		debug("--- STATE: value=",value," (",message,")");
+// #ifdef DEBUG 
+// 		{
+// 			stringstream dbg;
+// 			to_yaml(dbg);
+// 			debug("\n",dbg.str().c_str());
+// 		}
+// #endif
+// 	}
 	
  }
 

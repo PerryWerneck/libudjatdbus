@@ -60,24 +60,38 @@
 
 				for(const auto &method : methods) {
 
+					Schema::Output out;
+					interface.schema(method.method(),out);
+
 					xmldata << "<method name=\"" << MethodNameFactory(method.method()) << "\">";
 
-					Schema::Input in;
-					if(interface.schema(method.method(),in)) {
-						for(const auto &item : in) {
-							xmldata << "<arg name=\"" << item.name() << "\""
-									<< "type=\"" << DBus::StringTypeFactory(item.type())
-									<< "\" direction=\"in\" />"; 
-						}
-					}
+					if(method.method() == HTTP::Head) {
 
-					Schema::Output out;
-					if(interface.schema(method.method(),out)) {
-						for(const auto &item : out) {
-							xmldata << "<arg name=\"" << item.name() << "\""
-									<< "type=\"" << DBus::StringTypeFactory(item.type())
+						for(const char *item : { "value", "message" }) {
+							xmldata << "<arg name=\"" << item << "\""
+									<< "type=\"" << DBus::StringTypeFactory(Schema::String)
 									<< "\" direction=\"out\" />"; 
 						}
+
+					} else {
+
+						Schema::Input in;
+						if(interface.schema(method.method(),in)) {
+							for(const auto &item : in) {
+								xmldata << "<arg name=\"" << item.name() << "\""
+										<< "type=\"" << DBus::StringTypeFactory(item.type())
+										<< "\" direction=\"in\" />"; 
+							}
+						}
+
+						if(!out.empty()) {
+							for(const auto &item : out) {
+								xmldata << "<arg name=\"" << item.name() << "\""
+										<< "type=\"" << DBus::StringTypeFactory(item.type())
+										<< "\" direction=\"out\" />"; 
+							}
+						}
+						
 					}
 					
 					xmldata << "</method>";
