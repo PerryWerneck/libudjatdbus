@@ -21,6 +21,7 @@
  #include <udjat/defs.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/variant.h>
  #include <iostream>
 
  using namespace std;
@@ -134,27 +135,27 @@
 		case DBUS_TYPE_STRING:
 		case DBUS_TYPE_OBJECT_PATH:
 			dbus_message_iter_get_basic(iter,&dval);
-			value.set(dval.str);
+			value.assign(dval.str);
 			break;
 
 		case DBUS_TYPE_BOOLEAN:
 			dbus_message_iter_get_basic(iter,&dval);
-			value.set((bool) dval.bool_val);
+			value.assign((bool) dval.bool_val);
 			break;
 
 		case DBUS_TYPE_INT16:
 			dbus_message_iter_get_basic(iter,&dval);
-			value.set((int) dval.i16);
+			value.assign((int) dval.i16);
 			break;
 
 		case DBUS_TYPE_INT32:
 			dbus_message_iter_get_basic(iter,&dval);
-			value.set((int) dval.i32);
+			value.assign((int) dval.i32);
 			break;
 
 		case DBUS_TYPE_UINT32:
 			dbus_message_iter_get_basic(iter,&dval);
-			value.set((unsigned int) dval.u32);
+			value.assign((unsigned int) dval.u32);
 			break;
 
 		default:
