@@ -21,7 +21,12 @@ project(
 	'udjatdbus', 
 	['cpp'],
 	version: '3.0.0',
-	default_options : ['c_std=c11', 'cpp_std=c++17', 'buildtype=release'],
+	default_options : [
+    'c_std=c11', 
+    'cpp_std=c++17', 
+    'buildtype=release', 
+    'default_library=shared',
+  ],
 	license: 'GPL-3.0-or-later',
 )
 
@@ -190,7 +195,7 @@ config_src = [
   )
 ]
 
-dynamic = shared_library(
+libudjatdbus = library(
   meson.project_name(), 
   config_src + lib_src,
   install: true,
@@ -202,31 +207,17 @@ dynamic = shared_library(
   include_directories: includes_dir
 )
 
-static_library = declare_dependency(
-  link_with: static_library(
-    meson.project_name(), 
-    config_src + lib_src,
-    cpp_args: [ '-DSTATIC_LIBRARY', '-fno-lto' ],
-    install: true,
-    dependencies: lib_deps,
-    include_directories: includes_dir
-  ),
-  include_directories: includes_dir,
-  dependencies: lib_deps,
-)
-
-dynamic_library = declare_dependency(
-  link_with: dynamic,
+libudjatdbus_dep = declare_dependency(
+  link_with: libudjatdbus,
   include_directories: includes_dir,
 )
 
 # https://mesonbuild.com/Reference-manual_functions.html#shared_library
 module = shared_library(
   'dbus', 
-  config_src + module_src,
+  config_src + module_src + lib_src,
   name_prefix: 'udjat-module-',
   install: true,
-  link_with: dynamic,
   install_dir: libudjat.get_variable('module_path'),
   install_tag: 'module',
   gnu_symbol_visibility: 'hidden',
@@ -238,7 +229,7 @@ executable(
   meson.project_name(),
   config_src + test_src,
   install: false,
-  link_with : [ dynamic, module ],
+  link_with : [ module ],
   dependencies: [ libudjat, dbus ],
   include_directories: includes_dir
 )

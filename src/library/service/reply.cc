@@ -34,7 +34,7 @@
 
 		Variant::Type type = (Variant::Type) value; 
 		switch(type) {
-		case Variant::Object:
+		case Variant::ValueMap:
 			{
 				DBusMessageIter sub;
 				if(!dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, "{sv}", &sub)) {

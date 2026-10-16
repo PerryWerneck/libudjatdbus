@@ -31,13 +31,14 @@
  using namespace Udjat;
  using namespace std;
 
- #if defined(DEBUG) and ! defined(LIBUDJAT_STATIC) 
+ #if defined(DEBUG)
 
  UDJAT_API void udjat_register_tests(Udjat::TestSuite &suite) noexcept {
 
 	using Case = TestSuite::Case;
 
 	suite.add(
+		PACKAGE_DESCRIPTION,
 		Case{
 			"DBus service",
 			[](std::ostream &) {
