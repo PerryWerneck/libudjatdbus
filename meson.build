@@ -210,6 +210,7 @@ libudjatdbus = library(
 libudjatdbus_dep = declare_dependency(
   link_with: libudjatdbus,
   include_directories: includes_dir,
+  dependencies: lib_deps,
 )
 
 # https://mesonbuild.com/Reference-manual_functions.html#shared_library
