@@ -321,24 +321,9 @@
 			Subscription(const char *name, const std::function<bool(DBus::Message &message)> &c) : DBus::Connection::Subscription{name}, callback{c} {
 			}
 
-			bool process(Message &message) noexcept override {
-
-				try {
-
-					return callback(message);
-
-				} catch(const std::exception &e) {
-
-					Logger::String{"Error processing signal '",c_str(),"': ",e.what()}.error();
-
-				} catch(...) {
-
-					Logger::String{"Unexpected rror processing signal '",c_str(),"'"}.error();
-
-				}
-
+			bool process(Message &message) override {
+				return callback(message);
 				return false;
-
 			}
 		};
 
