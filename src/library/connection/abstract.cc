@@ -32,6 +32,7 @@
  #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/dbus/signal.h>
  #include <udjat/tools/dbus/exception.h>
+ #include <udjat/tools/dbus/message.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/mainloop.h>
  #include <udjat/tools/string.h>
@@ -210,23 +211,46 @@
 	DBusHandlerResult DBus::Connection::filter(DBusMessage *message) {
 
 		const char *interface = dbus_message_get_interface(message);
+		int type = dbus_message_get_type(message);
+		DBusHandlerResult rc = DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
 		debug("----------------> Check for interface '",interface,"'");
 
-		// Check if we have an interface matching the request
-	
+		for(const auto &intf : interfaces) {
 
-		// for(const auto &intf : interfaces) {
+			if(intf != interface) {
+				continue;
+			}
 
-		// 	if(intf == interface) {
+			for(const auto &subscription : intf.subscriptions) {
 
-		// 		DBusHandlerResult rc = intf.filter(message);
-		// 		if(rc != DBUS_HANDLER_RESULT_NOT_YET_HANDLED) {
-		// 			return rc;
-		// 		}
+				if(subscription->match(interface,type)) {
 
-		// 	}
+					try {
 
-		// }
+						DBus::Message msg{message};
+						if(subscription->process(msg)) {
+							rc = DBUS_HANDLER_RESULT_HANDLED;
+							if(type != DBUS_MESSAGE_TYPE_SIGNAL) {
+								return rc;
+							}
+						}
+
+					} catch(const std::exception &e) {
+
+						Logger::String{intf.c_str(),".",subscription->c_str(),": ",e.what()}.error();
+
+					} catch(...) {
+
+						Logger::String{intf.c_str(),".",subscription->c_str(),": Unexpected error"}.error();
+
+					}
+
+				}
+
+			}
+
+		}
 
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
@@ -280,31 +304,62 @@
 		return intf;
 	}
 
-	DBus::Connection::Subscription & DBus::Connection::Interface::subscribe(const char *member, const std::function<bool(Message &message)> &callback) {
-#if __cplusplus >= 201703
-		return subscriptions.emplace_back(member,callback);
-#else
-		subscriptions.emplace_back(member,callback);
-		return subscriptions.back();
-#endif
+	std::shared_ptr<DBus::Connection::Subscription> DBus::Connection::subscribe(const char *interface, const char *member, const std::function<bool(Message &message)> &callback) {
+
+		class Subscription : public DBus::Connection::Subscription {
+		public:
+			const std::function<bool(Message &message)> &callback;
+
+			Subscription(const char *name, const std::function<bool(DBus::Message &message)> &c) : DBus::Connection::Subscription{name}, callback{c} {
+			}
+
+			bool process(Message &message) noexcept override {
+
+				try {
+
+					return callback(message);
+
+				} catch(const std::exception &e) {
+
+					Logger::String{"Error processing signal '",c_str(),"': ",e.what()}.error();
+
+				} catch(...) {
+
+					Logger::String{"Unexpected rror processing signal '",c_str(),"'"}.error();
+
+				}
+
+				return false;
+
+			}
+		};
+
+		auto subscription = make_shared<Subscription>(name,callback);
+		subscribe(interface,subscription);
+		return subscription;
 	}
 
-	DBus::Connection::Subscription & DBus::Connection::subscribe(const char *intf_name, const char *member, const std::function<bool(Message &message)> &callback) {
-		Logger::String{"Subscribing ",intf_name,".",member}.trace(this->name());
+	void DBus::Connection::subscribe(const char *interface, std::shared_ptr<DBus::Connection::Subscription> subscription) {
+		Logger::String{"Subscribing ",interface,".",subscription->c_str()}.trace(this->name());
 		lock_guard<mutex> lock(guard);
-		return InterfaceFactory(intf_name).subscribe(member, callback);
+		InterfaceFactory(interface).subscriptions.push_back(subscription);
 	}
 
-	bool DBus::Connection::Unsubscribe(const Subscription &subscription) {
+
+	bool DBus::Connection::Unsubscribe(std::shared_ptr<DBus::Connection::Subscription> subscription) {
+
+		if(!subscription) {
+			return false;
+		}
 
 		lock_guard<mutex> lock(guard);
 
 		for(auto &intf : interfaces) {
 
 			bool rc = false;
-			intf.subscriptions.remove_if([this,&intf,&rc,&subscription](Subscription &sb){
-				if(&sb == &subscription) {
-					Logger::String{"Unsubscribing ",intf.c_str(),".",subscription.c_str()}.trace(this->name());
+			intf.subscriptions.remove_if([this,&intf,&rc,&subscription](std::shared_ptr<Subscription> sb){
+				if(sb.get() == subscription.get()) {
+					Logger::String{"Unsubscribing ",intf.c_str(),".",subscription->c_str()}.trace(this->name());
 					rc = true;
 					return true;
 				}

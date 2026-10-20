@@ -69,12 +69,29 @@
 		public:
 
 			class Subscription : public std::string {
+			private:
+				int type = DBUS_MESSAGE_TYPE_SIGNAL;
+
 			public:
-				const std::function<bool(Message &message)> &callback;
-				
-				Subscription(const char *name, const std::function<bool(Message &message)> &c) : std::string{name}, callback{c} {
+				Subscription(const char *name) : std::string{name} {
 				}
 
+				inline bool match(const char *name, int type = DBUS_MESSAGE_TYPE_SIGNAL) {
+					return type == this->type && strcmp(name,c_str()) == 0;
+				}
+
+				inline bool operator==(const char *name) const noexcept {
+					return strcmp(name,c_str()) == 0;
+				}
+
+				inline bool operator==(int t) const noexcept {
+					return type == t;
+				}
+
+				/// @brief Process message.
+				/// @param message The message to process.
+				/// @return true if the message was processed.
+				virtual bool process(Message &message) = 0;
 			};
 
 			/// @brief Get connection from XML node
@@ -119,15 +136,13 @@
 			void signal(const Signal &sig);
 
 			/// @brief Subscribe to d-bus signal.
-			/// @return Member handling the signal.
-			Subscription & subscribe(const char *interface, const char *member, const std::function<bool(Message &message)> &callback);
+			/// @return Pointer to subscription.
+			std::shared_ptr<Subscription> subscribe(const char *interface, const char *member, const std::function<bool(Message &message)> &callback);
 
-			/// @brief Watch d-bus method calls.
-			/// @return Member handling the signal.
-			// Member & watch(const char *interface, const char *member, const std::function<bool(Message &message)> &callback);
+			void subscribe(const char *interface, std::shared_ptr<Subscription> subscription);
 
 			/// @brief Unsubscribe from d-bus signal.
-			bool Unsubscribe(const Subscription &subscription);
+			bool Unsubscribe(std::shared_ptr<Subscription> subscription);
 
 			/// @brief Call method
 			void call(DBusMessage * message, const std::function<void(Message & message)> &call);
@@ -185,16 +200,22 @@
 
 			class Interface : public std::string {
 			public:
-				std::list<Subscription> subscriptions;
+				std::list<std::shared_ptr<Subscription>> subscriptions;
 
 				Interface(const char *name) : std::string{name} {
+				}
+
+				inline bool operator==(const char *name) const noexcept {
+					return strcmp(name,c_str()) == 0;
+				}
+
+				inline bool operator!=(const char *name) const noexcept {
+					return strcmp(name,c_str()) != 0;
 				}
 
 				inline String rule(const char *type) const {
 					return String{"type='",type,"',interface='",c_str(),"'"};
 				}
-
-				Subscription & subscribe(const char *member, const std::function<bool(Message &message)> &callback);
 
 			};
 

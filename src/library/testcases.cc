@@ -22,6 +22,8 @@
  #include <udjat/tools/testsuite.h>
  #include <udjat/tools/actions/dbus.h>
  #include <udjat/tools/dbus/service.h>
+ #include <udjat/tools/dbus/message.h>
+ #include <udjat/tools/dbus/connection.h>
  #include <udjat/tools/mainloop.h>
  #include <udjat/tools/service.h>
  #include <udjat/action.h>
@@ -85,6 +87,33 @@
 				action.call(request,response,true);
 
 				return "Signal emitted";
+			}
+		},
+		Case{
+			"Listen for signal",
+			[](std::ostream &out) {
+
+				DBus::SessionBus bus;
+
+				auto subscription = bus.subscribe(
+					"com.example.signal",
+					"hello",
+					[&out](DBus::Message &message) {
+
+						std::string text;
+						message.pop(text);
+						
+						out << "Signal 'hello' received: '" << message << "'" << endl;
+
+						return true;
+					}
+				);
+
+				MainLoop::getInstance().run();
+
+				bus.Unsubscribe(subscription);
+
+				return "Signal listener test ok";
 			}
 		}
 	);
