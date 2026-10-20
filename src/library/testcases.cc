@@ -99,12 +99,7 @@
 					"com.example.signal",
 					"hello",
 					[&out](DBus::Message &message) {
-
-						std::string text;
-						message.pop(text);
-						
 						out << "Signal 'hello' received: '" << message << "'" << endl;
-
 						return true;
 					}
 				);

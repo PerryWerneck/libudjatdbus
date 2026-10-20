@@ -233,6 +233,7 @@
 					try {
 
 						DBus::Message msg{message};
+
 						if(subscription->process(msg)) {
 							rc = DBUS_HANDLER_RESULT_HANDLED;
 							if(type != DBUS_MESSAGE_TYPE_SIGNAL) {
