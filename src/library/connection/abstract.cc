@@ -108,7 +108,7 @@
 
 	}
 
-	DBus::Connection::Connection(const char *name, DBusConnection *c) : object_name{name}, conn{c} {
+	DBus::Connection::Connection(const char *name, DBusConnection *c) : conn{c}, object_name{name} {
 
 		lock_guard<mutex> lock(guard);
 
@@ -263,16 +263,16 @@
 #endif
 
 		// Add interface
-		Logger::String{"Connecting to '",intf.rule().c_str(),"'"}.trace(this->name());
+		Logger::String{"Connecting to '",name,"'"}.trace(this->name());
 
 		DBusError error;
 		dbus_error_init(&error);
 
-		dbus_bus_add_match(conn,intf.rule().c_str(), &error);
+		dbus_bus_add_match(conn,intf.rule("signal").c_str(), &error);
 		dbus_connection_flush(conn);
 
 		if (dbus_error_is_set(&error)) {
-			Logger::String message{"Error '",error.message,"' adding rule ",intf.rule().c_str()};
+			Logger::String message{"Error '",error.message,"' adding rule ",intf.rule("signal").c_str()};
 			dbus_error_free(&error);
 			throw std::runtime_error(message);
 		}
@@ -281,16 +281,16 @@
 	}
 
 	DBus::Connection::Subscription & DBus::Connection::Interface::subscribe(const char *member, const std::function<bool(Message &message)> &callback) {
-		Logger::String{"Subscribing ",c_str(),".",member}.trace(this->name());
 #if __cplusplus >= 201703
-		return subscriptions.emplace_back(name,callback);
+		return subscriptions.emplace_back(member,callback);
 #else
-		subscriptions.emplace_back(name,callback);
+		subscriptions.emplace_back(member,callback);
 		return subscriptions.back();
 #endif
 	}
 
 	DBus::Connection::Subscription & DBus::Connection::subscribe(const char *intf_name, const char *member, const std::function<bool(Message &message)> &callback) {
+		Logger::String{"Subscribing ",intf_name,".",member}.trace(this->name());
 		lock_guard<mutex> lock(guard);
 		return InterfaceFactory(intf_name).subscribe(member, callback);
 	}
@@ -315,12 +315,12 @@
 
 				if(intf.subscriptions.empty()) {
 
-					Logger::String{"Disconnecting from '",intf.rule().c_str(),"'"}.trace(this->name());
+					Logger::String{"Disconnecting from '",intf.c_str(),"'"}.trace(this->name());
 
 					DBusError error;
 					dbus_error_init(&error);
 
-					dbus_bus_remove_match(conn,intf.rule().c_str(), &error);
+					dbus_bus_remove_match(conn,intf.rule("signal").c_str(), &error);
 
 					if(dbus_error_is_set(&error)) {
 						Logger::String{"Error '",error.message,"' removing interface '",intf.c_str(),"'"}.error(name());

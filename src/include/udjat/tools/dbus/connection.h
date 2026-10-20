@@ -27,6 +27,7 @@
  #include <udjat/defs.h>
  #include <udjat/tools/dbus/defs.h>
  #include <udjat/tools/properties.h>
+ #include <udjat/tools/string.h>
  #include <string>
  #include <mutex>
  #include <thread>
@@ -189,7 +190,9 @@
 				Interface(const char *name) : std::string{name} {
 				}
 
-				std::string rule() const;
+				inline String rule(const char *type) const {
+					return String{"type='",type,"',interface='",c_str(),"'"};
+				}
 
 				Subscription & subscribe(const char *member, const std::function<bool(Message &message)> &callback);
 
