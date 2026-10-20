@@ -33,7 +33,7 @@
 
 		class Message;
 		class Signal;
-		class Member;
+		class Subscription;
 
  	}
 

@@ -19,12 +19,12 @@ src/library/alert.cc
 src/library/argument.cc
 src/library/member.cc
 src/library/module.cc
-src/library/message.cc
 src/library/testcases.cc
 src/library/request.cc
 src/library/response.cc
 src/library/datatable.cc
 src/library/tools.cc
+src/library/message.cc
 src/module/init.cc
 src/include/private/mainloop.h
 src/include/private/dataslot.h

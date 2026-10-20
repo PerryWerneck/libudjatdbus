@@ -35,6 +35,7 @@
  #include <udjat/tools/logger.h>
  #include <udjat/tools/mainloop.h>
  #include <udjat/tools/string.h>
+ #include <mutex>
  
  #include <private/mainloop.h>
  
@@ -242,6 +243,102 @@
 
 	void DBus::Connection::flush() noexcept {
 		dbus_connection_flush(conn);
+	}
+
+	DBus::Connection::Interface & DBus::Connection::InterfaceFactory(const char *name) {
+
+		for(Interface &intf : interfaces) {
+
+			if(!strcmp(name,intf.c_str())) {
+				return intf;
+			}
+
+		}
+
+#if __cplusplus >= 201703
+		Interface &intf = interfaces.emplace_back(name);
+#else
+		interfaces.emplace_back(name);
+		Interface &intf = interfaces.back();
+#endif
+
+		// Add interface
+		Logger::String{"Connecting to '",intf.rule().c_str(),"'"}.trace(this->name());
+
+		DBusError error;
+		dbus_error_init(&error);
+
+		dbus_bus_add_match(conn,intf.rule().c_str(), &error);
+		dbus_connection_flush(conn);
+
+		if (dbus_error_is_set(&error)) {
+			Logger::String message{"Error '",error.message,"' adding rule ",intf.rule().c_str()};
+			dbus_error_free(&error);
+			throw std::runtime_error(message);
+		}
+
+		return intf;
+	}
+
+	DBus::Connection::Subscription & DBus::Connection::Interface::subscribe(const char *member, const std::function<bool(Message &message)> &callback) {
+		Logger::String{"Subscribing ",c_str(),".",member}.trace(this->name());
+#if __cplusplus >= 201703
+		return subscriptions.emplace_back(name,callback);
+#else
+		subscriptions.emplace_back(name,callback);
+		return subscriptions.back();
+#endif
+	}
+
+	DBus::Connection::Subscription & DBus::Connection::subscribe(const char *intf_name, const char *member, const std::function<bool(Message &message)> &callback) {
+		lock_guard<mutex> lock(guard);
+		return InterfaceFactory(intf_name).subscribe(member, callback);
+	}
+
+	bool DBus::Connection::Unsubscribe(const Subscription &subscription) {
+
+		lock_guard<mutex> lock(guard);
+
+		for(auto &intf : interfaces) {
+
+			bool rc = false;
+			intf.subscriptions.remove_if([this,&intf,&rc,&subscription](Subscription &sb){
+				if(&sb == &subscription) {
+					Logger::String{"Unsubscribing ",intf.c_str(),".",subscription.c_str()}.trace(this->name());
+					rc = true;
+					return true;
+				}
+				return false;
+			});
+
+			if(rc) {
+
+				if(intf.subscriptions.empty()) {
+
+					Logger::String{"Disconnecting from '",intf.rule().c_str(),"'"}.trace(this->name());
+
+					DBusError error;
+					dbus_error_init(&error);
+
+					dbus_bus_remove_match(conn,intf.rule().c_str(), &error);
+
+					if(dbus_error_is_set(&error)) {
+						Logger::String{"Error '",error.message,"' removing interface '",intf.c_str(),"'"}.error(name());
+						dbus_error_free(&error);
+					}
+
+
+				}
+
+				interfaces.remove(intf);
+				
+				return rc;
+			}
+
+		}
+
+		return false;
+
 	}
 
 	// void DBus::Connection::insert(const Udjat::DBus::Interface &interface) {

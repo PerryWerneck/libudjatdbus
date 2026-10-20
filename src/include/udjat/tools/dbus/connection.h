@@ -30,6 +30,8 @@
  #include <string>
  #include <mutex>
  #include <thread>
+ #include <list>
+ #include <mutex>
 
  namespace Udjat {
 
@@ -42,17 +44,6 @@
 
 		/// @brief Connection to D-Bus service.
 		class UDJAT_API Connection {
-		private:
-
-			/// @brief The connection name.
-			std::string object_name;
-
-			/// @brief Service thread.
-			std::thread * thread = nullptr;
-
-			/// @brief Message filter method.
-			static DBusHandlerResult on_message(DBusConnection *, DBusMessage *, Connection *) noexcept;
-
 		protected:
 
 			/// @brief Connection to D-Bus.
@@ -75,6 +66,15 @@
 			void clear();
 
 		public:
+
+			class Subscription : public std::string {
+			public:
+				const std::function<bool(Message &message)> &callback;
+				
+				Subscription(const char *name, const std::function<bool(Message &message)> &c) : std::string{name}, callback{c} {
+				}
+
+			};
 
 			/// @brief Get connection from XML node
 			/// @param node The XML node describing the connection.
@@ -119,14 +119,14 @@
 
 			/// @brief Subscribe to d-bus signal.
 			/// @return Member handling the signal.
-			Member & subscribe(const char *interface, const char *member, const std::function<bool(Message &message)> &callback);
+			Subscription & subscribe(const char *interface, const char *member, const std::function<bool(Message &message)> &callback);
 
 			/// @brief Watch d-bus method calls.
 			/// @return Member handling the signal.
-			Member & watch(const char *interface, const char *member, const std::function<bool(Message &message)> &callback);
+			// Member & watch(const char *interface, const char *member, const std::function<bool(Message &message)> &callback);
 
 			/// @brief Unsubscribe from d-bus signal.
-			void remove(const Member &member);
+			bool Unsubscribe(const Subscription &subscription);
 
 			/// @brief Call method
 			void call(DBusMessage * message, const std::function<void(Message & message)> &call);
@@ -170,6 +170,34 @@
 						const char *property_name,
 						const std::function<void(Message & message)> &call
 					);
+
+		private:
+
+			/// @brief The connection name.
+			std::string object_name;
+
+			/// @brief Service thread.
+			std::thread * thread = nullptr;
+
+			/// @brief Message filter method.
+			static DBusHandlerResult on_message(DBusConnection *, DBusMessage *, Connection *) noexcept;
+
+			class Interface : public std::string {
+			public:
+				std::list<Subscription> subscriptions;
+
+				Interface(const char *name) : std::string{name} {
+				}
+
+				std::string rule() const;
+
+				Subscription & subscribe(const char *member, const std::function<bool(Message &message)> &callback);
+
+			};
+
+			std::list<Interface> interfaces;
+
+			Interface & InterfaceFactory(const char *name);
 
 		};
 
