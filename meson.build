@@ -65,7 +65,6 @@ dbus = dependency(
 
 lib_deps = [
   libudjat,
-  dependency('pugixml',method : 'pkg-config',required: true),
   dbus,
 ]
 
