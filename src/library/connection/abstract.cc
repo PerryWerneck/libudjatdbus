@@ -222,9 +222,13 @@
 				continue;
 			}
 
+			debug("Found interface '",intf.c_str(),"' checking ",intf.subscriptions.size()," subscriptions");
+
+			const char *member = dbus_message_get_member(message);
+
 			for(const auto &subscription : intf.subscriptions) {
 
-				if(subscription->match(interface,type)) {
+				if(subscription->match(member,type)) {
 
 					try {
 
@@ -292,7 +296,10 @@
 		DBusError error;
 		dbus_error_init(&error);
 
-		dbus_bus_add_match(conn,intf.rule("signal").c_str(), &error);
+		auto rule = intf.rule("signal");
+		debug("RULE='",rule.c_str(),"'");
+
+		dbus_bus_add_match(conn,rule.c_str(), &error);
 		dbus_connection_flush(conn);
 
 		if (dbus_error_is_set(&error)) {
@@ -334,7 +341,7 @@
 			}
 		};
 
-		auto subscription = make_shared<Subscription>(name,callback);
+		auto subscription = make_shared<Subscription>(member,callback);
 		subscribe(interface,subscription);
 		return subscription;
 	}
@@ -371,6 +378,8 @@
 				if(intf.subscriptions.empty()) {
 
 					Logger::String{"Disconnecting from '",intf.c_str(),"'"}.trace(this->name());
+
+					debug("RULE='",intf.rule("signal").c_str(),"'");
 
 					DBusError error;
 					dbus_error_init(&error);

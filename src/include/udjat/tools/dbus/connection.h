@@ -30,6 +30,7 @@
  #include <udjat/tools/string.h>
  #include <string>
  #include <mutex>
+ #include <memory>
  #include <thread>
  #include <list>
  #include <mutex>
