@@ -339,7 +339,7 @@
 	}
 
 
-	bool DBus::Connection::Unsubscribe(std::shared_ptr<DBus::Connection::Subscription> subscription) {
+	bool DBus::Connection::unsubscribe(std::shared_ptr<DBus::Connection::Subscription> subscription) {
 
 		if(!subscription) {
 			return false;

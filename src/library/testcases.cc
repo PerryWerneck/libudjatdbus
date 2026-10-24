@@ -106,7 +106,7 @@
 
 				MainLoop::getInstance().run();
 
-				bus.Unsubscribe(subscription);
+				bus.unsubscribe(subscription);
 
 				return "Signal listener test ok";
 			}

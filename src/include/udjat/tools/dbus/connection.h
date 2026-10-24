@@ -143,7 +143,7 @@
 			void subscribe(const char *interface, std::shared_ptr<Subscription> subscription);
 
 			/// @brief Unsubscribe from d-bus signal.
-			bool Unsubscribe(std::shared_ptr<Subscription> subscription);
+			bool unsubscribe(std::shared_ptr<Subscription> subscription);
 
 			/// @brief Call method
 			void call(DBusMessage * message, const std::function<void(Message & message)> &call);
