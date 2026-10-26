@@ -316,7 +316,7 @@
 
 		class Subscription : public DBus::Connection::Subscription {
 		public:
-			const std::function<bool(Message &message)> &callback;
+			const std::function<bool(Message &message)> callback;
 
 			Subscription(const char *name, const std::function<bool(DBus::Message &message)> &c) : DBus::Connection::Subscription{name}, callback{c} {
 			}
