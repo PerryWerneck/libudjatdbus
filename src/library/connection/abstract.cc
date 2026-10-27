@@ -65,7 +65,7 @@
 		}
 
 		if(type.empty()) {
-			Logger::String{"Required attribute bus-name is missing on '",props.path().c_str(),"', using default"}.warning();
+			Logger::String{"Required attribute bus-name is missing on '",props.path().c_str(),"', using 'starter' as default"}.warning();
 			return DBUS_BUS_STARTER;
 		}
 
@@ -222,9 +222,8 @@
 				continue;
 			}
 
-			debug("Found interface '",intf.c_str(),"' checking ",intf.subscriptions.size()," subscriptions");
-
 			const char *member = dbus_message_get_member(message);
+			debug("Found interface '",intf.c_str(),"' checking ",intf.subscriptions.size()," subscriptions for member '",member,"'");
 
 			for(const auto &subscription : intf.subscriptions) {
 

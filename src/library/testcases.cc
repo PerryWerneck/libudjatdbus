@@ -95,18 +95,35 @@
 
 				DBus::SessionBus bus;
 
-				auto subscription = bus.subscribe(
-					"com.example.signal",
-					"hello",
-					[&out](DBus::Message &message) {
-						out << "Signal 'hello' received: '" << message << "'" << endl;
-						return true;
-					}
-				);
+				std::shared_ptr<DBus::Connection::Subscription> subscriptions[] = {
+
+					bus.subscribe(
+						"com.example.signal",
+						"hello",
+						[&out](DBus::Message &message) {
+							out << "Signal 'hello' received: '" << message << "'" << endl;
+							return true;
+						}
+					),
+
+					bus.subscribe(
+						"org.gnome.ScreenSaver",
+						"ActiveChanged",
+						[&out](DBus::Message &message) {
+							bool locked;
+							message.pop(locked);
+							out << "Gnome screen saver is now " << (locked ? "active" : "inactive") << endl;
+							return true;
+						}
+					)
+
+				};
 
 				MainLoop::getInstance().run();
 
-				bus.unsubscribe(subscription);
+				for(auto subscription : subscriptions) {
+					bus.unsubscribe(subscription);
+				}
 
 				return "Signal listener test ok";
 			}
